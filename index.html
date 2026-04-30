@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kelulusan | Local Dev</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --p: #10b981; --b: #3b82f6; --bg: #020617; --t: #f1f5f9; --s: #64748b; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--t); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(59,130,246,0.12) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(16,185,129,0.08) 0%, transparent 50%); }
+        .card { position: relative; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); padding: 3.5rem; border-radius: 32px; text-align: center; max-width: 540px; width: 95%; animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .header-row { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 2.5rem; }
+        .icon-box { display: inline-flex; padding: 1.25rem; background: rgba(16,185,129,0.1); border-radius: 20px; color: var(--p); border: 1px solid rgba(16,185,129,0.2); }
+        .meta-tags { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+        .badge { display: inline-flex; items: center; gap: 4px; padding: 4px 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 99px; color: var(--p); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dot { width: 6px; height: 6px; background: var(--p); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
+        h1 { font-size: 3.2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.75rem; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: var(--s); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2.5rem; max-width: 440px; margin-left: auto; margin-right: auto; }
+        .db-info { display: inline-flex; items: center; gap: 6px; font-size: 10px; color: #94a3b8; background: rgba(15, 23, 42, 0.4); padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.05); font-weight: 600; text-transform: uppercase; }
+        .links { display: flex; gap: 12px; justify-content: center; }
+        .btn { padding: 14px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; }
+        .btn-p { background: var(--p); color: #fff; box-shadow: 0 10px 20px -10px rgba(16,185,129,0.4); }
+        .btn-p:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-s { background: rgba(16,185,129,0.1); color: var(--p); border: 1px solid rgba(16,185,129,0.2); }
+        .btn-s:hover { background: rgba(16,185,129,0.2); }
+    </style>
+</head>
+<body>
+    <div class="mesh"></div>
+    <div class="card">
+        <div class="header-row">
+            <div class="icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            </div>
+            <div class="meta-tags">
+                <div class="badge"><div class="dot"></div> Static Active</div>
+                <div class="db-info"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg> MYSQL : 3306</div>
+            </div>
+        </div>
+        <h1>kelulusan</h1>
+        <p>Your local project is successfully configured and running on Antigravity Engine.</p>
+        <div class="links">
+            <a href="https://webdevwin.test" class="btn btn-p">Dashboard</a>
+            
+        </div>
+    </div>
+</body>
+</html>

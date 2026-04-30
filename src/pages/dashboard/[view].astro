@@ -1,0 +1,1186 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/global.css';
+const _v = Date.now();
+
+export function getStaticPaths() {
+  return [
+    { params: { view: 'overview' } },
+    { params: { view: 'lembaga' } },
+    { params: { view: 'identitas' } },
+    { params: { view: 'siswa-data' } },
+    { params: { view: 'pengguna' } },
+    { params: { view: 'json-history' } },
+    { params: { view: 'sync' } }
+  ];
+}
+
+const { view } = Astro.params;
+---
+
+<BaseLayout title="Admin Dashboard — Pusat Kendali Kelulusan">
+  <!-- Default ke dark mode jika belum ada preferensi tersimpan -->
+  <script is:inline>
+    if (!localStorage.getItem('theme')) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <!-- Dashboard Light/Dark mode CSS overrides -->
+  <style is:global>
+    /* ===== DARK MODE (default) ===== */
+    #dash-wrap   { background:#0B0F19; color:#cbd5e1; }
+    #dash-sidebar{ background:#111827; border-color:rgb(30,41,59); }
+    #dash-sidebar .sb-profile-box { background:#0F1523; }
+    #dash-sidebar .sb-profile-card{ background:#172033; border-color:rgba(51,65,85,.5); }
+    #dash-main   { background:#0B0F19; }
+    #dash-topbar { background:#111827; border-color:rgb(30,41,59); }
+
+    /* ===== LIGHT MODE overrides ===== */
+    html:not(.dark) #dash-wrap    { background:#f1f5f9 !important; color:#1e293b !important; }
+    html:not(.dark) #dash-sidebar { background:#ffffff !important; border-color:#e2e8f0 !important; }
+    html:not(.dark) #dash-sidebar .sb-profile-box  { background:#f8fafc !important; }
+    html:not(.dark) #dash-sidebar .sb-profile-card { background:#ffffff !important; border-color:#e2e8f0 !important; }
+    html:not(.dark) #dash-main    { background:#f1f5f9 !important; }
+    html:not(.dark) #dash-topbar  { background:#ffffff !important; border-color:#e2e8f0 !important; }
+
+    /* Card & panel backgrounds */
+    html:not(.dark) .dash-card    { background:#ffffff !important; border-color:#e2e8f0 !important; }
+    html:not(.dark) .dash-panel   { background:#f8fafc !important; border-color:#e2e8f0 !important; }
+    html:not(.dark) .dash-input   { background:#f1f5f9 !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+
+    /* Text colors in light mode */
+    html:not(.dark) #dash-wrap .text-white        { color:#0f172a !important; }
+    html:not(.dark) #dash-wrap .text-slate-300    { color:#475569 !important; }
+    html:not(.dark) #dash-wrap .text-slate-400    { color:#64748b !important; }
+    html:not(.dark) #dash-wrap .text-slate-500    { color:#94a3b8 !important; }
+    html:not(.dark) #dash-wrap .border-slate-800  { border-color:#e2e8f0 !important; }
+    html:not(.dark) #dash-wrap .border-slate-700  { border-color:#e2e8f0 !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#111827\]  { background:#ffffff !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#0F1523\]  { background:#f8fafc !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#172033\]  { background:#ffffff !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#131b2c\]  { background:#f1f5f9 !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#0B0F19\]  { background:#f1f5f9 !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#0a0d1a\]  { background:#e2e8f0 !important; }
+    html:not(.dark) #dash-wrap .hover\:bg-\[\#131b2c\]:hover { background:#f1f5f9 !important; }
+
+    /* Sidebar nav items in light */
+    html:not(.dark) #sidebar-nav a, html:not(.dark) #sidebar-nav button {
+      color: #475569 !important;
+    }
+    html:not(.dark) #sidebar-nav a.active, html:not(.dark) #sidebar-nav a:hover,
+    html:not(.dark) #sidebar-nav button.active, html:not(.dark) #sidebar-nav button:hover {
+      background: #eef2ff !important;
+      color: #4f46e5 !important;
+    }
+
+    /* Nav items (div.nav-item) in light mode */
+    html:not(.dark) .nav-item {
+      color: #475569 !important;
+    }
+    html:not(.dark) .nav-item::before {
+      background: rgba(79, 70, 229, 0.08) !important;
+    }
+    html:not(.dark) .nav-item:not(.active):hover {
+      color: #1e293b !important;
+    }
+    html:not(.dark) .nav-item:not(.active):hover::before {
+      opacity: 1 !important;
+    }
+    html:not(.dark) .nav-item.active {
+      color: #ffffff !important; /* aktif tetap putih (di atas gradient indigo) */
+    }
+
+
+    /* ===== OVERVIEW LIGHT MODE FIXES ===== */
+    /* Chart bar track (bg-slate-800) → light gray in light mode */
+    html:not(.dark) #dash-wrap .bg-slate-800 { background: #e2e8f0 !important; }
+    /* "Pratinjau Portal" header button */
+    html:not(.dark) #dash-wrap .bg-\[\#172033\] { background: #f1f5f9 !important; }
+    html:not(.dark) #dash-wrap .bg-\[\#1E293B\] { background: #e2e8f0 !important; }
+    /* Hover on Pratinjau button */
+    html:not(.dark) #dash-topbar a { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #334155 !important; }
+    html:not(.dark) #dash-topbar a:hover { background: #e2e8f0 !important; color: #1e293b !important; }
+    /* Overview chart labels */
+    html:not(.dark) #kelas-chart .text-white { color: #0f172a !important; }
+    html:not(.dark) #kelas-chart .text-slate-500 { color: #64748b !important; }
+    /* Nav item SVG icons in light mode - make them readable */
+    html:not(.dark) #sidebar-nav .nav-item svg { color: #6366f1 !important; opacity: 0.7; }
+    html:not(.dark) #sidebar-nav .nav-item:hover svg { opacity: 1; }
+    html:not(.dark) #sidebar-nav .nav-item.active svg { color: #ffffff !important; opacity: 1; }
+    /* Sidebar border in light */
+    html:not(.dark) #dash-sidebar { border-right-color: #e2e8f0 !important; }
+
+    /* ─── Sidebar Collapse ─── */
+    #dash-sidebar { transition: width 0.25s ease; overflow: hidden; }
+    #dash-sidebar.sb-collapsed { width: 5rem !important; }
+    /* Brand: hide text, center icon */
+    #dash-sidebar.sb-collapsed #sb-brand { padding-left: 0; padding-right: 0; justify-content: center; }
+    #dash-sidebar.sb-collapsed #sb-brand .flex.flex-col { display: none; }
+    /* Nav items: center icon, hide label */
+    #dash-sidebar.sb-collapsed #sidebar-nav { padding-left: 0.5rem; padding-right: 0.5rem; }
+    #dash-sidebar.sb-collapsed .nav-item { justify-content: center !important; padding: 0.75rem !important; }
+    #dash-sidebar.sb-collapsed .nav-item span { display: none !important; }
+    #dash-sidebar.sb-collapsed .nav-item svg { margin: 0 !important; }
+    /* Profile box: icon only */
+    #dash-sidebar.sb-collapsed .sb-profile-box { padding: 0.75rem 0.5rem; }
+    #dash-sidebar.sb-collapsed .sb-profile-card { justify-content: center !important; padding: 0.625rem !important; }
+    #dash-sidebar.sb-collapsed .sb-profile-card .min-w-0 { display: none; }
+    /* Tooltip on collapsed nav items */
+    #dash-sidebar.sb-collapsed .nav-item { position: relative; }
+    #dash-sidebar.sb-collapsed .nav-item::after {
+      content: attr(data-label);
+      position: absolute;
+      left: calc(100% + 0.5rem);
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1e293b;
+      color: #f1f5f9;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.5rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #dash-sidebar.sb-collapsed .nav-item:hover::after { opacity: 1; }
+
+    /* Table rows */
+    html:not(.dark) #dash-wrap table { background: #ffffff !important; }
+    html:not(.dark) #dash-wrap thead { background: #f8fafc !important; }
+    html:not(.dark) #dash-wrap tr:hover { background: #f1f5f9 !important; }
+
+    /* Img zones (upload) */
+    html:not(.dark) .img-zone { border-color: #cbd5e1 !important; }
+    html:not(.dark) .img-zone:hover { border-color: #6366f1 !important; background: #eef2ff !important; }
+    /* Kop Surat zone — amber in light mode */
+    html:not(.dark) .img-zone[data-input="input-kop_surat"] { border-color: #fcd34d !important; background: #fffbeb !important; }
+    html:not(.dark) .img-zone[data-input="input-kop_surat"]:hover { border-color: #f59e0b !important; background: #fef3c7 !important; }
+    /* Detail Siswa Modal in Light Mode */
+    html:not(.dark) #modal-detail-siswa > div {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+    html:not(.dark) #modal-detail-siswa .border-slate-700\/60,
+    html:not(.dark) #modal-detail-siswa .border-slate-800\/60,
+    html:not(.dark) #modal-detail-siswa .border-slate-800\/50 {
+      border-color: #e2e8f0 !important;
+    }
+    html:not(.dark) #modal-detail-siswa .bg-\[\#0F1523\]\/60,
+    html:not(.dark) #modal-detail-siswa .bg-\[\#0F1523\] {
+      background: #f8fafc !important;
+    }
+    html:not(.dark) #modal-detail-siswa .bg-\[\#111827\] {
+      background: #ffffff !important;
+    }
+    html:not(.dark) #modal-detail-siswa .bg-slate-800\/40 {
+      background: #f1f5f9 !important;
+    }
+    html:not(.dark) #modal-detail-siswa .text-slate-300 {
+      color: #334155 !important;
+    }
+    html:not(.dark) #modal-detail-siswa .text-white {
+      color: #0f172a !important;
+    }
+    
+    /* Button fixes in modal */
+    html:not(.dark) #detail-btn-preview-skl {
+      background: #e0e7ff !important; /* bg-indigo-100 */
+      border-color: #a5b4fc !important; /* border-indigo-300 */
+      color: #4338ca !important; /* text-indigo-700 */
+    }
+    html:not(.dark) #detail-btn-preview-skl:hover {
+      background: #c7d2fe !important; /* bg-indigo-200 */
+    }
+    html:not(.dark) #modal-detail-cancel {
+      background: #e2e8f0 !important; /* bg-slate-200 */
+      color: #475569 !important; /* text-slate-600 */
+    }
+    html:not(.dark) #modal-detail-cancel:hover {
+      background: #cbd5e1 !important; /* bg-slate-300 */
+    }
+    
+    /* Preview gambar di dalam upload zone — selalu bg terang */
+    .img-zone img:not(.hidden) {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.2);
+    }
+
+    /* ===== IMAGE PREVIEW CARDS ===== */
+    /* DARK MODE: checkerboard abu-abu gelap */
+    .dark #view-assets .grid > div {
+      background-color: #1e293b !important;
+      background-image:
+        linear-gradient(45deg, #263449 25%, transparent 25%),
+        linear-gradient(-45deg, #263449 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #263449 75%),
+        linear-gradient(-45deg, transparent 75%, #263449 75%) !important;
+      background-size: 16px 16px !important;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+      border-color: rgba(148,163,184,0.15) !important;
+    }
+    /* LIGHT MODE: checkerboard abu-abu terang */
+    html:not(.dark) #view-assets .grid > div {
+      background-color: #ffffff !important;
+      background-image:
+        linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%) !important;
+      background-size: 16px 16px !important;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+      border-color: rgba(148,163,184,0.25) !important;
+    }
+    /* Label teks tetap terbaca di atas bg keduanya */
+    #view-assets .grid > div > p {
+      background: rgba(0,0,0,0.35);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: #94a3b8 !important;
+    }
+    html:not(.dark) #view-assets .grid > div > p {
+      background: rgba(255,255,255,0.85);
+      color: #64748b !important;
+    }
+
+    /* Brand bar: border bottom */
+    html:not(.dark) #sb-brand {
+      border-bottom-color: #e2e8f0 !important;
+    }
+    /* Brand name "AdminPortal" — text-white → dark */
+    html:not(.dark) #sb-brand .font-outfit {
+      color: #1e293b !important;
+    }
+    /* Biarkan icon logo tetap putih di atas bg indigo */
+    html:not(.dark) #sb-brand svg.text-white {
+      color: #ffffff !important;
+    }
+    /* Role badge bawah brand — keep indigo, just ensure visible */
+    html:not(.dark) #sb-brand #sb-role {
+      color: #6366f1 !important;
+    }
+
+    /* Profile box top border */
+    html:not(.dark) .sb-profile-box {
+      border-top-color: #e2e8f0 !important;
+    }
+    /* User name text-white → dark on light card */
+    html:not(.dark) .sb-profile-card #sb-nama {
+      color: #1e293b !important;
+    }
+    /* Biarkan avatar inisial tetap putih di atas gradient */
+    html:not(.dark) #dash-wrap #sb-avatar {
+      color: #ffffff !important;
+    }
+    /* "Online" label */
+    html:not(.dark) .sb-profile-card .text-slate-400 {
+      color: #64748b !important;
+    }
+    /* Logout button */
+    html:not(.dark) #btn-logout {
+      color: #94a3b8 !important;
+    }
+    html:not(.dark) #btn-logout:hover {
+      color: #f43f5e !important;
+      background: rgba(244,63,94,0.08) !important;
+    }
+
+    /* Topbar: page title & subtitle */
+    html:not(.dark) #dash-topbar #page-title {
+      color: #0f172a !important;
+    }
+    html:not(.dark) #dash-topbar .text-slate-400 {
+      color: #64748b !important;
+    }
+    /* Topbar preview-portal link */
+    html:not(.dark) #dash-topbar a {
+      background: #f1f5f9 !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+    html:not(.dark) #dash-topbar a:hover {
+      background: #e2e8f0 !important;
+      color: #1e293b !important;
+    }
+  /* Collapse Sidebar Styles */
+      #dash-sidebar.collapsed { width: 5rem !important; }
+      #dash-sidebar.collapsed #sb-brand .font-outfit { display: none; }
+      #dash-sidebar.collapsed #sb-brand #sb-role { display: none; }
+      #dash-sidebar.collapsed #sb-brand { justify-content: center; padding: 0; }
+      #dash-sidebar.collapsed #sb-brand .flex.items-center.gap-3 { gap: 0; }
+      #dash-sidebar.collapsed .nav-label { display: none; }
+      #dash-sidebar.collapsed .nav-item { justify-content: center; padding-left: 0 !important; padding-right: 0 !important; }
+      #dash-sidebar.collapsed .sb-profile-box { padding: 1rem 0.5rem; }
+      #dash-sidebar.collapsed .sb-profile-card { padding: 0.5rem; justify-content: center; }
+      #dash-sidebar.collapsed .sb-profile-card .min-w-0 { display: none; }
+      #dash-sidebar.collapsed #btn-logout { display: none; }
+    </style>
+
+  <!-- xlsx-js-style for styled Excel import/export -->
+  <script is:inline src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+  <div id="dash-wrap" class="flex h-screen bg-[#0B0F19] text-slate-300 font-poppins overflow-hidden selection:bg-indigo-500/30">
+
+    <!-- ── SIDEBAR ── -->
+    <aside id="dash-sidebar" class="w-72 flex-shrink-0 bg-[#111827] border-r border-slate-800 flex flex-col transition-all duration-300 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+      
+      <!-- Brand Logo -->
+      <div id="sb-brand" class="h-20 flex items-center px-8 border-b border-slate-800/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-white font-black text-lg tracking-tight font-outfit leading-none">AdminPortal</span>
+            <span class="text-indigo-400 text-[9px] font-black uppercase tracking-widest mt-1" id="sb-role">ROLE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar" id="sidebar-nav">
+        <!-- Injected via JS -->
+      </nav>
+
+      <!-- User Profile -->
+      <div class="sb-profile-box p-4 border-t border-slate-800/50 bg-[#0F1523]">
+        <div class="sb-profile-card bg-[#172033] rounded-2xl p-4 flex items-center justify-between border border-slate-700/50">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-inner" id="sb-avatar">
+              A
+            </div>
+            <div class="min-w-0">
+              <p class="text-white text-xs font-bold truncate uppercase" id="sb-nama">Administrator</p>
+              <div class="flex items-center gap-1.5 mt-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[9px] font-medium text-slate-400">Online</span>
+              </div>
+            </div>
+          </div>
+          <button id="btn-logout" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Keluar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main id="dash-main" class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[url('/noise.png')] bg-repeat bg-opacity-5">
+      
+      <!-- Top Header -->
+      <header id="dash-topbar" class="h-20 flex items-center justify-between px-8 lg:px-12 border-b border-slate-800 bg-[#0B0F19]/80 backdrop-blur-md sticky top-0 z-10">
+        <div class="flex items-center gap-4">
+          <button id="btn-toggle-sidebar" class="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          </button>
+          <div>
+            <h1 class="text-2xl font-black text-white font-outfit tracking-tight" id="page-title">Pusat Kendali</h1>
+            <p class="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-1">Selamat datang di sistem administrasi</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+           <a href="/" target="_blank" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#172033] hover:bg-[#1E293B] border border-slate-700 text-slate-300 hover:text-white transition-all text-[11px] font-bold uppercase tracking-widest">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+              Pratinjau Portal
+           </a>
+        </div>
+      </header>
+
+      <!-- Scrollable Views Container -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12 relative">
+        
+        <!-- ── VIEW: OVERVIEW ── -->
+        <section id="view-overview" class="space-y-8">
+           <!-- Stats Row -->
+           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <!-- Stat Card 1 -->
+              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors relative overflow-hidden group">
+                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
+                 <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Siswa</span>
+                    <div class="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div>
+                 </div>
+                 <h3 class="text-4xl font-black font-outfit text-white" id="ov-total">0</h3>
+              </div>
+              <!-- Stat Card 2 -->
+              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors relative overflow-hidden group">
+                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                 <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Lulus</span>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                 </div>
+                 <h3 class="text-4xl font-black font-outfit text-white" id="ov-lulus">0</h3>
+              </div>
+              <!-- Stat Card 3 -->
+              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-rose-500/30 transition-colors relative overflow-hidden group">
+                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all"></div>
+                 <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tidak Lulus</span>
+                    <div class="w-10 h-10 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                 </div>
+                 <h3 class="text-4xl font-black font-outfit text-white" id="ov-tidak">0</h3>
+              </div>
+              <!-- Stat Card 4 -->
+              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-amber-500/30 transition-colors relative overflow-hidden group">
+                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+                 <div class="flex justify-between items-start mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Rata-Rata Nilai</span>
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg></div>
+                 </div>
+                 <h3 class="text-4xl font-black font-outfit text-white" id="ov-rata">0.0</h3>
+              </div>
+           </div>
+
+           <!-- Distribution Chart Area -->
+           <div class="bg-[#111827] border border-slate-800 rounded-2xl p-8">
+              <div class="flex items-center justify-between mb-8">
+                 <div>
+                    <h4 class="text-white font-bold text-lg font-outfit">Distribusi Kelulusan Per Kelas</h4>
+                    <p class="text-xs text-slate-500 mt-1">Perbandingan persentase kelulusan antar rombongan belajar</p>
+                 </div>
+                 <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Indikator Lulus</span>
+                 </div>
+              </div>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8" id="kelas-chart">
+                 <!-- Injected via JS -->
+              </div>
+              <!-- Tailwind Safelist untuk JS -->
+              <div class="hidden h-2.5 h-full bg-emerald-500 bg-amber-500 bg-rose-500 text-emerald-500 text-amber-500 text-rose-500 transition-all duration-700 bg-slate-800 rounded-full overflow-hidden"></div>
+           </div>
+        </section>
+
+        
+        <!-- ── VIEW: IDENTITAS ── -->
+        <section id="view-identitas" class="hidden space-y-8 max-w-5xl animate-fade-in mx-auto">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-3xl font-black font-outfit text-slate-800 dark:text-white tracking-tight">Profil Institusi</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola data resmi sekolah untuk kop surat dan pengumuman kelulusan.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="btn-preview-skl" class="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#111827] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/50 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Preview SKL
+                    </button>
+                    <button id="btn-edit-identitas" class="hidden admin-only group relative inline-flex items-center gap-2 px-6 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-violet-600 dark:hover:from-indigo-500 dark:hover:to-violet-500 rounded-xl text-sm font-bold text-white transition-all shadow-lg shadow-slate-200 dark:shadow-indigo-500/25">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        Edit Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- View Mode -->
+            <div id="identitas-view" class="space-y-6">
+                <!-- Data Utama -->
+                <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                    <h4 class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        Informasi Utama
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12">
+                        <div class="lg:col-span-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Nama Lembaga</p>
+                            <p id="id-sekolah" class="font-black text-2xl text-slate-800 dark:text-white font-outfit">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Tahun Pelajaran</p>
+                            <p id="id-tapel" class="font-bold text-lg text-slate-700 dark:text-slate-200 font-outfit">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">NPSN / NSS</p>
+                            <p class="text-slate-600 dark:text-slate-300 font-medium"><span id="id-npsn" class="text-indigo-600 dark:text-indigo-400">-</span> / <span id="id-nss">-</span></p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Jenjang Sekolah</p>
+                            <span id="id-jenjang" class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">-</span>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Alamat Lengkap</p>
+                            <p id="id-alamat" class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-3xl">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Kota Penerbitan</p>
+                            <p id="id-kota" class="text-slate-600 dark:text-slate-300 font-medium">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Pengaturan Surat -->
+                    <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                        <h4 class="text-xs font-bold text-violet-500 uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Pengaturan Dokumen
+                        </h4>
+                        <div class="space-y-6">
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1"><span class="text-emerald-500">●</span> Tanggal SKL 1 (Tanpa Nilai)</p>
+                                <p id="id-tgl" class="font-bold text-slate-800 dark:text-white">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1"><span class="text-indigo-500">●</span> Tanggal SKL 2 (Dengan Nilai)</p>
+                                <p id="id-tgl-skl2" class="font-bold text-slate-800 dark:text-white">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Format Nomor Surat</p>
+                                <p id="id-nomor-surat" class="text-violet-600 dark:text-violet-400 font-mono text-sm font-medium bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-lg inline-block">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Domain Hosting</p>
+                                <p id="id-domain" class="text-slate-600 dark:text-slate-400 font-mono text-xs font-medium">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kontak & Kepsek -->
+                    <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Kontak & Penandatangan
+                            </h4>
+                            <div class="space-y-6">
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Kepala Sekolah</p>
+                                    <p id="id-kepsek" class="text-lg font-bold text-slate-800 dark:text-white">-</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="id-nip">NIP. -</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Telepon</p>
+                                        <p id="id-telepon" class="text-sm font-medium text-slate-700 dark:text-slate-300">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Email</p>
+                                        <p id="id-email" class="text-sm font-medium text-slate-700 dark:text-slate-300">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aset Visual (view mode preview) -->
+                <div id="view-assets" class="hidden bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+                    <h4 class="text-xs font-bold text-pink-500 uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Aset Visual Cetak
+                    </h4>
+
+                    <!-- Kop Surat — Full Width Card -->
+                    <div id="card-asset-kop_surat" class="hidden mb-6 p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-700/40 relative group">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-500">Kop Surat</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label class="relative inline-flex items-center cursor-pointer" title="Tampilkan/Sembunyikan Kop Surat">
+                                    <input type="checkbox" id="toggle-kop_surat" class="sr-only peer" checked>
+                                    <div class="w-8 h-4 bg-slate-300 dark:bg-slate-700 peer-checked:bg-amber-500 rounded-full transition-colors relative after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"></div>
+                                </label>
+                                <button id="btn-del-kop_surat" data-field="kop_surat" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                            </div>
+                        </div>
+                        <img id="view-kop_surat" class="w-full max-h-32 object-contain hidden rounded-lg border border-amber-200 dark:border-amber-700/30 bg-white dark:bg-[#0F1523] p-2" />
+                        <p id="no-kop_surat" class="text-[10px] text-slate-400 italic">Belum diupload</p>
+                    </div>
+
+                    <!-- Logo, Stempel, TTD -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <!-- Logo -->
+                        <div class="flex flex-col items-center gap-3 p-5 rounded-2xl bg-slate-50 dark:bg-[#0F1523] border border-slate-100 dark:border-slate-800 relative group" id="card-asset-logo">
+                            <div class="w-full flex justify-between items-center">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Logo</span>
+                                <label class="relative inline-flex items-center cursor-pointer" title="Tampilkan/Sembunyikan Logo">
+                                    <input type="checkbox" id="toggle-logo" class="sr-only peer" checked>
+                                    <div class="w-8 h-4 bg-slate-300 dark:bg-slate-700 peer-checked:bg-emerald-500 rounded-full transition-colors relative after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"></div>
+                                </label>
+                            </div>
+                            <img id="view-logo" class="h-20 w-auto object-contain hidden" />
+                            <p id="no-logo" class="text-[10px] text-slate-400 italic">Belum diupload</p>
+                            <button id="btn-del-logo" data-field="logo" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                        </div>
+                        <!-- Stempel -->
+                        <div class="flex flex-col items-center gap-3 p-5 rounded-2xl bg-slate-50 dark:bg-[#0F1523] border border-slate-100 dark:border-slate-800 relative group" id="card-asset-stempel">
+                            <div class="w-full flex justify-between items-center">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Stempel</span>
+                                <label class="relative inline-flex items-center cursor-pointer" title="Tampilkan/Sembunyikan Stempel">
+                                    <input type="checkbox" id="toggle-stempel" class="sr-only peer" checked>
+                                    <div class="w-8 h-4 bg-slate-300 dark:bg-slate-700 peer-checked:bg-emerald-500 rounded-full transition-colors relative after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"></div>
+                                </label>
+                            </div>
+                            <img id="view-stempel" class="h-20 w-auto object-contain hidden" />
+                            <p id="no-stempel" class="text-[10px] text-slate-400 italic">Belum diupload</p>
+                            <button id="btn-del-stempel" data-field="stempel" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                        </div>
+                        <!-- TTD -->
+                        <div class="flex flex-col items-center gap-3 p-5 rounded-2xl bg-slate-50 dark:bg-[#0F1523] border border-slate-100 dark:border-slate-800 relative group" id="card-asset-ttd">
+                            <div class="w-full flex justify-between items-center">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Tanda Tangan</span>
+                                <label class="relative inline-flex items-center cursor-pointer" title="Tampilkan/Sembunyikan TTD">
+                                    <input type="checkbox" id="toggle-ttd" class="sr-only peer" checked>
+                                    <div class="w-8 h-4 bg-slate-300 dark:bg-slate-700 peer-checked:bg-emerald-500 rounded-full transition-colors relative after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"></div>
+                                </label>
+                            </div>
+                            <img id="view-ttd" class="h-20 w-auto object-contain hidden" />
+                            <p id="no-ttd" class="text-[10px] text-slate-400 italic">Belum diupload</p>
+                            <button id="btn-del-ttd" data-field="ttd" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="identitas-edit" class="hidden">
+                <form id="form-identitas" class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl shadow-indigo-500/5">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-100 dark:border-slate-800 pb-5">
+                        <h4 class="text-xl font-bold font-outfit text-slate-800 dark:text-white flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </div>
+                            Edit Profil Institusi
+                        </h4>
+                    </div>
+                    
+                    <div class="space-y-8">
+                        <!-- Group 1 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nama Lembaga <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-sekolah" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tahun Pelajaran <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-tapel" required placeholder="2025/2026" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Jenjang Sekolah <span class="text-rose-500">*</span></label>
+                                <select id="input-jenjang" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all cursor-pointer appearance-none">
+                                    <option value="SMP">SMP</option><option value="SMA">SMA</option><option value="SMK">SMK</option><option value="MA">MA</option><option value="MTs">MTs</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">NPSN <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-npsn" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">NSS <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-nss" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100 dark:border-slate-800">
+
+                        <!-- Group 2 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1"><span class="text-emerald-500">●</span> Tanggal Pengumuman SKL 1 <span class="text-rose-500">*</span></label>
+                                <input type="date" id="input-tgl" required class="date-input w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                <p class="text-[10px] text-slate-500 mt-1.5">Portal publik aktif & SKL (tanpa nilai) dirilis setelah tanggal ini.</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1"><span class="text-indigo-500">●</span> Tanggal SKL 2 (Dengan Nilai)</label>
+                                <input type="date" id="input-tgl-skl2" class="date-input w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                <p class="text-[10px] text-slate-500 mt-1.5">SKL lengkap dengan rincian nilai tersedia.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Sufiks Nomor Surat</label>
+                                <div class="flex items-center bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-[#0B0F19] focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all">
+                                    <span class="px-4 text-slate-400 text-xs font-mono border-r border-slate-200 dark:border-slate-700 py-3 bg-slate-100 dark:bg-slate-800/50">XXX</span>
+                                    <input type="text" id="input-nomor-surat" placeholder="/SMKBU/OU/IV/2026" class="flex-1 bg-transparent py-3 px-3 text-sm text-slate-800 dark:text-white outline-none font-mono">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1.5">Nomor urut (XXX) dibuat otomatis per siswa.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Domain Hosting Portal</label>
+                                <div class="flex items-center bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-[#0B0F19] focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all">
+                                    <span class="px-4 text-slate-400 text-sm font-mono border-r border-slate-200 dark:border-slate-700 py-3 bg-slate-100 dark:bg-slate-800/50">https://</span>
+                                    <input type="text" id="input-domain" placeholder="namadomain.com" class="flex-1 bg-transparent py-3 px-3 text-sm text-slate-800 dark:text-white outline-none font-mono">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1.5">Untuk referensi URL portal Anda.</p>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100 dark:border-slate-800">
+
+                        <!-- Group 3 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Telepon</label>
+                                <input type="text" id="input-telepon" placeholder="(021) 123456" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Email</label>
+                                <input type="email" id="input-email" placeholder="contoh@sekolah.sch.id" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kepala Sekolah <span class="text-rose-500">*</span></label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input type="text" id="input-kepsek" required placeholder="Nama Lengkap & Gelar" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                    <input type="text" id="input-nip" placeholder="NIP (Opsional)" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Alamat Lengkap <span class="text-rose-500">*</span></label>
+                                <textarea id="input-alamat" rows="2" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kota Penerbitan <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-kota" required placeholder="Contoh: Binjai" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                <p class="text-[10px] text-slate-500 mt-1.5">Digunakan untuk lokasi pada tanggal penandatanganan SKL (misal: Binjai, 26 April 2026).</p>
+                            </div>
+                        </div>
+
+                        <!-- Image Uploads -->
+                        <div class="pt-4">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">Aset Visual SKL (Opsional)</label>
+                            
+                            <!-- Kop Surat — Full Width Zone -->
+                            <div class="mb-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-500">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Kop Surat (Header SKL)
+                                    </span>
+                                    <span class="text-[9px] text-slate-500 dark:text-slate-600">— Jika diisi, akan menggantikan header otomatis pada SKL</span>
+                                </div>
+                                <div class="img-zone relative border-2 border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-500/5 rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all cursor-pointer group min-h-[120px]" data-input="input-kop_surat" data-preview="preview-kop_surat" data-hint="hint-kop_surat" data-clear="clear-kop_surat" data-changed="false">
+                                    <img id="preview-kop_surat" class="max-h-28 w-auto max-w-full object-contain hidden rounded shadow-sm" />
+                                    <div id="hint-kop_surat" class="flex flex-col items-center gap-1.5 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400 text-center font-medium">Drag & Drop atau Klik untuk Upload Kop Surat<br><span class="text-[10px] font-normal text-slate-500">Auto Convert WebP · JPG/PNG/dll · Maks 3MB</span></p>
+                                    </div>
+                                    <button id="clear-kop_surat" type="button" class="hidden absolute top-2 right-2 p-1.5 bg-white dark:bg-[#111827] text-rose-500 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all z-10" data-clear-btn><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                                    <input type="file" id="input-kop_surat" accept="image/*" class="hidden" />
+                                </div>
+                            </div>
+
+                            <!-- Logo, Stempel, TTD -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Logo -->
+                                <div class="img-zone relative border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#0F1523] rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all cursor-pointer group min-h-[140px]" data-input="input-logo" data-preview="preview-logo" data-hint="hint-logo" data-clear="clear-logo" data-changed="false">
+                                    <img id="preview-logo" class="h-20 w-auto object-contain hidden rounded shadow-sm" />
+                                    <div id="hint-logo" class="flex flex-col items-center gap-1.5 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 text-center font-medium">Logo Sekolah<br><span class="text-[9px] font-normal text-indigo-400">⚡ Auto WebP · Maks 3MB</span></p>
+                                    </div>
+                                    <button id="clear-logo" type="button" class="hidden absolute top-2 right-2 p-1.5 bg-white dark:bg-[#111827] text-rose-500 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all z-10" data-clear-btn><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                                    <input type="file" id="input-logo" accept="image/*" class="hidden" />
+                                </div>
+                                <!-- Stempel -->
+                                <div class="img-zone relative border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#0F1523] rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all cursor-pointer group min-h-[140px]" data-input="input-stempel" data-preview="preview-stempel" data-hint="hint-stempel" data-clear="clear-stempel" data-changed="false">
+                                    <img id="preview-stempel" class="h-20 w-auto object-contain hidden rounded shadow-sm" />
+                                    <div id="hint-stempel" class="flex flex-col items-center gap-1.5 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 text-center font-medium">Stempel<br><span class="text-[9px] font-normal text-indigo-400">⚡ Auto WebP · Maks 3MB</span></p>
+                                    </div>
+                                    <button id="clear-stempel" type="button" class="hidden absolute top-2 right-2 p-1.5 bg-white dark:bg-[#111827] text-rose-500 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all z-10" data-clear-btn><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                                    <input type="file" id="input-stempel" accept="image/*" class="hidden" />
+                                </div>
+                                <!-- TTD -->
+                                <div class="img-zone relative border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#0F1523] rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all cursor-pointer group min-h-[140px]" data-input="input-ttd" data-preview="preview-ttd" data-hint="hint-ttd" data-clear="clear-ttd" data-changed="false">
+                                    <img id="preview-ttd" class="h-20 w-auto object-contain hidden rounded shadow-sm" />
+                                    <div id="hint-ttd" class="flex flex-col items-center gap-1.5 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 text-center font-medium">Tanda Tangan<br><span class="text-[9px] font-normal text-indigo-400">⚡ Auto WebP · Maks 3MB</span></p>
+                                    </div>
+                                    <button id="clear-ttd" type="button" class="hidden absolute top-2 right-2 p-1.5 bg-white dark:bg-[#111827] text-rose-500 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all z-10" data-clear-btn><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                                    <input type="file" id="input-ttd" accept="image/*" class="hidden" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                        <button type="button" id="btn-cancel-identitas" class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Batal</button>
+                        <button type="submit" class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 dark:bg-gradient-to-r dark:from-indigo-600 dark:to-violet-600 dark:hover:from-indigo-500 dark:hover:to-violet-500 shadow-lg shadow-slate-200 dark:shadow-indigo-500/25 transition-all">Simpan Profil</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ── VIEW: LEMBAGA ── -->
+        <section id="view-lembaga" class="hidden space-y-6 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-black font-outfit text-white">Manajemen Lembaga</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Kelola institusi pendidikan yang menggunakan sistem ini.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div id="lembaga-aktif-info"></div>
+              <button id="btn-add-lembaga" class="btn-primary !text-white flex items-center gap-2 text-xs !py-2 !px-4">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Lembaga
+              </button>
+            </div>
+          </div>
+          <div class="relative w-full lg:w-96">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="search" id="search-lembaga" placeholder="Cari nama lembaga atau slug..." autocomplete="new-password" spellcheck="false" class="w-full bg-[#111827] border border-slate-800 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white focus:border-indigo-500 outline-none transition-all">
+          </div>
+          <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b border-slate-800 bg-[#0F1523]">
+                    <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembaga</th>
+                    <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                    <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Siswa</th>
+                    <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dibuat</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="lembaga-table" class="divide-y divide-slate-800/50"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── VIEW: SISWA-DATA ── -->
+        <section id="view-siswa-data" class="hidden space-y-6 animate-fade-in">
+           <div class="flex flex-col lg:flex-row justify-between items-center gap-4 bg-[#111827] border border-slate-800 p-4 rounded-2xl">
+              <div class="relative w-full lg:w-96">
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="search" id="search-siswa" placeholder="Cari nama atau NISN..." autocomplete="new-password" spellcheck="false" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white focus:border-indigo-500 outline-none transition-all">
+              </div>
+              <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                 <select id="filter-kelas" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Kelas</option></select>
+                 <select id="filter-status" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Status</option><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select>
+                 <button id="btn-add-siswa" class="admin-only hidden btn-primary !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Siswa</button>
+              </div>
+           </div>
+           <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+              <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-[#131b2c]">
+                 <div class="flex items-center gap-4"><h4 class="text-white font-bold font-outfit">Tabel Kelulusan</h4><span class="text-xs text-slate-500" id="table-count">Memuat...</span></div>
+                 <div class="flex items-center gap-3">
+                   <div id="selected-count" class="hidden items-center gap-2 px-3 py-1 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold border border-indigo-500/30">0 Dipilih</div>
+                   <button id="btn-export-siswa" class="btn-success !text-white text-xs !py-1.5 !px-3 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export XLSX</button>
+                   <button id="btn-import-siswa" class="admin-only hidden btn-success !text-white text-xs !py-1.5 !px-3 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Import XLSX</button>
+                 </div>
+              </div>
+              <div class="overflow-x-auto custom-scrollbar flex-1">
+                 <table class="w-full text-left border-collapse">
+                    <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-6 py-4 w-12 text-center"><input type="checkbox" id="check-all" class="rounded bg-[#172033] border-slate-700 w-4 h-4 cursor-pointer accent-indigo-500"></th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Siswa</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Rata-Rata</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Aksi</th></tr></thead>
+                    <tbody id="siswa-table" class="divide-y divide-slate-800/50"></tbody>
+                 </table>
+              </div>
+              <div class="p-4 border-t border-slate-800 bg-[#0F1523] flex items-center justify-between gap-3 min-h-[64px]">
+                 <div class="flex items-center gap-6">
+                   <span class="text-xs text-slate-500 italic" id="db-status">Data live dari Database</span>
+                   <div id="pagination-container" class="flex items-center gap-3 hidden">
+                     <button id="btn-prev-page" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                     <span id="page-indicator" class="text-xs text-slate-400 font-bold">1 / 1</span>
+                     <button id="btn-next-page" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+                   </div>
+                 </div>
+                 <div class="flex gap-2">
+                   <button id="btn-bulk-lulus" class="hidden btn-success !text-white text-xs !py-2 !px-4">✓ Set Lulus Terpilih</button>
+                   <button id="btn-bulk-tidak" class="hidden btn-danger text-xs !py-2 !px-4">✗ Set Tidak Lulus</button>
+                   <button id="btn-bulk-delete" class="admin-only hidden btn-danger text-xs !py-2 !px-4">Hapus Terpilih</button>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        <!-- ── VIEW: PENGGUNA ── -->
+        <section id="view-pengguna" class="hidden space-y-6 animate-fade-in">
+           <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+              <div class="p-5 border-b border-slate-800 bg-[#131b2c] flex items-center justify-between">
+                 <div><h4 class="text-white font-bold text-lg font-outfit">Manajemen Pengguna</h4><p class="text-xs text-slate-500 mt-1">Kelola akun Admin, Guru, dan Siswa portal</p></div>
+                 <button id="btn-add-user" class="btn-primary !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Pengguna</button>
+              </div>
+              <div class="overflow-x-auto">
+                 <table class="w-full text-left">
+                    <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Username</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Lengkap</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Aksi</th></tr></thead>
+                    <tbody id="user-table" class="divide-y divide-slate-800/50"></tbody>
+                 </table>
+              </div>
+           </div>
+        </section>
+
+  <!-- ── MODAL DETAIL SISWA ── -->
+  <div id="modal-detail-siswa" class="fixed inset-0 z-[985] items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="bg-[#111827] rounded-2xl border border-slate-700/80 shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col animate-fade-in">
+
+      <!-- Header bar -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
+        <span class="text-xs font-black uppercase tracking-widest text-slate-500">Detail Data Siswa</span>
+        <button id="modal-detail-close" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar" style="min-height:0">
+
+        <!-- Profile hero -->
+        <div class="px-6 py-5 flex items-center gap-4 border-b border-slate-800/60 bg-[#0F1523]/60">
+          <div id="detail-avatar" class="w-14 h-14 rounded-2xl bg-indigo-200 text-indigo-800 dark:bg-indigo-500/30 dark:text-indigo-300 flex items-center justify-center font-black text-lg flex-shrink-0 shadow-sm border border-indigo-300 dark:border-transparent">
+            AF
+          </div>
+          <div class="flex-1 min-w-0">
+            <p id="detail-nama" class="text-white font-black text-base font-outfit truncate">-</p>
+            <p id="detail-nisn" class="text-slate-500 text-xs font-mono mt-0.5">-</p>
+            <span id="detail-status" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black mt-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">LULUS</span>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Rata-rata</p>
+            <p id="detail-rata" class="text-2xl font-black text-white font-outfit">-</p>
+          </div>
+        </div>
+
+        <!-- Info grid -->
+        <div class="grid grid-cols-2 gap-px bg-slate-800/40 border-b border-slate-800/60">
+          <div class="bg-[#111827] px-5 py-3.5">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Kelas</p>
+            <p id="detail-kelas" class="text-sm font-bold text-slate-300">-</p>
+          </div>
+          <div class="bg-[#111827] px-5 py-3.5">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Jenis Kelamin</p>
+            <p id="detail-jk" class="text-sm font-bold text-slate-300">-</p>
+          </div>
+          <div class="bg-[#111827] px-5 py-3.5 col-span-2">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Tempat, Tanggal Lahir</p>
+            <p id="detail-ttl" class="text-sm font-bold text-slate-300">-</p>
+          </div>
+        </div>
+
+        <!-- Nilai table -->
+        <div class="px-6 pt-5 pb-2">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Daftar Nilai</p>
+          <div class="rounded-xl overflow-hidden border border-slate-800/60">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-[#0F1523]">
+                  <th class="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 w-10">No</th>
+                  <th class="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500">Mata Pelajaran</th>
+                  <th class="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center w-20">Nilai</th>
+                </tr>
+              </thead>
+              <tbody id="detail-nilai-tbody">
+                <tr><td colspan="3" class="px-4 py-6 text-center text-slate-600 text-xs">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer actions -->
+      <div class="px-6 py-4 border-t border-slate-700/60 flex items-center justify-between flex-shrink-0 bg-[#0F1523]/60">
+        <button id="detail-btn-preview-skl" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-400 hover:text-indigo-300 text-xs font-bold transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Preview SKL Siswa Ini
+        </button>
+        <div class="flex gap-2">
+          <button id="modal-detail-cancel" class="px-4 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">Tutup</button>
+          <button id="detail-btn-edit" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-500/30 text-xs font-bold transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Edit Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL PREVIEW SKL ── -->
+  <div id="modal-skl-preview" class="fixed inset-0 z-[990] items-center justify-center p-4 bg-black/85 backdrop-blur-sm hidden">
+    <div class="bg-[#111827] rounded-2xl border border-slate-700 shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col animate-fade-in">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+            <svg class="w-4.5 h-4.5 text-indigo-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-sm font-outfit">Preview Surat Keterangan Lulus</h3>
+            <p class="text-[10px] text-slate-500 mt-0.5">Menggunakan data identitas saat ini + siswa contoh (bukan data asli)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="modal-skl-print" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-emerald-500/20" title="Cetak / Download PDF">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Cetak PDF
+          </button>
+          <button id="modal-skl-close" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl transition-colors" title="Tutup">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Scale toolbar + SKL type tabs -->
+      <div class="flex items-center gap-4 px-6 py-2.5 border-b border-slate-800 bg-[#0F1523]/80 flex-shrink-0 flex-wrap">
+        <!-- SKL Type Tabs -->
+        <div class="flex items-center gap-1 bg-slate-800/60 rounded-lg p-0.5">
+          <button id="skl-tab-1" class="px-3 py-1 rounded-md text-xs font-bold transition-colors bg-emerald-600 text-white" title="SKL Tanpa Nilai — Pengumuman Kelulusan">📋 SKL 1 (Tanpa Nilai)</button>
+          <button id="skl-tab-2" class="px-3 py-1 rounded-md text-xs font-bold transition-colors text-slate-400 hover:text-white" title="SKL Dengan Nilai — Penerimaan SKL">📄 SKL 2 (Dengan Nilai)</button>
+        </div>
+        <span class="text-slate-700 text-xs">|</span>
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Skala</span>
+        <input id="skl-scale" type="range" min="40" max="100" value="65" step="5" class="w-28 h-1 accent-indigo-500 cursor-pointer">
+        <span id="skl-scale-val" class="text-xs font-bold text-indigo-400 w-9">65%</span>
+        <span class="text-slate-700 text-xs">|</span>
+        <span class="text-[10px] text-slate-600">Format A4 · 794×1123px</span>
+      </div>
+      <!-- Preview area -->
+      <div class="flex-1 overflow-auto p-6 bg-[#0a0d1a]" style="min-height:0">
+        <div id="skl-preview-wrap" class="mx-auto" style="transform-origin:top center;transition:transform .2s ease;width:794px;">
+          <iframe id="skl-iframe" style="width:794px;height:1123px;border:none;border-radius:6px;box-shadow:0 25px 60px rgba(0,0,0,0.6);display:block;" title="Preview SKL"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style is:global>
+    .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#334155;border-radius:10px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#475569}
+    .nav-item{position:relative;display:flex;flex-direction:row;align-items:center;gap:1rem;padding:.75rem 1.25rem;margin-bottom:.375rem;border-radius:.75rem;font-size:.8125rem;font-weight:700;color:#94a3b8;transition:all .3s;cursor:pointer;overflow:hidden}
+    .nav-item:not(.active):hover{color:#f1f5f9;background:rgba(255,255,255,.05)}
+    .nav-item.active{background:linear-gradient(to right,#6366f1,#4f46e5);color:#fff;box-shadow:0 4px 15px rgba(99,102,241,.25)}
+    .btn-primary{padding:.625rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;background:linear-gradient(to right,#6366f1,#4f46e5);color:#fff;transition:all .3s;border:none;cursor:pointer}
+    .btn-primary:hover{background:linear-gradient(to right,#818cf8,#6366f1);transform:translateY(-1px)}
+    .btn-success{padding:.625rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;background:#059669;color:#fff;transition:all .3s;border:none;cursor:pointer}
+    .btn-success:hover{background:#10b981}
+    .btn-danger{padding:.625rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;background:#e11d48;color:#fff;transition:all .3s;border:none;cursor:pointer}
+    .btn-danger:hover{background:#f43f5e}
+    .status-pill{display:inline-flex;align-items:center;justify-content:center;gap:.375rem;padding:.375rem .875rem;border-radius:.5rem;font-size:.6875rem;text-transform:uppercase;letter-spacing:.05em;font-weight:900;transition:all .3s;line-height:1}
+    .status-pill.lulus{background:rgba(16,185,129,.1);color:#34d399}.status-pill.tidak{background:rgba(239,68,68,.1);color:#f87171}
+    .role-badge{display:inline-flex;align-items:center;justify-content:center;padding:.375rem .625rem;border-radius:.375rem;font-size:.625rem;font-weight:700;text-transform:uppercase;line-height:1}
+    .role-badge.admin{background:rgba(99,102,241,.1);color:#818cf8}.role-badge.guru{background:rgba(59,130,246,.1);color:#60a5fa}.role-badge.siswa{background:#1e293b;color:#94a3b8}
+    .aktif-badge{display:inline-flex;align-items:center;justify-content:center;gap:.375rem;padding:.375rem .75rem;border-radius:.5rem;font-size:.625rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;line-height:1;transition:all .3s;cursor:pointer;border:none}
+    .aktif-badge.aktif{background:rgba(16,185,129,.1);color:#34d399}.aktif-badge.nonaktif{background:rgba(239,68,68,.1);color:#f87171}
+    .img-zone{border:2px dashed #334155;border-radius:.75rem;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+    .img-zone:hover{border-color:#6366f1;background:rgba(99,102,241,.05)}
+    @keyframes fade-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .animate-fade-in{animation:fade-in .4s ease-out forwards}
+  </style>
+
+  <!-- VIEW: JSON HISTORY -->
+  <section id="view-json-history" class="hidden space-y-6 animate-fade-in">
+    <div class="flex items-center justify-between"><div><h2 class="text-xl font-black font-outfit text-white">Riwayat JSON</h2><p class="text-xs text-slate-400 mt-0.5">Arsip generate JSON — restore ke DB atau jadikan aktif.</p></div><span class="text-xs text-slate-500 font-mono" id="history-count"></span></div>
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left">
+          <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembaga</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">File</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Total</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Lulus</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dibuat</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aksi</th></tr></thead>
+          <tbody id="history-table" class="divide-y divide-slate-800/50"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW: SYNC -->
+  <section id="view-sync" class="hidden space-y-6 animate-fade-in">
+    <div class="flex items-center gap-4 mb-2"><div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center flex-shrink-0"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div><div><h2 class="text-xl font-black font-outfit text-white">Sinkronisasi Cloud</h2><p class="text-xs text-slate-400 mt-0.5">Generate data JSON statis dari database lokal, lalu deploy ke hosting.</p></div></div>
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3"><svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><h3 class="text-sm font-bold text-white">Generate &amp; Export JSON</h3></div>
+      <div class="p-6">
+        <div class="max-w-sm space-y-4">
+          <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password Admin</label><div class="relative"><input type="password" id="input-sync-password" placeholder="Masukkan password Anda..." autocomplete="new-password" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 pr-12 text-sm text-white focus:border-indigo-500 outline-none transition-all"><button type="button" onclick="togglePw('input-sync-password','eye-sync')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"><svg id="eye-sync" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button></div></div>
+          <div class="flex gap-3"><button id="btn-generate-json" class="btn-primary flex-1 flex items-center justify-center gap-2 py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Generate &amp; Perbarui</button><a id="btn-download-json" href="/data.json" download="data.json" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-sm transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Download</a></div>
+        </div>
+        <div id="sync-logs" class="mt-6 hidden"><div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Log Eksekusi</h3></div><pre id="sync-log-content" class="bg-[#0B0F19] border border-slate-800 rounded-xl p-4 text-[11px] text-emerald-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-48"></pre></div>
+        <div class="mt-6 pt-5 border-t border-slate-800">
+          <button type="button" id="btn-toggle-upload-pw" class="flex items-center gap-2 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>Set Password admin-upload.php<svg id="icon-toggle-pw" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+          <div id="upload-pw-panel" class="hidden mt-4">
+            <form id="form-upload-password" class="space-y-3" autocomplete="off">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Password Baru</label><div class="relative"><input type="password" id="input-upload-pw" placeholder="Min. 8 karakter" autocomplete="new-password" class="w-full bg-[#0B0F19] border border-slate-700 rounded-xl py-2.5 px-4 pr-10 text-sm text-white focus:border-rose-500 outline-none transition-all"><button type="button" data-input-target="input-upload-pw" data-eye-target="eye-upload-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"><svg id="eye-upload-pw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Konfirmasi</label><div class="relative"><input type="password" id="input-upload-pw-confirm" placeholder="Ulangi password" autocomplete="new-password" class="w-full bg-[#0B0F19] border border-slate-700 rounded-xl py-2.5 px-4 pr-10 text-sm text-white focus:border-rose-500 outline-none transition-all"><button type="button" data-input-target="input-upload-pw-confirm" data-eye-target="eye-upload-pw-confirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"><svg id="eye-upload-pw-confirm" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+              </div>
+              <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Verifikasi Password Admin</label><div class="relative"><input type="password" id="input-upload-admin-pw" placeholder="Password login Anda" autocomplete="current-password" class="w-full bg-[#0B0F19] border border-slate-700 rounded-xl py-2.5 px-4 pr-10 text-sm text-white focus:border-indigo-500 outline-none transition-all"><button type="button" data-input-target="input-upload-admin-pw" data-eye-target="eye-upload-admin-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"><svg id="eye-upload-admin-pw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div>
+              <button type="submit" id="btn-save-upload-pw" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 font-bold text-sm transition-all">Simpan Password Upload</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3"><svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p class="text-xs text-amber-300/80 leading-relaxed"><span class="font-bold text-amber-400">Catatan:</span> Upload JSON ke hosting menggunakan <code class="bg-amber-500/10 px-1 rounded" id="upload-url-text">https://namadomain.com/admin-upload.php</code></p></div>
+  </section>
+
+  <!-- Siswa Modal -->
+  <div id="modal-siswa" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl animate-fade-in max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between flex-shrink-0"><h3 class="text-white font-bold text-lg font-outfit" id="modal-siswa-title">Tambah Siswa</h3><button id="modal-siswa-close" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <form id="form-siswa" class="overflow-y-auto flex-1 custom-scrollbar" autocomplete="off">
+        <input type="hidden" id="siswa-id">
+        <div class="p-6 border-b border-slate-800">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Data Pokok Siswa</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">NISN <span class="text-rose-400">*</span></label><input type="text" id="siswa-nisn" required placeholder="0012345678" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Nama Lengkap <span class="text-rose-400">*</span></label><input type="text" id="siswa-nama" required placeholder="Nama lengkap siswa" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Kelas <span class="text-rose-400">*</span></label><input type="text" id="siswa-kelas" required placeholder="XII IPA 1" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Jenis Kelamin</label><select id="siswa-jk" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tempat Lahir</label><input type="text" id="siswa-tempat-lahir" placeholder="Jakarta" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tanggal Lahir</label><input type="date" id="siswa-tanggal-lahir" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all date-input"></div>
+            <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status Kelulusan</label><select id="siswa-status" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select></div>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4"><h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nilai Mata Pelajaran</h4><button type="button" id="btn-add-mapel" class="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-bold transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Mapel</button></div>
+          <div id="nilai-list" class="space-y-2 max-h-52 overflow-y-auto custom-scrollbar pr-1"></div>
+        </div>
+        <div class="p-6 border-t border-slate-800 flex justify-end gap-3"><button type="button" id="modal-siswa-cancel" class="px-6 py-3 rounded-xl font-semibold bg-slate-700 hover:bg-slate-600 text-white transition-all">Batal</button><button type="submit" id="btn-siswa-submit" class="btn-primary">Simpan Data</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div id="modal-import" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in">
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between"><h3 class="text-white font-bold text-lg font-outfit">Import Data Siswa &amp; Nilai (.xlsx)</h3><button id="modal-import-close" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <div class="p-6 space-y-5">
+        <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 text-xs text-indigo-300 leading-relaxed"><p class="font-bold mb-2 text-indigo-200">Format kolom XLSX (baris pertama = header):</p><p class="font-mono">nisn | nama | jenis_kelamin | tempat_lahir | tanggal_lahir | kelas | status</p><p class="font-mono mt-1">+ kolom nilai: <span class="text-emerald-400">Matematika | Bahasa Indonesia | ...</span></p><p class="mt-2 text-slate-400">NISN sama = overwrite. <a id="btn-download-template" href="#" class="text-indigo-400 hover:text-indigo-300 font-bold">&darr; Download Template</a></p></div>
+        <div><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" class="hidden"><button type="button" id="btn-pick-xlsx" class="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-xl p-8 hover:border-indigo-500 hover:bg-indigo-500/5 transition-all text-slate-400 hover:text-indigo-400"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="font-bold text-sm text-white mb-1">Klik untuk pilih file .xlsx</span></button><p id="xlsx-file-name" class="text-xs text-indigo-400 mt-2 font-medium text-center"></p></div>
+        <div id="import-preview" class="hidden"><p class="text-xs text-slate-400">Preview: <span id="import-preview-count"></span> baris ditemukan</p></div>
+        <div class="flex justify-end gap-3"><button id="modal-import-cancel" class="px-6 py-3 rounded-xl font-semibold bg-slate-700 hover:bg-slate-600 text-white">Batal</button><button id="btn-import-submit" class="btn-primary" disabled>Proses Import</button></div>
+        <div id="import-result" class="hidden text-xs font-mono bg-[#0B0F19] border border-slate-800 rounded-xl p-4 text-emerald-400 whitespace-pre-wrap max-h-32 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div id="modal-user" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in">
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between"><h3 class="text-white font-bold text-lg font-outfit" id="modal-user-title">Tambah Pengguna</h3><button id="modal-user-close" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <form id="form-user" class="p-6 space-y-4" autocomplete="off">
+        <input type="hidden" id="user-id">
+        <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Username <span class="text-rose-400">*</span></label><input type="text" id="user-username" required placeholder="Username" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+        <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nama Lengkap <span class="text-rose-400">*</span></label><input type="text" id="user-nama" required placeholder="Nama pengguna" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Role</label><select id="user-role" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="admin">Admin</option><option value="guru" selected>Guru</option><option value="siswa">Siswa</option></select></div>
+          <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Kelas (Guru)</label><input type="text" id="user-kelas" placeholder="XII IPA 1" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+        </div>
+        <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label><div class="relative"><input type="password" id="user-password" placeholder="Kosongkan jika tidak diubah" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 pr-11 text-sm text-white focus:border-indigo-500 outline-none transition-all"><button type="button" onclick="togglePw('user-password','eye-user-pw')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors p-0.5"><svg id="eye-user-pw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button></div></div>
+        <div class="pt-4 flex justify-end gap-3 border-t border-slate-800 mt-2"><button type="button" id="modal-user-cancel" class="px-6 py-3 rounded-xl font-semibold bg-slate-700 hover:bg-slate-600 text-white">Batal</button><button type="submit" class="btn-primary">Simpan Pengguna</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lembaga Modal -->
+  <div id="modal-lembaga" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in">
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between"><h3 class="text-white font-bold text-lg font-outfit" id="modal-lembaga-title">Tambah Lembaga</h3><button id="modal-lembaga-close" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <form id="form-lembaga" class="p-6 space-y-4" autocomplete="off">
+        <input type="hidden" id="lembaga-modal-id">
+        <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nama Lembaga <span class="text-rose-400">*</span></label><input type="text" id="lembaga-modal-nama" required placeholder="SMA Negeri 1 ..." class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+        <div class="pt-2 flex justify-end gap-3 border-t border-slate-800"><button type="button" id="modal-lembaga-cancel" class="px-6 py-3 rounded-xl font-semibold bg-slate-700 hover:bg-slate-600 text-white">Batal</button><button type="submit" id="btn-lembaga-submit" class="btn-primary">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script is:inline src={`/js/dash-util.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-nav.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-siswa.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-crud.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-lembaga.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-history.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-init.js?v=${_v}`}></script>
+
+</BaseLayout>

@@ -1,0 +1,52 @@
+{
+    "name": "kelulusan/pengumuman-app",
+    "description": "Aplikasi Pengumuman Kelulusan Siswa - Astro SSG",
+    "type": "project",
+    "license": "MIT",
+    "config": {
+        "process-timeout": 0
+    },
+    "require": {},
+    "scripts": {
+        "dev": [
+            "@putenv NODE_ENV=development",
+            "npm run dev"
+        ],
+        "php-server": "php -S localhost:8090 -t public -d variables_order=EGPCS",
+
+        "build": [
+            "@putenv NODE_ENV=production",
+            "npm run build"
+        ],
+        "preview": "npm run preview",
+        "migrate": "node scripts/migrate.js",
+        "seed": "node scripts/seed.js",
+        "export-data": "node scripts/export-data.js",
+        "db:setup": [
+            "@migrate",
+            "@seed",
+            "@export-data"
+        ],
+        "generate-pdf": "node scripts/generate-pdf.js",
+        "publish": [
+            "@export-data",
+            "@generate-pdf",
+            "@build"
+        ],
+        "deploy": "npm run deploy",
+        "install-node": "npm install"
+    },
+    "scripts-descriptions": {
+        "dev": "Jalankan Astro dev server (http://localhost:4321) — PHP server harus aktif dulu via php-server",
+        "php-server": "Jalankan PHP built-in server di port 8090 (wajib aktif agar API bekerja saat dev)",
+        "build": "Build production static files ke folder /dist",
+        "preview": "Preview hasil build secara lokal",
+        "migrate": "Buat tabel database (jalankan sekali saja)",
+        "seed": "Isi data dummy ke database untuk testing",
+        "export-data": "Export data MySQL ke public/data.json (NISN ter-hash)",
+        "db:setup": "Setup lengkap: migrate + seed + export (pertama kali)",
+        "publish": "Export data terbaru + build production (workflow deploy)",
+        "deploy": "Generate data JSON, build production, dan buat file zip siap deploy ke hosting",
+        "install-node": "Install Node.js dependencies (npm install)"
+    }
+}

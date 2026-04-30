@@ -1,0 +1,161 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan Anda secara online.' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <script is:inline>
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Google Fonts Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <title>{title}</title>
+  </head>
+  <body class="antialiased">
+    <slot />
+    
+    <!-- Theme Toggle Floating Button -->
+    <button id="theme-toggle" class="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-white/10 dark:bg-black/20 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 hover:scale-110 transition-all shadow-lg">
+      <svg id="theme-icon-dark" class="w-6 h-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      <svg id="theme-icon-light" class="w-6 h-6 block dark:hidden text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </button>
+    <script is:inline>
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" is:inline></script>
+    <script is:inline>
+      window.showToast = function(msg, type = 'info') {
+        const isDark = document.documentElement.classList.contains('dark');
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          background: isDark ? '#1a1a2e' : '#ffffff',
+          color: isDark ? '#e2e8f0' : '#1e293b',
+          customClass: {
+            popup: 'swal-custom-toast',
+            title: 'swal-toast-title'
+          },
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+          }
+        });
+
+        Toast.fire({
+          icon: type,
+          title: msg
+        });
+      };
+
+      window.showConfirm = function(msg, onConfirm) {
+        const isDark = document.documentElement.classList.contains('dark');
+        Swal.fire({
+          title: 'Konfirmasi Tindakan',
+          html: `<p style="font-family: 'Poppins', sans-serif;">${msg}</p>`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#6366f1',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Ya, Lanjutkan!',
+          cancelButtonText: 'Batal',
+          background: isDark ? '#1a1a2e' : '#ffffff',
+          color: isDark ? '#e2e8f0' : '#1e293b',
+          customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            confirmButton: 'swal-custom-btn',
+            cancelButton: 'swal-custom-btn'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            onConfirm();
+          }
+        });
+      };
+    </script>
+    <style is:global>
+      /* SweetAlert2 Toast Custom Styling */
+      .swal-custom-toast {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        font-family: 'Poppins', sans-serif !important;
+        padding: 10px 15px !important;
+        z-index: 99999 !important;
+      }
+      .dark .swal-custom-toast {
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+      }
+      .swal-toast-title {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+      }
+      /* SweetAlert2 Custom Styling */
+      .swal-custom-popup {
+        border-radius: 20px !important;
+        border: 1px solid rgba(99, 102, 241, 0.15) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+      }
+      .dark .swal-custom-popup {
+        border-color: rgba(255,255,255,0.1) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+      }
+      .swal-custom-title {
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 700 !important;
+      }
+      .swal-custom-btn {
+        font-family: 'Poppins', sans-serif !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        padding: 12px 24px !important;
+        transition: all 0.3s ease !important;
+      }
+      .swal2-confirm.swal-custom-btn {
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+      }
+      .swal2-confirm.swal-custom-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6) !important;
+      }
+      .swal2-cancel.swal-custom-btn {
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+      }
+      .swal2-cancel.swal-custom-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5) !important;
+      }
+    </style>
+  </body>
+</html>
