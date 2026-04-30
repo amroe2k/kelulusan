@@ -1,0 +1,69 @@
+# ─── Node.js ───────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# ─── Astro ─────────────────────────────────────────────────────────────────────
+dist/
+.astro/
+
+# ─── PHP / Composer ────────────────────────────────────────────────────────────
+vendor/
+composer.phar
+
+# ─── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+# Simpan .env_origin sebagai referensi template (tanpa nilai sensitif)
+# .env_origin  ← dikecualikan dari ignore agar tetap ada di repo
+
+# ─── Database Credentials ──────────────────────────────────────────────────────
+# PERINGATAN: db.php mengandung kredensial DB, pertimbangkan untuk tidak commit
+# public/api/db.php
+
+# ─── Data Sensitif / Auto-Generated ───────────────────────────────────────────
+public/data.json
+public/users.json
+public/exports/
+
+# ─── Deploy Artifacts ──────────────────────────────────────────────────────────
+*.zip
+deploy-hosting.zip
+
+# ─── PDF Output ────────────────────────────────────────────────────────────────
+public/pdf/*.pdf
+
+# ─── OS Files ──────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ─── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── SSL / Certificates ────────────────────────────────────────────────────────
+ssl/
+*.pem
+*.key
+*.crt
+*.p12
+
+# ─── TypeScript Build Info ─────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Log Files ─────────────────────────────────────────────────────────────────
+*.log
+logs/
