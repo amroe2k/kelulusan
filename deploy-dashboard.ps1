@@ -19,7 +19,15 @@
       - Node.js (untuk npm run build:dashboard)
       - mysqldump (MySQL/XAMPP/Laragon)
       - PowerShell 5.1+ / PowerShell 7+
+
+    PSScriptAnalyzer:
+      AvoidUsingCmdletAliases suppressed — semua 'echo' ada di dalam
+      @'...'@ heredoc (konten bash script, bukan kode PowerShell).
 #>
+
+# PSScriptAnalyzer: 'echo' di file ini adalah konten bash script
+# di dalam @'...'@ string literal -- bukan PowerShell alias.
+# Rule PSAvoidUsingCmdletAliases di-suppress via PSScriptAnalyzerSettings.psd1
 
 param (
     [switch]$SkipBuild,
