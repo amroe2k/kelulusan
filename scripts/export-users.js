@@ -4,20 +4,47 @@
  * Password hash ikut di-export (untuk verifikasi client-side).
  * Data sensitif (NISN asli) TIDAK diexport.
  *
+ * CATATAN: Fitur ini sudah di-rewrite ke pure PHP di
+ *   public/api/generate_json.php  — tidak butuh Node.js di server.
+ * Script ini dipertahankan sebagai alternatif CLI lokal jika dibutuhkan.
+ *
  * LOGIKA:
  *   1. Export semua user dari tabel `users` (admin, guru, siswa yg punya akun manual)
  *   2. AUTO-GENERATE akun untuk siswa yang BELUM punya akun di tabel `users`
  *      → username = NISN, password default = NISN
  *
- * Jalankan: npm run export-users
+ * Jalankan: npm run export-users  (hanya untuk development lokal)
  */
 import mysql from 'mysql2/promise';
 import fs    from 'fs/promises';
 import path  from 'path';
+import { existsSync, readFileSync } from 'fs';
+
+// ─── Baca .env (tanpa library eksternal) ─────────────────────────────────────
+function loadEnv() {
+  const envPath = path.join(process.cwd(), '.env');
+  if (!existsSync(envPath)) return {};
+  const env = {};
+  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const eq = t.indexOf('=');
+    if (eq < 0) continue;
+    let val = t.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1,-1);
+    env[t.slice(0, eq).trim()] = val;
+  }
+  return env;
+}
+const _env = loadEnv();
+const e    = (k, def = '') => _env[k] ?? process.env[k] ?? def;
 
 const DB = {
-  host: 'localhost', user: 'root',
-  password: '@demo1234', database: 'db_kelulusan',
+  host:     e('DB_HOST', 'localhost'),
+  port:     parseInt(e('DB_PORT', '3306')),
+  user:     e('DB_USER', 'root'),
+  password: e('DB_PASS', ''),
+  database: e('DB_NAME', 'db_kelulusan'),
 };
 
 async function exportUsers() {

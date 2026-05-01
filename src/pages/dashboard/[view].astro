@@ -338,7 +338,17 @@ const { view } = Astro.params;
       #dash-sidebar.collapsed .sb-profile-card { padding: 0.5rem; justify-content: center; }
       #dash-sidebar.collapsed .sb-profile-card .min-w-0 { display: none; }
       #dash-sidebar.collapsed #btn-logout { display: none; }
-    </style>
+  
+    /* ===== OVERVIEW ENTRANCE ANIMATION ===== */
+    @keyframes ovFadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ov-card {
+      opacity: 0;
+      animation: ovFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+  </style>
 
   <!-- xlsx-js-style for styled Excel import/export -->
   <script is:inline src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -405,7 +415,7 @@ const { view } = Astro.params;
     </aside>
 
     <!-- ── MAIN CONTENT ── -->
-    <main id="dash-main" class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[url('/noise.png')] bg-repeat bg-opacity-5">
+    <main id="dash-main" class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
       
       <!-- Top Header -->
       <header id="dash-topbar" class="h-20 flex items-center justify-between px-8 lg:px-12 border-b border-slate-800 bg-[#0B0F19]/80 backdrop-blur-md sticky top-0 z-10">
@@ -434,7 +444,7 @@ const { view } = Astro.params;
            <!-- Stats Row -->
            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <!-- Stat Card 1 -->
-              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors relative overflow-hidden group">
+              <div class="ov-card bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors relative overflow-hidden group" style="animation-delay:0ms">
                  <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
                  <div class="flex justify-between items-start mb-4">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Siswa</span>
@@ -443,7 +453,7 @@ const { view } = Astro.params;
                  <h3 class="text-4xl font-black font-outfit text-white" id="ov-total">0</h3>
               </div>
               <!-- Stat Card 2 -->
-              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors relative overflow-hidden group">
+              <div class="ov-card bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-colors relative overflow-hidden group" style="animation-delay:80ms">
                  <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                  <div class="flex justify-between items-start mb-4">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Lulus</span>
@@ -452,7 +462,7 @@ const { view } = Astro.params;
                  <h3 class="text-4xl font-black font-outfit text-white" id="ov-lulus">0</h3>
               </div>
               <!-- Stat Card 3 -->
-              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-rose-500/30 transition-colors relative overflow-hidden group">
+              <div class="ov-card bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-rose-500/30 transition-colors relative overflow-hidden group" style="animation-delay:160ms">
                  <div class="absolute -right-6 -top-6 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all"></div>
                  <div class="flex justify-between items-start mb-4">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tidak Lulus</span>
@@ -461,7 +471,7 @@ const { view } = Astro.params;
                  <h3 class="text-4xl font-black font-outfit text-white" id="ov-tidak">0</h3>
               </div>
               <!-- Stat Card 4 -->
-              <div class="bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-amber-500/30 transition-colors relative overflow-hidden group">
+              <div class="ov-card bg-[#111827] border border-slate-800 rounded-2xl p-6 hover:border-amber-500/30 transition-colors relative overflow-hidden group" style="animation-delay:240ms">
                  <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                  <div class="flex justify-between items-start mb-4">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Rata-Rata Nilai</span>
@@ -472,7 +482,7 @@ const { view } = Astro.params;
            </div>
 
            <!-- Distribution Chart Area -->
-           <div class="bg-[#111827] border border-slate-800 rounded-2xl p-8">
+           <div class="ov-card bg-[#111827] border border-slate-800 rounded-2xl p-8" style="animation-delay:360ms">
               <div class="flex items-center justify-between mb-8">
                  <div>
                     <h4 class="text-white font-bold text-lg font-outfit">Distribusi Kelulusan Per Kelas</h4>
@@ -880,28 +890,28 @@ const { view } = Astro.params;
         <!-- ── VIEW: SISWA-DATA ── -->
         <section id="view-siswa-data" class="hidden space-y-6 animate-fade-in">
            <div class="flex flex-col lg:flex-row justify-between items-center gap-4 bg-[#111827] border border-slate-800 p-4 rounded-2xl">
-              <div class="relative w-full lg:w-96">
+              <div class="relative w-full lg:max-w-md">
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="search" id="search-siswa" placeholder="Cari nama atau NISN..." autocomplete="new-password" spellcheck="false" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white focus:border-indigo-500 outline-none transition-all">
               </div>
-              <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                 <select id="filter-kelas" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Kelas</option></select>
-                 <div id="filter-kompetensi-wrap" class="hidden">
-                   <select id="filter-kompetensi" class="bg-[#0F1523] border border-amber-600/50 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500 cursor-pointer">
+              <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
+                 <select id="filter-kelas" class="w-full sm:w-40 bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer truncate"><option value="">Semua Kelas</option></select>
+                 <div id="filter-kompetensi-wrap" class="hidden w-full sm:w-auto">
+                   <select id="filter-kompetensi" class="w-full sm:w-40 bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer truncate">
                      <option value="">Semua Kompetensi</option>
                    </select>
                  </div>
-                 <select id="filter-status" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Status</option><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select>
-                 <button id="btn-add-siswa" class="admin-only hidden btn-primary !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Siswa</button>
+                 <select id="filter-status" class="w-full sm:w-40 bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer truncate"><option value="">Semua Status</option><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select>
               </div>
            </div>
            <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
-              <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-[#131b2c]">
-                 <div class="flex items-center gap-4"><h4 class="text-white font-bold font-outfit">Tabel Kelulusan</h4><span class="text-xs text-slate-500" id="table-count">Memuat...</span></div>
-                 <div class="flex items-center gap-3">
-                   <div id="selected-count" class="hidden items-center gap-2 px-3 py-1 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold border border-indigo-500/30">0 Dipilih</div>
-                   <button id="btn-export-siswa" class="btn-success !text-white text-xs !py-1.5 !px-3 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export XLSX</button>
-                   <button id="btn-import-siswa" class="admin-only hidden btn-success !text-white text-xs !py-1.5 !px-3 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Import XLSX</button>
+              <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#131b2c]">
+                 <div class="flex items-center gap-4"><h4 class="text-white font-bold font-outfit text-lg">Tabel Kelulusan</h4><span class="text-xs text-slate-500 bg-[#0F1523] px-2.5 py-1 rounded-md border border-slate-800" id="table-count">Memuat...</span></div>
+                 <div class="flex flex-wrap items-center gap-3">
+                   <div id="selected-count" class="hidden items-center gap-2 px-3 py-1.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold border border-indigo-500/30">0 Dipilih</div>
+                   <button id="btn-add-siswa" class="admin-only hidden btn-primary !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Siswa</button>
+                   <button id="btn-export-siswa" class="btn-success !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export XLSX</button>
+                   <button id="btn-import-siswa" class="admin-only hidden btn-success !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Import XLSX</button>
                  </div>
               </div>
               <div class="overflow-x-auto custom-scrollbar flex-1">
@@ -1102,12 +1112,88 @@ const { view } = Astro.params;
   </style>
 
   <!-- VIEW: JSON HISTORY -->
-  <section id="view-json-history" class="hidden space-y-6 animate-fade-in">
-    <div class="flex items-center justify-between"><div><h2 class="text-xl font-black font-outfit text-white">Riwayat JSON</h2><p class="text-xs text-slate-400 mt-0.5">Arsip generate JSON — restore ke DB atau jadikan aktif.</p></div><span class="text-xs text-slate-500 font-mono" id="history-count"></span></div>
+  <section id="view-json-history" class="hidden space-y-4 animate-fade-in">
+    <!-- Header -->
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h2 class="text-xl font-black font-outfit text-white">Riwayat JSON</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Arsip generate JSON — restore ke DB atau jadikan aktif.</p>
+      </div>
+      <span class="text-xs text-slate-500 font-mono" id="history-count"></span>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Search -->
+      <div class="relative flex-1 min-w-[200px]">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+        </svg>
+        <input type="text" id="history-search" placeholder="Cari lembaga atau nama file..."
+          oninput="filterHistoryTable()"
+          class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#111827] border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+      </div>
+      <!-- Filter: Lembaga -->
+      <select id="history-filter-lembaga" onchange="filterHistoryTable()"
+        class="px-3 py-2.5 rounded-xl bg-[#111827] border border-slate-700 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+        <option value="">Semua Lembaga</option>
+      </select>
+      <!-- Filter: Tanggal -->
+      <select id="history-filter-date" onchange="filterHistoryTable()"
+        class="px-3 py-2.5 rounded-xl bg-[#111827] border border-slate-700 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+        <option value="">Semua Waktu</option>
+        <option value="today">Hari Ini</option>
+        <option value="7d">7 Hari Terakhir</option>
+        <option value="30d">30 Hari Terakhir</option>
+        <option value="thismonth">Bulan Ini</option>
+      </select>
+      <!-- Reset -->
+      <button onclick="resetHistoryFilter()"
+        class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-sm font-bold transition-all flex items-center gap-1.5"
+        title="Reset filter">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Reset
+      </button>
+    </div>
+
+    <!-- Bulk Delete Toolbar -->
+    <div id="bulk-delete-toolbar" class="hidden items-center gap-3 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 animate-fade-in">
+      <span class="text-sm font-bold text-rose-400" id="bulk-delete-count">0 dipilih</span>
+      <div class="flex-1"></div>
+      <button onclick="bulkDeleteHistory()"
+        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-400 font-bold text-sm transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        Hapus yang Dipilih
+      </button>
+      <button onclick="_selectedHistoryIds.clear(); document.querySelectorAll('.history-checkbox').forEach(c=>c.checked=false); updateBulkToolbar();"
+        class="px-3 py-2 rounded-xl text-slate-400 hover:text-white text-sm font-bold transition-colors">
+        Batal
+      </button>
+    </div>
+
     <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
       <div class="overflow-x-auto custom-scrollbar">
         <table class="w-full text-left">
-          <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembaga</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">File</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Total</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Lulus</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dibuat</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aksi</th></tr></thead>
+          <thead class="sticky top-0 z-10"><tr class="border-b border-slate-800 bg-[#0F1523]">
+            <!-- Select All -->
+            <th class="px-3 py-4 w-10">
+              <input type="checkbox" id="history-select-all"
+                class="w-4 h-4 rounded border-slate-600 bg-slate-800 cursor-pointer accent-rose-500"
+                onchange="toggleSelectAllHistory(this)" title="Pilih semua">
+            </th>
+            <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembaga</th>
+            <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">File</th>
+            <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Total</th>
+            <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Lulus</th>
+            <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dibuat</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aksi</th>
+          </tr></thead>
+        </table>
+      </div>
+      <div class="overflow-y-auto custom-scrollbar" style="max-height: calc(7 * 57px)">
+        <table class="w-full text-left">
           <tbody id="history-table" class="divide-y divide-slate-800/50"></tbody>
         </table>
       </div>
@@ -1207,7 +1293,7 @@ const { view } = Astro.params;
             Refresh
           </button>
         </div>
-        <div id="archive-list" class="space-y-2">
+        <div id="archive-list" class="space-y-2 overflow-y-auto custom-scrollbar" style="max-height: calc(6 * 52px); padding-right: 2px;">
           <p class="text-xs text-slate-500 text-center py-4">Memuat daftar arsip...</p>
         </div>
       </div>
@@ -1298,7 +1384,7 @@ const { view } = Astro.params;
             Buat Bundle ZIP
           </button>
         </div>
-        <div id="bundle-result" class="hidden">
+          <div id="bundle-result" class="hidden">
           <div class="bg-fuchsia-500/5 border border-fuchsia-500/20 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 flex items-center justify-center flex-shrink-0">
@@ -1309,10 +1395,14 @@ const { view } = Astro.params;
                 <p id="bundle-file-meta" class="text-[10px] text-slate-500 mt-0.5"></p>
               </div>
             </div>
-            <a id="bundle-download-link" href="#" download class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/30 font-bold text-sm transition-all flex-shrink-0">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Unduh Bundle
-            </a>
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Badge build mode (diisi oleh JS) -->
+              <div id="bundle-build-badge" class="hidden"></div>
+              <a id="bundle-download-link" href="#" download class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/30 font-bold text-sm transition-all flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Unduh Bundle
+              </a>
+            </div>
           </div>
           <div class="mt-3 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-3">
             <p class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">📦 Cara Deploy</p>
@@ -1326,7 +1416,10 @@ const { view } = Astro.params;
         </div>
         <div class="flex items-start gap-2.5 bg-slate-100 dark:bg-slate-800/30 rounded-xl p-3">
           <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <p class="text-xs text-slate-600 dark:text-slate-500 leading-relaxed">Bundle menggunakan folder <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">/dist</code>. Jika ada perubahan tampilan, jalankan <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">npm run build</code> dulu sebelum membuat bundle.</p>
+          <p class="text-xs text-slate-600 dark:text-slate-500 leading-relaxed">
+            Bundle menggunakan <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-emerald-600 dark:text-emerald-400">/dist/frontend/</code> jika tersedia (hanya portal siswa), atau <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">/dist/</code> sebagai fallback.
+            Jalankan <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">npm run build:frontend</code> untuk bundle optimal tanpa file dashboard.
+          </p>
         </div>
       </div>
     </div>

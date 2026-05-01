@@ -1,5 +1,60 @@
 // ── SYNC STATUS INDICATOR ─────────────────────────────────────────────────
 
+/**
+ * renderBuildBadge — Tampilkan badge status build frontend di panel sync.
+ * @param {object} build  - Objek dari sync-status.php: { status, info, dist_path }
+ * @param {boolean} isDark
+ */
+function renderBuildBadge(build, isDark) {
+  const status   = build?.status || 'none';
+  const info     = build?.info   || '';
+  const distPath = build?.dist_path || '';
+
+  const cfgMap = {
+    frontend: {
+      dot:   'bg-emerald-400',
+      badge: isDark
+        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+        : 'bg-emerald-50 border-emerald-200 text-emerald-700',
+      label: '⚡ Frontend Build',
+      tip:   `dist/frontend/ — hanya portal siswa (optimal untuk bundle)`,
+    },
+    legacy: {
+      dot:   'bg-amber-400 animate-pulse',
+      badge: isDark
+        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+        : 'bg-amber-50 border-amber-200 text-amber-700',
+      label: '⚠ Build Lengkap (legacy)',
+      tip:   `dist/ — mengandung semua halaman termasuk dashboard. Jalankan npm run build:frontend`,
+    },
+    none: {
+      dot:   'bg-rose-500 animate-pulse',
+      badge: isDark
+        ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+        : 'bg-rose-50 border-rose-200 text-rose-700',
+      label: '✗ Belum Ada Build',
+      tip:   'Jalankan npm run build:frontend sebelum membuat bundle.',
+    },
+  };
+
+  const c = cfgMap[status] || cfgMap.none;
+  const metaText = info
+    ? `<span class="opacity-60 font-normal">${escHtml(info)}</span>`
+    : '';
+  const pathText = distPath
+    ? `<code class="font-mono text-[9px] opacity-50 ml-1">${escHtml(distPath)}</code>`
+    : '';
+
+  return `
+    <div class="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl border ${c.badge} text-[10px] font-bold" title="${escHtml(c.tip)}">
+      <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}"></span>
+      <span>Build Frontend:</span>
+      <span class="font-black">${c.label}</span>
+      ${metaText}
+      ${pathText}
+    </div>`;
+}
+
 async function loadSyncStatus() {
   const body = $('sync-status-body');
   const dot  = $('sync-status-dot');
@@ -291,5 +346,9 @@ function renderSyncStatus(d) {
           Generate Sekarang
         </button>` : ''}
     </div>
+
+    <!-- Build Status Badge -->
+    ${renderBuildBadge(d.build, isDark)}
+
     ${changesHtml}`;
 }

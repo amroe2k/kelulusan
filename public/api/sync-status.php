@@ -164,6 +164,34 @@ if ($jsonGeneratedAt) {
     }
 }
 
+// ── 7. Deteksi status build frontend ─────────────────────────────────
+// Cek ketersediaan dist/frontend/ (build terpisah) vs dist/ (build legacy)
+$rootDir         = realpath(__DIR__ . '/../../');
+$distFrontendDir = $rootDir . '/dist/frontend';
+$distLegacyDir   = $rootDir . '/dist';
+
+$buildStatus = 'none'; // 'frontend' | 'legacy' | 'none'
+$buildInfo   = null;
+
+if (is_dir($distFrontendDir) && file_exists($distFrontendDir . '/index.html')) {
+    $buildStatus = 'frontend';
+    // Hitung umur build dari mtime index.html
+    $mtime = filemtime($distFrontendDir . '/index.html');
+    $diff  = time() - $mtime;
+    if ($diff < 60)        $buildInfo = 'dibangun ' . $diff . ' detik lalu';
+    elseif ($diff < 3600)  $buildInfo = 'dibangun ' . round($diff/60) . ' menit lalu';
+    elseif ($diff < 86400) $buildInfo = 'dibangun ' . round($diff/3600) . ' jam lalu';
+    else                   $buildInfo = 'dibangun ' . round($diff/86400) . ' hari lalu';
+} elseif (is_dir($distLegacyDir) && file_exists($distLegacyDir . '/index.html')) {
+    $buildStatus = 'legacy';
+    $mtime = filemtime($distLegacyDir . '/index.html');
+    $diff  = time() - $mtime;
+    if ($diff < 60)        $buildInfo = 'dibangun ' . $diff . ' detik lalu';
+    elseif ($diff < 3600)  $buildInfo = 'dibangun ' . round($diff/60) . ' menit lalu';
+    elseif ($diff < 86400) $buildInfo = 'dibangun ' . round($diff/3600) . ' jam lalu';
+    else                   $buildInfo = 'dibangun ' . round($diff/86400) . ' hari lalu';
+}
+
 echo json_encode([
     'success'          => true,
     'sync_status'      => $syncStatus,
@@ -187,4 +215,10 @@ echo json_encode([
     'changes_count'    => count($statusChanges),
     'assets'           => $assetComparison,
     'asset_out_of_sync'=> $assetOutOfSync,
+    // ── Info build frontend ──────────────────────────────────────────
+    'build' => [
+        'status'       => $buildStatus,   // 'frontend' | 'legacy' | 'none'
+        'info'         => $buildInfo,     // "dibangun X menit lalu" | null
+        'dist_path'    => $buildStatus === 'frontend' ? '/dist/frontend' : ($buildStatus === 'legacy' ? '/dist' : null),
+    ],
 ]);

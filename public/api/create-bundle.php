@@ -76,9 +76,25 @@ if (!file_exists($dataJsonSrc)) {
 }
 
 // ── Tentukan folder dist ──────────────────────────────────────────────────
-$distDir = dirname(__DIR__, 2) . '/dist';
-if (!is_dir($distDir)) {
-    echo json_encode(['success' => false, 'error' => 'Folder /dist belum ada. Jalankan "npm run build" terlebih dahulu.']);
+// Prioritas: dist/frontend/ (build terpisah) → dist/ (build lengkap legacy)
+$rootDir          = dirname(__DIR__, 2);
+$distFrontendDir  = $rootDir . '/dist/frontend';
+$distLegacyDir    = $rootDir . '/dist';
+
+$buildMode = 'none';
+if (is_dir($distFrontendDir) && file_exists($distFrontendDir . '/index.html')) {
+    // ✅ Build terpisah tersedia — gunakan dist/frontend/ (hanya portal siswa)
+    $distDir   = $distFrontendDir;
+    $buildMode = 'frontend';
+} elseif (is_dir($distLegacyDir) && file_exists($distLegacyDir . '/index.html')) {
+    // ⚠️ Fallback ke dist/ (build lengkap — termasuk dashboard)
+    $distDir   = $distLegacyDir;
+    $buildMode = 'legacy';
+} else {
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Folder build belum ada. Jalankan "npm run build:frontend" untuk build terpisah, atau "npm run build" untuk build lengkap.',
+    ]);
     exit;
 }
 
@@ -87,7 +103,7 @@ $bundlesDir = dirname(__DIR__) . '/bundles/';
 if (!is_dir($bundlesDir)) mkdir($bundlesDir, 0755, true);
 
 // ── Nama file ZIP output ──────────────────────────────────────────────────
-$date      = date('Y-m-d');
+$date      = date('Ymd-His');
 $zipName   = "bundle-{$slug}-{$date}.zip";
 $zipPath   = $bundlesDir . $zipName;
 
@@ -198,12 +214,20 @@ $zip->close();
 // ── Hitung ukuran ─────────────────────────────────────────────────────────
 $sizeKb = round(filesize($zipPath) / 1024);
 
+// Pesan info build mode untuk ditampilkan di UI
+$buildModeInfo = $buildMode === 'frontend'
+    ? null  // mode benar, tidak perlu pesan
+    : 'Bundle menggunakan /dist/ (build lengkap). Jalankan "npm run build:frontend" untuk bundle yang lebih bersih (tanpa file dashboard).';
+
 echo json_encode([
-    'success'     => true,
-    'zip_name'    => $zipName,
-    'zip_url'     => '/bundles/' . $zipName,
-    'size_kb'     => $sizeKb,
-    'total_files' => $totalFiles + 1, // +1 untuk data.json
-    'lembaga'     => $lembaga['nama'],
-    'data_json'   => basename($fileName),
+    'success'          => true,
+    'zip_name'         => $zipName,
+    'zip_url'          => '/bundles/' . $zipName,
+    'size_kb'          => $sizeKb,
+    'total_files'      => $totalFiles + 1, // +1 untuk data.json
+    'lembaga'          => $lembaga['nama'],
+    'data_json'        => basename($fileName),
+    'build_mode'       => $buildMode,       // 'frontend' | 'legacy'
+    'build_mode_info'  => $buildModeInfo,   // null jika benar, string jika perlu warning
+    'dist_used'        => str_replace($rootDir, '', $distDir), // '/dist/frontend' atau '/dist'
 ]);

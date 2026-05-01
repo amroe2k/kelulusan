@@ -1,26 +1,124 @@
 // ── RIWAYAT JSON ─────────────────────────────────────────────────────────
 
+// State
+let _selectedHistoryIds = new Set();
+let _allHistoryRows     = []; // cache semua data dari API
+
 async function renderJsonHistory() {
   const tbody = $('history-table');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 text-sm animate-pulse">Memuat riwayat...</td></tr>';
+  _selectedHistoryIds.clear();
+  updateBulkToolbar();
+  tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-slate-500 text-sm animate-pulse">Memuat riwayat...</td></tr>';
 
   try {
     const r = await fetch('/api/json-history.php');
     const d = await r.json();
-    const rows = d.data || [];
-    renderHistoryTable(rows);
-    $('history-count').textContent = `${rows.length} entri`;
+
+    // Cache + sortir terbaru di atas
+    _allHistoryRows = (d.data || []).sort((a, b) =>
+      new Date(b.generated_at) - new Date(a.generated_at)
+    );
+
+    // Populate dropdown lembaga (unik)
+    populateLembagaDropdown(_allHistoryRows);
+
+    // Reset filter & render
+    filterHistoryTable();
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-rose-400 text-sm">Gagal memuat riwayat.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-rose-400 text-sm">Gagal memuat riwayat.</td></tr>';
   }
+}
+
+// ── Populate dropdown lembaga ─────────────────────────────────────────────────
+function populateLembagaDropdown(rows) {
+  const sel = document.getElementById('history-filter-lembaga');
+  if (!sel) return;
+
+  // Kumpulkan lembaga unik
+  const seen = new Map();
+  rows.forEach(r => {
+    if (!seen.has(r.lembaga_id)) seen.set(r.lembaga_id, r.lembaga_nama || r.lembaga_slug || r.lembaga_id);
+  });
+
+  // Rebuild options (pertahankan pilihan saat ini)
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Semua Lembaga</option>';
+  seen.forEach((nama, id) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = nama;
+    if (id === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Filter & Search ───────────────────────────────────────────────────────────
+function filterHistoryTable() {
+  const q          = (document.getElementById('history-search')?.value || '').toLowerCase().trim();
+  const lembagaId  = document.getElementById('history-filter-lembaga')?.value || '';
+  const dateRange  = document.getElementById('history-filter-date')?.value   || '';
+
+  const now   = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const filtered = _allHistoryRows.filter(row => {
+    // ── Search ──
+    if (q) {
+      const haystack = [row.lembaga_nama, row.lembaga_slug, row.file_name].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+
+    // ── Filter Lembaga ──
+    if (lembagaId && row.lembaga_id !== lembagaId) return false;
+
+    // ── Filter Tanggal ──
+    if (dateRange) {
+      const rowDate = new Date(row.generated_at);
+      if (dateRange === 'today') {
+        if (rowDate < today) return false;
+      } else if (dateRange === '7d') {
+        const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - 7);
+        if (rowDate < cutoff) return false;
+      } else if (dateRange === '30d') {
+        const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - 30);
+        if (rowDate < cutoff) return false;
+      } else if (dateRange === 'thismonth') {
+        const cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (rowDate < cutoff) return false;
+      }
+    }
+
+    return true;
+  });
+
+  renderHistoryTable(filtered);
+
+  // Update counter: "5 entri" atau "3 dari 8 entri"
+  const countEl = $('history-count');
+  if (countEl) {
+    const total = _allHistoryRows.length;
+    countEl.textContent = filtered.length === total
+      ? `${total} entri`
+      : `${filtered.length} dari ${total} entri`;
+  }
+}
+
+function resetHistoryFilter() {
+  const search   = document.getElementById('history-search');
+  const lembaga  = document.getElementById('history-filter-lembaga');
+  const dateEl   = document.getElementById('history-filter-date');
+  if (search)  search.value  = '';
+  if (lembaga) lembaga.value = '';
+  if (dateEl)  dateEl.value  = '';
+  filterHistoryTable();
 }
 
 function renderHistoryTable(rows) {
   const tbody = $('history-table');
   if (!tbody) return;
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center">
+    tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-12 text-center">
       <div class="flex flex-col items-center gap-3 text-slate-600">
         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <p class="text-sm">Belum ada riwayat generate JSON.</p>
@@ -39,7 +137,13 @@ function renderHistoryTable(rows) {
     const pct      = total ? Math.round(lulus/total*100) : 0;
     const fileOk   = row.file_exists;
 
-    return `<tr class="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors" data-id="${row.id}">
+    return `<tr class="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors group/row" data-id="${row.id}">
+      <!-- Checkbox -->
+      <td class="px-3 py-4 w-10">
+        <input type="checkbox" data-history-id="${row.id}"
+          class="history-checkbox w-4 h-4 rounded border-slate-600 bg-slate-800 text-rose-500 cursor-pointer accent-rose-500"
+          onchange="onHistoryCheckbox(this)">
+      </td>
       <td class="px-4 py-4">
         <div>
           <p class="text-white font-bold text-sm">${escHtml(row.lembaga_nama||'-')}</p>
@@ -96,6 +200,87 @@ function renderHistoryTable(rows) {
   }).join('');
 }
 
+// ── Checkbox Handling ─────────────────────────────────────────────────────────
+
+function onHistoryCheckbox(el) {
+  const id = el.dataset.historyId;
+  if (el.checked) _selectedHistoryIds.add(id);
+  else _selectedHistoryIds.delete(id);
+  updateBulkToolbar();
+
+  // Sync select-all state
+  const all = document.querySelectorAll('.history-checkbox');
+  const selectAllEl = $('history-select-all');
+  if (selectAllEl) {
+    selectAllEl.checked = all.length > 0 && _selectedHistoryIds.size === all.length;
+    selectAllEl.indeterminate = _selectedHistoryIds.size > 0 && _selectedHistoryIds.size < all.length;
+  }
+}
+
+function toggleSelectAllHistory(el) {
+  const checkboxes = document.querySelectorAll('.history-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = el.checked;
+    const id = cb.dataset.historyId;
+    if (el.checked) _selectedHistoryIds.add(id);
+    else _selectedHistoryIds.delete(id);
+  });
+  updateBulkToolbar();
+}
+
+function updateBulkToolbar() {
+  const toolbar = $('bulk-delete-toolbar');
+  const counter = $('bulk-delete-count');
+  if (!toolbar) return;
+  const count = _selectedHistoryIds.size;
+  if (count > 0) {
+    toolbar.classList.remove('hidden');
+    if (counter) counter.textContent = `${count} dipilih`;
+  } else {
+    toolbar.classList.add('hidden');
+  }
+}
+
+// ── Bulk Delete ───────────────────────────────────────────────────────────────
+
+async function bulkDeleteHistory() {
+  const ids = [..._selectedHistoryIds];
+  if (!ids.length) return;
+
+  const c = await Swal.fire({
+    title: 'Hapus Massal?',
+    html: `<span class="text-rose-400 font-bold">${ids.length} entri</span> riwayat akan dihapus beserta file arsip-nya.<br><small class="text-slate-500">Arsip terakhir per lembaga akan dilewati untuk keamanan.</small>`,
+    icon: 'warning', showCancelButton: true,
+    confirmButtonText: `Hapus ${ids.length} Entri`, cancelButtonText: 'Batal',
+    background: '#111827', color: '#e2e8f0', confirmButtonColor: '#ef4444'
+  });
+  if (!c.isConfirmed) return;
+
+  showToast('Menghapus...', 'info');
+
+  try {
+    const r   = await fetch('/api/json-history.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'bulk_delete', ids })
+    });
+    const res = await r.json();
+
+    if (res.success) {
+      let msg = `✓ ${res.deleted} entri dihapus`;
+      if (res.skipped > 0) msg += ` · ${res.skipped} dilewati (arsip terakhir)`;
+      showToast(msg, res.skipped > 0 ? 'warning' : 'success');
+      _selectedHistoryIds.clear();
+      await renderJsonHistory();
+    } else {
+      showToast(res.error || 'Gagal menghapus.', 'error');
+    }
+  } catch(e) {
+    showToast('Terjadi kesalahan jaringan.', 'error');
+  }
+}
+
+// ── Aksi Individual ───────────────────────────────────────────────────────────
+
 async function setActiveJson(fileName) {
   const c = await Swal.fire({
     title: 'Jadikan Aktif?',
@@ -126,7 +311,6 @@ async function restoreJson(id, lembagaId, lembagaNama, fileName) {
   });
   if (!c.isConfirmed) return;
 
-  const btn = document.querySelector(`[data-id="${id}"] .restore-btn`);
   showToast('Restoring data...','info');
 
   const r   = await fetch('/api/json-history.php', {
@@ -138,7 +322,6 @@ async function restoreJson(id, lembagaId, lembagaNama, fileName) {
   if (res.success) {
     showToast(`✓ ${res.imported} siswa berhasil direstore ke ${lembagaNama}! Menyinkronkan JSON...`, 'success');
 
-    // ── Auto-regenerate data.json + bundle-config.js setelah restore ──
     try {
       const syncRes = await (await fetch('/api/sync-data.php', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }

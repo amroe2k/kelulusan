@@ -17,12 +17,11 @@ composer.phar
 .env
 .env.local
 .env.*.local
-# Simpan .env_origin sebagai referensi template (tanpa nilai sensitif)
-# .env_origin  ← dikecualikan dari ignore agar tetap ada di repo
+# .env.example  ← JANGAN ignore, ini template aman untuk di-commit ke repo
+# .env_origin   ← template lama, tetap di-commit
 
-# ─── Database Credentials ──────────────────────────────────────────────────────
-# PERINGATAN: db.php mengandung kredensial DB, pertimbangkan untuk tidak commit
-# public/api/db.php
+# ─── Deploy Bundles ──────────────────────────────────────────────────────
+deploy/
 
 # ─── Data Sensitif / Auto-Generated ───────────────────────────────────────────
 public/data.json

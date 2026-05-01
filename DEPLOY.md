@@ -2,13 +2,15 @@
 
 Dokumen ini menjelaskan dua jalur deploy yang tersedia:
 
-| Jalur | Deskripsi | Target |
-|---|---|---|
-| **[A] Frontend Statis** | Portal siswa (cek kelulusan + download SKL) | Shared Hosting / cPanel / Niagahoster |
-| **[B] Dashboard Admin** | Panel admin lengkap + database | VPS / Server dengan PHP & MySQL |
+| Jalur | Deskripsi | Target | Build Command |
+|---|---|---|---|
+| **[A] Frontend Statis** | Portal siswa (cek kelulusan + download SKL) | Shared Hosting / cPanel / Niagahoster | `npm run build:frontend` |
+| **[B] Dashboard Admin** | Panel admin lengkap + database | VPS / Server dengan PHP & MySQL | `npm run build:dashboard` |
 
 > **Arsitektur Singkat:**  
 > Dashboard admin (VPS) → Generate `data.json` → Upload ke hosting → Portal siswa membaca `data.json`
+
+> 💡 **Build terpisah tersedia**: Gunakan `npm run build:frontend` untuk hanya membangun portal publik (`dist/frontend/`), atau `npm run build:dashboard` untuk hanya dashboard admin (`dist/dashboard/`). Lihat **[💻 Panduan Build Terpisah](#-build-terpisah-frontend--dashboard)** di bawah.
 
 ---
 
@@ -22,7 +24,7 @@ Setelah build selesai, server hanya butuh **PHP + MySQL**.
 | Dashboard UI (`/dist`) | ❌ Tidak | File statis HTML/JS/CSS hasil build |
 | PHP API (`/api/*.php`) | ❌ Tidak | Pure PHP + MySQL |
 | Autentikasi & CRUD | ❌ Tidak | Dihandle PHP |
-| Generate JSON | ❌ Tidak | `sync-data.php` — Pure PHP |
+| Generate JSON | ❌ Tidak | `generate_json.php` v3 — Pure PHP (Node tidak diperlukan) |
 | SKL Preview & PDF | ❌ Tidak | Render di browser (client-side) |
 | Build Astro | ✅ **Sekali** | Jalankan `npm run build` di komputer lokal |
 | Migrasi Database | ✅ **Sekali** | `npm run migrate` di lokal, atau import SQL |
@@ -32,9 +34,10 @@ Setelah build selesai, server hanya butuh **PHP + MySQL**.
 ```
 Komputer Lokal (ada Node.js)       →    VPS/Hosting (cukup PHP + MySQL)
 ────────────────────────────────────────────────────────────────────────
-npm run migrate     # Setup DB       →   Import schema.sql via phpMyAdmin
-npm run build       # Build Astro    →   Upload /dist ke server
-npm run export-data # Export JSON    →   Upload data.json ke server
+  npm run migrate           # Setup DB   →  Import schema.sql via phpMyAdmin
+  npm run build:frontend    # Build portal publik   →  Upload /dist/frontend/ ke hosting
+  npm run build:dashboard   # Build admin dashboard →  Upload /dist/dashboard/ ke VPS
+  npm run export-data       # Export JSON           →  Upload data.json ke server
 ```
 
 ---
@@ -52,6 +55,86 @@ npm run export-data # Export JSON    →   Upload data.json ke server
 - **MySQL 8.0+** atau **MariaDB 10.6+**
 - **Nginx** atau **Apache** sebagai web server
 - **Node.js 18+** — hanya di mesin build/lokal, **tidak wajib di VPS**
+
+---
+
+## 💻 Build Terpisah: Frontend & Dashboard
+
+Sejak versi terbaru, build dapat dilakukan secara **terpisah** antara portal siswa dan admin dashboard — menghasilkan output yang lebih bersih dan deployment yang lebih aman.
+
+### Perbandingan Mode Build
+
+| Mode | Command | Output | Isi |
+|---|---|---|---|
+| Build standar (semua) | `npm run build` | `dist/` | Semua halaman |
+| Build frontend saja | `npm run build:frontend` | `dist/frontend/` | Portal siswa + login |
+| Build dashboard saja | `npm run build:dashboard` | `dist/dashboard/` | Semua halaman `/dashboard/*` |
+| Build keduanya | `npm run build:all` | `dist/frontend/` + `dist/dashboard/` | Keduanya terpisah |
+
+### Cara Kerja
+
+Script `scripts/build-split.mjs` menangani pemisahan secara otomatis:
+
+```
+npm run build:frontend
+  │
+  ├─ Sembunyikan sementara: src/pages/dashboard/
+  ├─ Jalankan: astro build --config astro.config.frontend.mjs
+  ├─ Output: dist/frontend/  (hanya index.html + login/)
+  └─ Kembalikan: src/pages/dashboard/  ← selalu dikembalikan, bahkan jika error
+```
+
+```
+npm run build:dashboard
+  │
+  ├─ Sembunyikan sementara: src/pages/index.astro + login.astro
+  ├─ Jalankan: astro build --config astro.config.dashboard.mjs
+  ├─ Output: dist/dashboard/  (hanya halaman /dashboard/*)
+  └─ Kembalikan: src/pages/index.astro + login.astro
+```
+
+### Keuntungan Build Terpisah
+
+| Keuntungan | Keterangan |
+|---|---|
+| **Keamanan** | File dashboard tidak ikut ke hosting frontend publik |
+| **Ukuran lebih kecil** | Tiap bundle hanya berisi halaman yang diperlukan |
+| **Deploy lebih cepat** | Update frontend → hanya rebuild frontend, tidak perlu rebuild dashboard |
+| **Pemisahan infrastruktur** | Frontend di shared hosting, dashboard di VPS — build-nya pun terpisah |
+
+### Contoh Workflow Lengkap
+
+```bash
+# ── Pertama kali setup ──────────────────────────────────────────
+npm run export-data          # Export data.json dari DB
+
+# Build frontend untuk shared hosting
+npm run build:frontend       # → dist/frontend/
+
+# Build dashboard untuk VPS
+npm run build:dashboard      # → dist/dashboard/
+
+# ── Update data saja (tanpa perubahan kode) ────────────────────
+npm run export-data          # Export ulang data.json
+# Tidak perlu rebuild! Cukup upload data.json terbaru
+
+# ── Update kode frontend saja ──────────────────────────────────
+npm run build:frontend       # Hanya rebuild frontend
+# Upload dist/frontend/ ke shared hosting
+
+# ── Update kode dashboard saja ────────────────────────────────
+npm run build:dashboard      # Hanya rebuild dashboard
+# Upload dist/dashboard/ ke VPS
+```
+
+### File Konfigurasi
+
+| File | Fungsi |
+|---|---|
+| `astro.config.mjs` | Config Astro default (build standar — semua halaman ke `dist/`) |
+| `astro.config.frontend.mjs` | Config build frontend saja (`outDir: dist/frontend`) |
+| `astro.config.dashboard.mjs` | Config build dashboard saja (`outDir: dist/dashboard`) |
+| `scripts/build-split.mjs` | Engine script yang mengorkestrasi proses build terpisah |
 
 ---
 
@@ -155,14 +238,25 @@ Di **komputer lokal** (yang ada Node.js):
 # 1. Export data terbaru dari database ke data.json
 npm run export-data
 
-# 2. Build Astro ke folder /dist
-npm run build
-
-# Atau sekaligus (export + build + zip):
-npm run deploy
+# 2. Build HANYA halaman frontend publik → dist/frontend/
+npm run build:frontend
 ```
 
-Setelah selesai, folder `/dist` berisi semua file statis siap upload.
+> Setelah selesai, folder `/dist/frontend/` berisi semua file statis siap upload.  
+> Folder ini **tidak mengandung** file dashboard admin.
+
+<details>
+<summary>Atau build semua sekaligus (jika ingin keduanya)</summary>
+
+```bash
+# Build semua halaman ke satu folder /dist (cara lama)
+npm run build
+
+# Build keduanya terpisah di satu langkah
+npm run build:all
+```
+
+</details>
 
 ---
 
@@ -172,12 +266,12 @@ Struktur yang perlu diupload ke `public_html/`:
 
 ```
 public_html/
-├── index.html              ← dari /dist/index.html
-├── _astro/                 ← dari /dist/_astro/ (JS/CSS bundle)
-├── favicon.svg             ← dari /dist/
+├── index.html              ← dari /dist/frontend/index.html
+├── _astro/                 ← dari /dist/frontend/_astro/ (JS/CSS bundle)
+├── favicon.svg             ← dari /dist/frontend/
 ├── data.json               ← dari /public/data.json  ⚠️ PENTING
 ├── admin-upload.php        ← dari /public/admin-upload.php  ⚠️ PENTING
-└── (file statis lainnya dari /dist/)
+└── (file statis lainnya dari /dist/frontend/)
 ```
 
 > ⚠️ **`data.json` wajib ada** — Portal tidak akan berfungsi tanpanya.  
@@ -324,19 +418,19 @@ npm run migrate           # Buat struktur tabel di DB lokal dulu
 # Atau: generate SQL dump manual
 mysqldump -u root db_kelulusan --no-data > schema.sql
 
-# 3. Build frontend Astro
-npm run build             # → menghasilkan folder /dist
+# 3. Build KHUSUS dashboard admin → dist/dashboard/
+npm run build:dashboard
 
 # 4. Export data
 npm run export-data       # → public/data.json
 
 # 5. Zip semua yang dibutuhkan server
 # Yang perlu diupload:
-#   - /dist/          (hasil build)
-#   - /public/api/    (PHP backend)
+#   - /dist/dashboard/  (hasil build dashboard)
+#   - /public/api/      (PHP backend)
 #   - /public/admin-upload.php
 #   - /public/data.json
-#   - schema.sql      (untuk import ke MySQL VPS)
+#   - schema.sql        (untuk import ke MySQL VPS)
 ```
 
 ---
@@ -346,8 +440,8 @@ npm run export-data       # → public/data.json
 **Via SCP (dari lokal ke VPS):**
 
 ```bash
-# Upload folder dist ke VPS
-scp -r dist/ user@ip-vps:/var/www/kelulusan/
+# Upload folder dist/dashboard ke VPS (khusus dashboard)
+scp -r dist/dashboard/ user@ip-vps:/var/www/kelulusan/dist/
 
 # Upload folder public/api/
 scp -r public/api/ user@ip-vps:/var/www/kelulusan/public/
@@ -392,27 +486,52 @@ mysql -u kelulusan_user -p db_kelulusan < ~/schema.sql
 
 ---
 
-### Langkah B5 — Konfigurasi `db.php` di VPS
+### Langkah B5 — Konfigurasi Database via `.env`
 
-Edit `public/api/db.php` di VPS:
+Sejak versi terbaru, kredensial database dibaca dari file `.env` — **jangan edit `db.php` langsung**.
 
 ```bash
-sudo nano /var/www/kelulusan/public/api/db.php
+# Buat file .env di root project VPS
+nano /var/www/kelulusan/.env
 ```
 
-```php
-<?php
-// Sesuaikan dengan kredensial MySQL di VPS
-$host     = 'localhost';
-$dbname   = 'db_kelulusan';
-$username = 'kelulusan_user';
-$password = 'password_kuat_db';
+```ini
+# /var/www/kelulusan/.env
+# ──────────────────────────────────────
+#  JANGAN commit file ini ke Git!
+# ──────────────────────────────────────
 
-$pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-]);
+# Database MySQL
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=db_kelulusan
+DB_USER=kelulusan_user
+DB_PASS=password_kuat_db
+DB_CHARSET=utf8mb4
+
+# Aplikasi
+APP_ENV=production
+APP_URL=https://admin.namadomain.com
+
+# Session
+SESSION_NAME=kls_session
+
+# JSON Retention (max arsip per lembaga)
+JSON_RETENTION_LIMIT=5
 ```
+
+```bash
+# Proteksi file .env agar tidak bisa diakses via browser
+chmod 640 /var/www/kelulusan/.env
+chown www-data:www-data /var/www/kelulusan/.env
+```
+
+> 💡 Template tersedia di `.env.example` — salin dan sesuaikan nilainya.
+
+> ⚠️ Pastikan Nginx **memblokir akses langsung ke `.env`**:
+> ```nginx
+> location ~ /\.env { deny all; return 404; }
+> ```
 
 ---
 
@@ -537,16 +656,16 @@ sudo certbot renew --dry-run    # Test auto-renewal
 Karena tidak ada `npm run seed`, buat akun admin langsung via MySQL:
 
 ```bash
-# Generate bcrypt hash dulu (jalankan di lokal / PHP CLI)
-php -r "echo password_hash('password_baru_anda', PASSWORD_BCRYPT) . PHP_EOL;"
-# Output: $2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# Generate SHA-256 hash password (sesuai sistem autentikasi portal)
+php -r "echo hash('sha256', 'password_baru_anda') . PHP_EOL;"
+# Output: a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3
 
 # Masuk MySQL di VPS
 sudo mysql db_kelulusan
 
-# Insert akun admin
-INSERT INTO users (username, password, role)
-VALUES ('admin', '$2y$10$HASH_YANG_DIHASILKAN_DI_ATAS', 'admin');
+# Insert akun admin (ganti HASH_DI_ATAS dengan output perintah php di atas)
+INSERT INTO users (id, username, password_hash, nama, role, aktif)
+VALUES (UUID(), 'admin', 'HASH_DI_ATAS', 'Administrator', 'admin', 1);
 EXIT;
 ```
 
@@ -580,10 +699,12 @@ Jika ada update tampilan/fitur (yang memerlukan rebuild Astro):
 # Di komputer lokal — pull update & build ulang
 git pull
 npm install
-npm run build
 
-# Upload ulang folder /dist ke VPS
-scp -r dist/ user@ip-vps:/var/www/kelulusan/
+# Build HANYA dashboard (lebih cepat dari build penuh)
+npm run build:dashboard
+
+# Upload ulang folder /dist/dashboard/ ke VPS
+scp -r dist/dashboard/ user@ip-vps:/var/www/kelulusan/dist/
 ```
 
 > **Data siswa di database tidak terpengaruh** oleh update frontend.

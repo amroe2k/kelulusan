@@ -639,8 +639,33 @@ async function createBundle() {
       const m = document.getElementById('bundle-file-meta');
       const a = document.getElementById('bundle-download-link');
       if (n) n.textContent = data.zip_name;
-      if (m) m.textContent = data.lembaga + ' � ' + data.size_kb + ' KB � ' + data.total_files + ' files';
+      if (m) m.textContent = data.lembaga + ' · ' + data.size_kb + ' KB · ' + data.total_files + ' files';
       if (a) { a.href = data.zip_url; a.download = data.zip_name; }
+
+      // ── Tampilkan badge build mode di hasil bundle ──
+      const bdgEl = document.getElementById('bundle-build-badge');
+      if (bdgEl) {
+        if (data.build_mode === 'frontend') {
+          bdgEl.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Frontend Only · <code class="font-mono opacity-80">${data.dist_used}</code>
+            </span>`;
+        } else {
+          bdgEl.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              Build Lengkap · <code class="font-mono opacity-80">${data.dist_used}</code>
+            </span>`;
+        }
+        bdgEl.classList.remove('hidden');
+      }
+
+      // ── Tampilkan warning jika pakai build legacy ──
+      if (data.build_mode_info) {
+        showToast('⚠️ ' + data.build_mode_info, 'warning');
+      }
+
       showToast('Bundle berhasil: ' + data.zip_name + ' (' + data.size_kb + ' KB)', 'success');
     } else {
       showToast(data.error || 'Gagal membuat bundle.', 'error');

@@ -47,6 +47,12 @@ function switchView(id){
   if($('page-title'))$('page-title').textContent=titles[id]||id;
   renderSidebar();
   if(id==='overview'){
+    // Replay entrance animation
+    document.querySelectorAll('.ov-card').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = '';
+    });
     // Selalu fetch ulang dari server agar data selalu fresh
     ['ov-total','ov-lulus','ov-tidak','ov-rata'].forEach(eid=>{
       const el=$(eid); if(el) el.textContent='...';

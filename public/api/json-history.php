@@ -220,6 +220,63 @@ if ($method === 'POST') {
         echo json_encode(['success'=>true]);
         exit;
     }
+
+    // ── Hapus Bulk ────────────────────────────────────────────────────────
+    if ($act === 'bulk_delete') {
+        $ids = $body['ids'] ?? [];
+        if (!is_array($ids) || count($ids) === 0) {
+            echo json_encode(['success'=>false,'error'=>'Tidak ada ID yang dipilih.']); exit;
+        }
+
+        // Sanitasi: hanya izinkan string UUID yang valid
+        $ids = array_filter($ids, fn($id) => preg_match('/^[0-9a-f\-]{36}$/i', $id));
+        if (count($ids) === 0) {
+            echo json_encode(['success'=>false,'error'=>'Format ID tidak valid.']); exit;
+        }
+
+        $exportsDir = dirname(__DIR__) . '/exports/';
+        $deleted    = 0;
+        $skipped    = 0;
+
+        foreach ($ids as $delId) {
+            // Ambil info entri
+            $rowStmt = $pdo->prepare("SELECT lembaga_id, file_name FROM json_history WHERE id = ?");
+            $rowStmt->execute([$delId]);
+            $row = $rowStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) continue;
+
+            // Guard: cek apakah ini arsip terakhir yang masih ada file-nya
+            $validCount = $pdo->prepare(
+                "SELECT COUNT(*) FROM json_history
+                 WHERE lembaga_id = ? AND file_name IS NOT NULL AND id != ?"
+            );
+            $validCount->execute([$row['lembaga_id'], $delId]);
+            $remaining = (int)$validCount->fetchColumn();
+
+            $thisFileExists = $row['file_name'] && file_exists($exportsDir . basename($row['file_name']));
+
+            if ($remaining === 0 && $thisFileExists) {
+                $skipped++;
+                continue; // Lewati — arsip terakhir tidak boleh dihapus
+            }
+
+            // Hapus file fisik
+            if ($row['file_name']) {
+                $p = $exportsDir . basename($row['file_name']);
+                if (file_exists($p)) unlink($p);
+            }
+            // Hapus record DB
+            $pdo->prepare("DELETE FROM json_history WHERE id = ?")->execute([$delId]);
+            $deleted++;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'deleted' => $deleted,
+            'skipped' => $skipped,
+        ]);
+        exit;
+    }
 }
 
 http_response_code(405);

@@ -1,7 +1,11 @@
 /**
  * scripts/export-data.js  v2 — Multi-Lembaga
  * Export data dari MySQL → public/data.json
- * Jalankan: npm run export-data
+ * Jalankan: npm run export-data  (hanya untuk development lokal)
+ *
+ * CATATAN: Fitur Generate JSON sudah di-rewrite ke pure PHP di
+ *   public/api/generate_json.php  — tidak butuh Node.js di server.
+ * Script ini dipertahankan sebagai alternatif CLI lokal jika dibutuhkan.
  *
  * ALUR:
  *   1. Ambil lembaga AKTIF dari tabel lembaga
@@ -15,13 +19,34 @@ import mysql  from 'mysql2/promise';
 import fs     from 'fs/promises';
 import crypto from 'crypto';
 import path   from 'path';
+import { existsSync, readFileSync } from 'fs';
 
-// ─── Konfigurasi ─────────────────────────────────
+// ─── Baca .env (tanpa library eksternal) ─────────────────────────────────────
+function loadEnv() {
+  const envPath = path.join(process.cwd(), '.env');
+  if (!existsSync(envPath)) return {};
+  const env = {};
+  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const eq = t.indexOf('=');
+    if (eq < 0) continue;
+    let val = t.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1,-1);
+    env[t.slice(0, eq).trim()] = val;
+  }
+  return env;
+}
+const _env = loadEnv();
+const e    = (k, def = '') => _env[k] ?? process.env[k] ?? def;
+
+// ─── Konfigurasi (membaca dari .env) ─────────────────────────────────────────
 const DB = {
-  host:     'localhost',
-  user:     'root',
-  password: '@demo1234',
-  database: 'db_kelulusan',
+  host:     e('DB_HOST', 'localhost'),
+  port:     parseInt(e('DB_PORT', '3306')),
+  user:     e('DB_USER', 'root'),
+  password: e('DB_PASS', ''),
+  database: e('DB_NAME', 'db_kelulusan'),
 };
 
 // ─── Helpers ─────────────────────────────────────

@@ -165,8 +165,11 @@ kelulusan/
 │   ├── seed.js              # Data dummy
 │   ├── export-data.js       # Export ke data.json
 │   ├── generate-pdf.js      # Generate SKL PDF (Puppeteer)
+│   ├── build-split.mjs      # ⚡ Build terpisah frontend/dashboard
 │   └── deploy.js            # Build & package untuk hosting
-├── astro.config.mjs         # Konfigurasi Astro + proxy
+├── astro.config.mjs         # Konfigurasi Astro (build lengkap)
+├── astro.config.frontend.mjs  # Konfigurasi build frontend saja
+├── astro.config.dashboard.mjs # Konfigurasi build dashboard saja
 ├── tailwind.config.mjs      # Konfigurasi Tailwind CSS
 ├── package.json             # Dependensi Node.js
 ├── composer.json            # Scripts Composer
@@ -188,14 +191,35 @@ npm run export-users   # Export akun admin → public/users.json
 ```
 
 ### Build & Package
+
+#### 🔵 Build Lengkap (Frontend + Dashboard jadi satu `dist/`)
 ```bash
 # All-in-one: export data + build Astro + buat ZIP
 npm run deploy
 
-# Atau step by step:
-npm run build          # Build Astro ke /dist
-# → File zip siap deploy akan dibuat di root proyek
+# Atau hanya build:
+npm run build          # Build semua halaman ke /dist
 ```
+
+#### ⚡ Build Terpisah (direkomendasikan untuk deploy terpisah)
+
+```bash
+# Build HANYA portal siswa (publik) → dist/frontend/
+npm run build:frontend
+
+# Build HANYA admin dashboard → dist/dashboard/
+npm run build:dashboard
+
+# Build keduanya sekaligus
+npm run build:all
+```
+
+| Output | Isi | Tujuan Deploy |
+|---|---|---|
+| `dist/frontend/` | `index.html`, `login/` | Shared hosting / cPanel |
+| `dist/dashboard/` | `dashboard/*/` | VPS / subdomain admin |
+
+> 💡 **Cara kerja `build:frontend`**: Script sementara menyembunyikan folder `dashboard/` dari Astro sehingga hanya halaman publik yang di-build. Sebaliknya saat `build:dashboard`, halaman `index.astro` dan `login.astro` disembunyikan sementara. File selalu dikembalikan setelah build selesai (termasuk jika terjadi error).
 
 ### Deploy ke Hosting (Shared Hosting / cPanel)
 
@@ -238,14 +262,25 @@ npm run deploy
 ## 🔧 Scripts Tersedia
 
 ```bash
+# ─── Development ───────────────────────────────────────────────────────────────
 npm run dev              # Jalankan Astro dev server (dev mode)
-npm run build            # Build production ke /dist
+npm run dev:php          # Jalankan PHP API server di port 8090
 npm run preview          # Preview hasil build lokal
+
+# ─── Build ─────────────────────────────────────────────────────────────────────
+npm run build            # Build semua halaman → /dist (build standar)
+npm run build:frontend   # Build HANYA portal siswa → /dist/frontend/
+npm run build:dashboard  # Build HANYA admin dashboard → /dist/dashboard/
+npm run build:all        # Build keduanya terpisah (frontend + dashboard)
+
+# ─── Database ──────────────────────────────────────────────────────────────────
 npm run migrate          # Buat tabel database
 npm run seed             # Isi data dummy
 npm run export-data      # Export data ke public/data.json
 npm run export-users     # Export user ke public/users.json
 npm run db:setup         # Setup database lengkap (migrate + seed + export)
+
+# ─── Publish & Deploy ──────────────────────────────────────────────────────────
 npm run generate-pdf     # Generate semua SKL PDF via Puppeteer
 npm run publish          # Export + Generate PDF + Build
 npm run deploy           # Full deploy: export + build + zip
