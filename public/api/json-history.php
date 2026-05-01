@@ -67,8 +67,8 @@ if ($method === 'POST') {
             $pdo->prepare("DELETE FROM siswa WHERE lembaga_id = ?")->execute([$lembagaId]);
 
             $stmtS = $pdo->prepare(
-                "INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $stmtN = $pdo->prepare(
                 "INSERT INTO nilai (siswa_id, mapel, nilai, urutan) VALUES (?, ?, ?, ?)"
@@ -98,10 +98,9 @@ if ($method === 'POST') {
                 }
 
                 $stmtS->execute([
-                    $sId, $lembagaId,
-                    $s['nisn'] ?? '', $s['nama'] ?? '', $s['jenis_kelamin'] ?? 'L',
-                    $s['tempat_lahir'] ?? '', $tgl, $s['kelas'] ?? '',
-                    $s['status'] ?? 'LULUS'
+                    $sId, $lembagaId, $s['nisn'] ?? '', $s['nama'] ?? '',
+                    $s['jenis_kelamin'] ?? 'L', $s['tempat_lahir'] ?? '', $tgl,
+                    $s['kelas'] ?? '', $s['kompetensi_keahlian'] ?? '', $s['status'] ?? 'LULUS'
                 ]);
 
                 foreach ($s['nilai'] ?? [] as $i => $n) {
@@ -157,6 +156,25 @@ if ($method === 'POST') {
         if (!copy($srcPath, $dstPath)) {
             echo json_encode(['success'=>false,'error'=>'Gagal menyalin file']); exit;
         }
+
+        // ── Update bundle-config.js sesuai secret lembaga dari arsip ──
+        $archiveJson = json_decode(file_get_contents($srcPath), true);
+        $archiveLembagaId = $archiveJson['_meta']['lembaga_id'] ?? null;
+        if ($archiveLembagaId) {
+            $secretRow = $pdo->prepare("SELECT integrity_secret, slug, nama FROM lembaga WHERE id = ?");
+            $secretRow->execute([$archiveLembagaId]);
+            $lRow = $secretRow->fetch(PDO::FETCH_ASSOC);
+            if ($lRow) {
+                $secret = !empty($lRow['integrity_secret']) ? $lRow['integrity_secret'] : 'kls-portal-integrity-2026';
+                $bundleConfigPath = dirname(__DIR__) . '/bundle-config.js';
+                file_put_contents($bundleConfigPath,
+                    "/* AUTO-GENERATED — DO NOT EDIT */\n" .
+                    "/* Bundle: {$lRow['slug']} | {$lRow['nama']} (set_active) */\n" .
+                    "window.BUNDLE_SECRET = '{$secret}';\n"
+                );
+            }
+        }
+
         echo json_encode(['success'=>true]);
         exit;
     }
@@ -165,7 +183,35 @@ if ($method === 'POST') {
     if ($act === 'delete') {
         $id       = $body['id']       ?? '';
         $fileName = $body['file_name'] ?? '';
-        if ($id) $pdo->prepare("DELETE FROM json_history WHERE id = ?")->execute([$id]);
+        if (!$id) { echo json_encode(['success'=>false,'error'=>'ID diperlukan']); exit; }
+
+        // ── Guard: cek apakah ini satu-satunya arsip dengan file valid ──
+        $rowCheck = $pdo->prepare("SELECT lembaga_id FROM json_history WHERE id = ?");
+        $rowCheck->execute([$id]);
+        $targetRow = $rowCheck->fetch(PDO::FETCH_ASSOC);
+
+        if ($targetRow) {
+            $lembagaId = $targetRow['lembaga_id'];
+            $exportsCheck = dirname(__DIR__) . '/exports/';
+            $validCount = $pdo->prepare(
+                "SELECT COUNT(*) FROM json_history WHERE lembaga_id = ? AND file_name IS NOT NULL AND id != ?"
+            );
+            $validCount->execute([$lembagaId, $id]);
+            $remaining = (int)$validCount->fetchColumn();
+
+            // Cek apakah file yang akan dihapus ini masih ada secara fisik
+            $thisFileExists = $fileName && file_exists($exportsCheck . basename($fileName));
+
+            if ($remaining === 0 && $thisFileExists) {
+                echo json_encode([
+                    'success' => false,
+                    'error'   => 'Tidak dapat menghapus arsip terakhir. Minimal 1 arsip harus dipertahankan sebagai restore point.'
+                ]);
+                exit;
+            }
+        }
+
+        $pdo->prepare("DELETE FROM json_history WHERE id = ?")->execute([$id]);
         // Hapus file fisik juga jika ada
         if ($fileName) {
             $p = dirname(__DIR__) . '/exports/' . basename($fileName);

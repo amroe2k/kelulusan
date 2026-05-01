@@ -1,4 +1,7 @@
 // Identitas, Pengguna, Sync, Init
+
+// ── Konstanta Global ──────────────────────────────────────────────────────
+const VALID_VIEWS = ['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'];
 // ─── Asset helpers ───
 function getAssetEnabled(field){
   return localStorage.getItem('asset_'+field+'_enabled') !== '0';
@@ -182,8 +185,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
   );
 
   // Load data.php (identitas) di background
-  fetch('/api/data.php').then(r=>r.json()).then(d=>{
+  const t = Date.now();
+  fetch(`/api/data.php?t=${t}`).then(r=>r.json()).then(d=>{
     allData=d;
+    // Tampilkan nama lembaga aktif di sidebar
+    const namaLembaga = d?._meta?.lembaga_nama || d?._meta?.sekolah || '';
+    const sbLembaga = $('sb-lembaga-nama');
+    if(sbLembaga && namaLembaga) sbLembaga.textContent = namaLembaga;
     if(currentView==='identitas') renderIdentitas();
     if(currentView==='overview') renderOverview();
   }).catch(e=>console.error('[data.php]',e));
@@ -196,14 +204,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
   // Tentukan & switch view LANGSUNG
   const parts=window.location.pathname.split('/').filter(Boolean);
   const pv=parts[parts.length-1]||'overview';
-  const valid=['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'];
-  switchView(valid.includes(pv)?pv:'overview');
+  switchView(VALID_VIEWS.includes(pv)?pv:'overview');
 
   // Init lembaga modal events
   initLembagaView();
 
   // Preload allSiswa SELALU supaya overview stats terpopulasi
-  fetch('/api/siswa.php').then(r=>r.json()).then(d=>{
+  fetch(`/api/siswa.php?t=${t}`).then(r=>r.json()).then(d=>{
     if(d.success){ allSiswa=d.data||[]; if(currentView==='overview')renderOverview(); }
   }).catch(()=>{});
 
@@ -211,6 +218,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('search-siswa')?.addEventListener('input',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
   $('filter-status')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
   $('filter-kelas')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
+  $('filter-kompetensi')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
   $('btn-prev-page')?.addEventListener('click',()=>{ if(currentSiswaPage>1) { currentSiswaPage--; renderSiswaTable(allSiswa); } });
   $('btn-next-page')?.addEventListener('click',()=>{ currentSiswaPage++; renderSiswaTable(allSiswa); });
   $('btn-bulk-lulus')?.addEventListener('click',()=>applyBulk('LULUS'));
@@ -220,7 +228,33 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('form-siswa')?.addEventListener('submit',saveSiswa);
   $('modal-siswa-close')?.addEventListener('click',()=>modalClose('modal-siswa'));
   $('modal-siswa-cancel')?.addEventListener('click',()=>modalClose('modal-siswa'));
-  $('btn-import-siswa')?.addEventListener('click',()=>{$('import-result')?.classList.add('hidden');$('import-preview')?.classList.add('hidden');$('xlsx-file-name').textContent='';$('xlsx-file-input').value='';$('btn-import-submit').disabled=true;modalOpen('modal-import');});
+  $('btn-import-siswa')?.addEventListener('click',()=>{
+    // Reset result & preview
+    $('import-result')?.classList.add('hidden');
+    $('import-preview')?.classList.add('hidden');
+    $('btn-import-submit').disabled=true;
+    // Reset file input
+    if($('xlsx-file-input')) $('xlsx-file-input').value='';
+    // Reset drop zone ke state awal
+    const dz=$('xlsx-drop-zone');
+    if(dz){
+      dz.classList.remove('border-emerald-500','bg-emerald-500/5','border-indigo-500');
+      dz.classList.add('border-slate-700');
+    }
+    // Sembunyikan nama file
+    const fn=$('xlsx-file-name');
+    if(fn){ fn.textContent=''; fn.classList.add('hidden'); }
+    // Reset overlay
+    const ov=$('xlsx-drag-overlay');
+    if(ov) ov.style.opacity='0';
+    // Reset imported rows
+    importedRows=[];
+    if ($('btn-import-submit')) {
+      $('btn-import-submit').textContent = 'Proses Import';
+      $('btn-import-submit').disabled = true;
+    }
+    modalOpen('modal-import');
+  });
   $('btn-export-siswa')?.addEventListener('click',exportXlsx);
   initImport();
 
@@ -263,7 +297,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('form-identitas')?.addEventListener('submit',async e=>{
     e.preventDefault();
     const rawDomain=($('input-domain')?.value||'').trim().replace(/^https?:\/\//,'');
-    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',kompetensi_keahlian:$('input-kompetensi')?.value||'',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,nip_kepsek:$('input-nip').value,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_suffix:$('input-nomor-surat')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain};
+    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,nip_kepsek:$('input-nip').value,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_suffix:$('input-nomor-surat')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain};
     // Hanya kirim gambar jika user benar-benar mengubahnya (data-changed='true')
     // Jika data-changed='clear', kirim null untuk hapus gambar dari DB
     document.querySelectorAll('.img-zone').forEach(zone=>{
@@ -326,17 +360,25 @@ document.addEventListener('DOMContentLoaded',async()=>{
       $('input-sync-password').value = '';
 
       if (res.success) {
-        // Tampilkan log
         $('sync-logs')?.classList.remove('hidden');
         if ($('sync-log-content')) $('sync-log-content').textContent = res.output || 'Sukses.';
-
-        // Parse jumlah siswa dari output log
         const matchTotal = (res.output || '').match(/Total\s*:\s*(\d+)/);
         const matchLulus = (res.output || '').match(/Lulus\s*:\s*(\d+)/);
         const totalStr = matchTotal ? ` ${matchTotal[1]} siswa` : '';
         const lulusStr = matchLulus ? `, ${matchLulus[1]} lulus` : '';
-
         showToast(`✓ Generate JSON berhasil!${totalStr}${lulusStr}`, 'success');
+        loadArchiveList(); // refresh list setelah generate
+        
+        // Refresh allSiswa agar overview up-to-date
+        fetch(`/api/siswa.php?t=${Date.now()}`).then(r=>r.json()).then(d=>{
+          if(d.success){ 
+            allSiswa=d.data||[]; 
+            if(currentView==='overview') renderOverview(); 
+          }
+        });
+
+        // Refresh indikator sinkronisasi
+        if(typeof loadSyncStatus==='function') loadSyncStatus();
       } else {
         $('sync-logs')?.classList.remove('hidden');
         if ($('sync-log-content')) $('sync-log-content').textContent = res.error || res.output || 'Gagal.';
@@ -350,11 +392,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
     }
   });
 
+
+
   window.addEventListener('popstate',()=>{
     const parts=window.location.pathname.split('/').filter(Boolean);
     const pv=parts[parts.length-1]||'overview';
-    const valid=['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'];
-    const tv=valid.includes(pv)?pv:'overview';
+    const tv=VALID_VIEWS.includes(pv)?pv:'overview';
     if(currentView!==tv)switchView(tv);
   });
 
@@ -481,3 +524,127 @@ document.addEventListener('DOMContentLoaded',async()=>{
     }
   });
 });
+
+// ── loadArchiveList: Render daftar arsip JSON di view-sync ─────────────────
+async function loadArchiveList() {
+  const container = document.getElementById('archive-list');
+  if (!container) return;
+
+  container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 animate-pulse">Memuat arsip...</p>';
+
+  try {
+    const res = await fetch('/api/json-history.php');
+    const data = await res.json();
+
+    // Filter hanya yang punya file fisik (bukan auto-sync)
+    const allArchives = (data.data || []).filter(r => r.file_name && r.file_exists);
+
+    // Ambil 1 terbaru per lembaga (API sudah ORDER BY generated_at DESC)
+    const seen = new Map();
+    allArchives.forEach(r => {
+      if (!seen.has(r.lembaga_id)) seen.set(r.lembaga_id, r);
+    });
+    const archives = [...seen.values()];
+
+    if (archives.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-8 gap-2 text-slate-600">
+          <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          </svg>
+          <p class="text-xs">Belum ada arsip — generate dulu di Langkah 1.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = archives.map(r => {
+      const kb   = r.file_size ? (r.file_size / 1024).toFixed(0) + ' KB' : '-';
+      const tgl  = r.generated_at
+        ? new Date(r.generated_at).toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+        : '-';
+      const nama = r.lembaga_nama || r.lembaga_slug || '-';
+      const file = r.file_name;
+
+      return `
+        <div class="flex items-center justify-between gap-3 bg-[#0F1523] border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors group">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-white font-mono truncate" title="${file}">${file}</p>
+              <p class="text-[10px] text-slate-500 mt-0.5 truncate">${nama} · ${kb} · ${tgl}</p>
+            </div>
+          </div>
+          <a href="/exports/${encodeURIComponent(file)}" download="${file}"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold transition-all flex-shrink-0 group-hover:border-emerald-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Unduh
+          </a>
+        </div>`;
+    }).join('');
+
+  } catch (e) {
+    container.innerHTML = '<p class="text-xs text-rose-400 text-center py-4">Gagal memuat arsip.</p>';
+  }
+}
+
+// -- Bundle Deploy Functions -----------------------------------------------
+
+window.copyUploadUrl = function() {
+  const text = document.getElementById('upload-url-text')?.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('URL upload berhasil disalin!', 'success');
+  }).catch(() => {
+    showToast('Gagal menyalin URL.', 'error');
+  });
+};
+
+async function populateBundleSelect() {
+  const sel = document.getElementById('bundle-lembaga-select');
+  if (!sel) return;
+  try {
+    const res  = await fetch('/api/lembaga.php');
+    const data = await res.json();
+    const list = data.data || data.lembaga || [];
+    sel.innerHTML = list.length
+      ? '<option value="">-- Pilih Lembaga --</option>' +
+        list.map(l => `<option value="${l.id}">${l.nama}</option>`).join('')
+      : '<option value="">Belum ada lembaga</option>';
+  } catch { sel.innerHTML = '<option value="">Gagal memuat</option>'; }
+}
+
+async function createBundle() {
+  const sel       = document.getElementById('bundle-lembaga-select');
+  const btn       = document.getElementById('btn-create-bundle');
+  const lembagaId = sel?.value;
+  if (!lembagaId) { showToast('Pilih lembaga terlebih dahulu.', 'warning'); return; }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Membuat Bundle...';
+  btn.disabled = true;
+  try {
+    const res  = await fetch('/api/create-bundle.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lembaga_id: lembagaId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('bundle-result')?.classList.remove('hidden');
+      const n = document.getElementById('bundle-file-name');
+      const m = document.getElementById('bundle-file-meta');
+      const a = document.getElementById('bundle-download-link');
+      if (n) n.textContent = data.zip_name;
+      if (m) m.textContent = data.lembaga + ' � ' + data.size_kb + ' KB � ' + data.total_files + ' files';
+      if (a) { a.href = data.zip_url; a.download = data.zip_name; }
+      showToast('Bundle berhasil: ' + data.zip_name + ' (' + data.size_kb + ' KB)', 'success');
+    } else {
+      showToast(data.error || 'Gagal membuat bundle.', 'error');
+    }
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  finally { btn.innerHTML = orig; btn.disabled = false; }
+}

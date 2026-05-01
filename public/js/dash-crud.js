@@ -145,73 +145,146 @@ function initImport(){
   const BASE_COLS_SET=new Set(['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','kompetensi keahlian','status','no','rata-rata','rata_rata']);
   importedRows=[];
 
-  $('btn-pick-xlsx')?.addEventListener('click',()=>$('xlsx-file-input').click());
-  $('xlsx-file-input')?.addEventListener('change',e=>{
-    const f=e.target.files[0]; if(!f)return;
-    $('xlsx-file-name').textContent=`📄 ${f.name}`;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const wb=window.XLSX.read(ev.target.result,{type:'array',cellDates:true});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const raw=window.XLSX.utils.sheet_to_json(ws,{defval:''});
-      importedRows=raw.map(row=>{
-        const obj={};
-        // Normalize keys to lowercase_underscore
-        Object.keys(row).forEach(k=>{ obj[k.toLowerCase().trim().replace(/\s+/g,'_')]=row[k]; });
+  // ─── Drag & Drop Zone ───
+  const dropZone   = $('xlsx-drop-zone');
+  const fileInput  = $('xlsx-file-input');
+  const fileNameEl = $('xlsx-file-name');
+  const overlay    = $('xlsx-drag-overlay');
+
+  function processXlsxFile(f){
+    if(!f) return;
+    const ext = f.name.split('.').pop().toLowerCase();
+    if(!['xlsx','xls'].includes(ext)){
+      showToast('File harus berformat .xlsx atau .xls', 'error'); return;
+    }
+    // Tampilkan nama file
+    if(fileNameEl){
+      fileNameEl.textContent = '📄 ' + f.name;
+      fileNameEl.classList.remove('hidden');
+    }
+    // Update tampilan drop zone → sukses
+    if(dropZone){
+      dropZone.classList.remove('border-slate-700','hover:border-indigo-500');
+      dropZone.classList.add('border-emerald-500','bg-emerald-500/5');
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const wb = window.XLSX.read(ev.target.result, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = window.XLSX.utils.sheet_to_json(ws, {defval:''});
+      importedRows = raw.map(row => {
+        const obj = {};
+        Object.keys(row).forEach(k => { obj[k.toLowerCase().trim().replace(/\s+/g,'_')] = row[k]; });
         return obj;
-      }).filter(r=>r.nisn&&r.nama);
+      }).filter(r => r.nisn && r.nama);
       $('import-preview').classList.remove('hidden');
-      $('import-preview-count').textContent=importedRows.length;
-      $('btn-import-submit').disabled=importedRows.length===0;
-      showToast(`${importedRows.length} baris siap diimport`,'info');
+      $('import-preview-count').textContent = importedRows.length;
+      $('btn-import-submit').disabled = importedRows.length === 0;
+      showToast(`${importedRows.length} baris siap diimport`, 'info');
     };
     reader.readAsArrayBuffer(f);
+  }
+
+  // Klik zona → buka file picker
+  if(dropZone){
+    dropZone.addEventListener('click', e => {
+      if(e.target.closest('input[type="file"]')) return;
+      fileInput?.click();
+    });
+  }
+
+  // File dipilih via input
+  fileInput?.addEventListener('change', e => {
+    processXlsxFile(e.target.files[0]);
   });
 
-  $('btn-import-submit')?.addEventListener('click',async()=>{
-    if(!importedRows.length)return;
-    const rows=importedRows.map(row=>{
-      const siswa={
+  // ── Drag events ──
+  let dragDepth = 0;
+  if(dropZone){
+    dropZone.addEventListener('dragenter', e => {
+      e.preventDefault();
+      dragDepth++;
+      if(overlay) overlay.style.opacity = '1';
+      dropZone.classList.add('border-indigo-500');
+      dropZone.classList.remove('border-slate-700');
+    });
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+    dropZone.addEventListener('dragleave', () => {
+      if(--dragDepth <= 0){
+        dragDepth = 0;
+        if(overlay) overlay.style.opacity = '0';
+        // Kembalikan border hanya jika belum ada file sukses
+        if(!importedRows.length){
+          dropZone.classList.remove('border-indigo-500','border-emerald-500','bg-emerald-500/5');
+          dropZone.classList.add('border-slate-700');
+        }
+      }
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dragDepth = 0;
+      if(overlay) overlay.style.opacity = '0';
+      const f = e.dataTransfer.files[0];
+      processXlsxFile(f);
+    });
+  }
+
+  $('btn-import-submit')?.addEventListener('click', async () => {
+    const btn = $('btn-import-submit');
+    if (btn && btn.textContent.trim() === 'Tutup') {
+      modalClose('modal-import');
+      return;
+    }
+    if(!importedRows.length) return;
+    const rows = importedRows.map(row => {
+      const siswa = {
         nisn:String(row.nisn||'').trim(),
         nama:String(row.nama||'').trim(),
         jenis_kelamin:(row.jenis_kelamin||'L').toString().toUpperCase().charAt(0),
         tempat_lahir:row.tempat_lahir||'',
         kelas:row.kelas||'',
         status:(row.status||'LULUS').toString().toUpperCase(),
-        // kompetensi_keahlian: opsional, boleh kosong
         kompetensi_keahlian: String(row.kompetensi_keahlian||row['kompetensi keahlian']||'').trim()||null,
       };
-      // Handle tanggal_lahir (Excel date or string)
-      const tgl=row.tanggal_lahir;
-      if(tgl instanceof Date)siswa.tanggal_lahir=tgl.toISOString().slice(0,10);
-      else if(tgl)siswa.tanggal_lahir=String(tgl).slice(0,10);
-      else siswa.tanggal_lahir=null;
-      // Extra columns = nilai (semua yg bukan BASE_COLS)
-      const nilai=[];
-      Object.keys(row).forEach((k,i)=>{
-        const nk=k.toLowerCase().trim().replace(/\s+/g,'_');
-        if(!BASE_COLS_SET.has(nk)) nilai.push({mapel:k,nilai:parseFloat(row[k])||0,urutan:i});
+      const tgl = row.tanggal_lahir;
+      if(tgl instanceof Date) siswa.tanggal_lahir = tgl.toISOString().slice(0,10);
+      else if(tgl) siswa.tanggal_lahir = String(tgl).slice(0,10);
+      else siswa.tanggal_lahir = null;
+      const nilai = [];
+      Object.keys(row).forEach((k,i) => {
+        const nk = k.toLowerCase().trim().replace(/\s+/g,'_');
+        if(!BASE_COLS_SET.has(nk)) nilai.push({mapel:k, nilai:parseFloat(row[k])||0, urutan:i});
       });
-      siswa.nilai=nilai;
+      siswa.nilai = nilai;
       return siswa;
     });
 
-    $('btn-import-submit').textContent='Memproses...'; $('btn-import-submit').disabled=true;
-    const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'import_json',rows})});
-    const res=await r.json();
-    $('btn-import-submit').textContent='Proses Import'; $('btn-import-submit').disabled=false;
-    const log=`✅ Berhasil: ${res.imported||0} baris\n⚠️ Dilewati: ${res.skipped||0} baris${(res.errors||[]).length?'\n\n'+res.errors.join('\n'):''}`;
-    $('import-result').textContent=log; $('import-result').classList.remove('hidden');
-    if(res.success){showToast(`Import selesai: ${res.imported} berhasil`,'success');await loadAndRenderSiswa();}
-    else showToast(res.error||'Import gagal','error');
+    $('btn-import-submit').textContent = 'Memproses...';
+    $('btn-import-submit').disabled = true;
+    const r = await fetch('/api/siswa.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'import_json', rows})});
+    const res = await r.json();
+    $('btn-import-submit').textContent = 'Proses Import';
+    $('btn-import-submit').disabled = false;
+    const log = `✅ Berhasil: ${res.imported||0} baris\n⚠️ Dilewati: ${res.skipped||0} baris${(res.errors||[]).length?'\n\n'+res.errors.join('\n'):''}`;
+    $('import-result').textContent = log;
+    $('import-result').classList.remove('hidden');
+    if(res.success){ 
+      showToast(`Import selesai: ${res.imported} berhasil`, 'success'); 
+      $('btn-import-submit').textContent = 'Tutup';
+      await loadAndRenderSiswa(); 
+    }
+    else showToast(res.error||'Import gagal', 'error');
   });
 
-  $('btn-download-template')?.addEventListener('click',e=>{
+  $('btn-download-template')?.addEventListener('click', e => {
     e.preventDefault(); downloadTemplate();
   });
 
-  $('modal-import-close')?.addEventListener('click',()=>modalClose('modal-import'));
-  $('modal-import-cancel')?.addEventListener('click',()=>modalClose('modal-import'));
+  $('modal-import-close')?.addEventListener('click', () => modalClose('modal-import'));
+  $('modal-import-cancel')?.addEventListener('click', () => modalClose('modal-import'));
 }
 
 function downloadTemplate(){

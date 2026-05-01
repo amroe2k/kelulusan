@@ -126,6 +126,8 @@ const { view } = Astro.params;
     #dash-sidebar.sb-collapsed .sb-profile-box { padding: 0.75rem 0.5rem; }
     #dash-sidebar.sb-collapsed .sb-profile-card { justify-content: center !important; padding: 0.625rem !important; }
     #dash-sidebar.sb-collapsed .sb-profile-card .min-w-0 { display: none; }
+    /* Lembaga card: hide when collapsed */
+    #dash-sidebar.sb-collapsed #sb-lembaga-wrap { display: none; }
     /* Tooltip on collapsed nav items */
     #dash-sidebar.sb-collapsed .nav-item { position: relative; }
     #dash-sidebar.sb-collapsed .nav-item::after {
@@ -265,7 +267,17 @@ const { view } = Astro.params;
       color: #6366f1 !important;
     }
 
-    /* Profile box top border */
+    /* Lembaga aktif card in sidebar — light mode */
+    html:not(.dark) #sb-lembaga-wrap { border-bottom-color: #e2e8f0 !important; }
+    html:not(.dark) #sb-lembaga-wrap > div {
+      background: #eef2ff !important;
+      border-color: #a5b4fc !important;
+    }
+    html:not(.dark) #sb-lembaga-wrap #sb-lembaga-nama { color: #4338ca !important; }
+    html:not(.dark) #sb-lembaga-wrap .text-indigo-500\/70 { color: #6366f1 !important; opacity: 0.7; }
+    html:not(.dark) #sb-lembaga-wrap svg { color: #6366f1 !important; }
+    html:not(.dark) #sb-lembaga-wrap > div > div:first-child { background: #c7d2fe !important; }
+
     html:not(.dark) .sb-profile-box {
       border-top-color: #e2e8f0 !important;
     }
@@ -293,6 +305,13 @@ const { view } = Astro.params;
     /* Topbar: page title & subtitle */
     html:not(.dark) #dash-topbar #page-title {
       color: #0f172a !important;
+    }
+    html:not(.dark) #dash-topbar #topbar-lembaga {
+      color: #6366f1 !important;
+    }
+    html:not(.dark) #dash-topbar #topbar-lembaga + span,
+    html:not(.dark) #dash-topbar .flex.items-center.gap-1\.5 span:first-child {
+      background: #6366f1 !important;
     }
     html:not(.dark) #dash-topbar .text-slate-400 {
       color: #64748b !important;
@@ -332,18 +351,34 @@ const { view } = Astro.params;
       <!-- Brand Logo -->
       <div id="sb-brand" class="h-20 flex items-center px-8 border-b border-slate-800/50">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
           </div>
-          <div class="flex flex-col">
+          <div class="flex flex-col min-w-0">
             <span class="text-white font-black text-lg tracking-tight font-outfit leading-none">AdminPortal</span>
             <span class="text-indigo-400 text-[9px] font-black uppercase tracking-widest mt-1" id="sb-role">ROLE</span>
           </div>
         </div>
       </div>
 
+      <!-- Lembaga Aktif Card -->
+      <div id="sb-lembaga-wrap" class="px-4 py-3 border-b border-slate-800/50">
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[9px] font-bold uppercase tracking-widest text-indigo-500/70 leading-none mb-0.5">Lembaga Aktif</p>
+            <p class="text-xs font-black text-indigo-300 truncate leading-snug" id="sb-lembaga-nama">Memuat...</p>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+        </div>
+      </div>
+
       <!-- Navigation -->
-      <nav class="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar" id="sidebar-nav">
+      <nav class="flex-1 py-4 px-4 space-y-1.5 overflow-y-auto custom-scrollbar" id="sidebar-nav">
         <!-- Injected via JS -->
       </nav>
 
@@ -587,7 +622,6 @@ const { view } = Astro.params;
                                     <input type="checkbox" id="toggle-kop_surat" class="sr-only peer" checked>
                                     <div class="w-8 h-4 bg-slate-300 dark:bg-slate-700 peer-checked:bg-amber-500 rounded-full transition-colors relative after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"></div>
                                 </label>
-                                <button id="btn-del-kop_surat" data-field="kop_surat" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                             </div>
                         </div>
                         <img id="view-kop_surat" class="w-full max-h-32 object-contain hidden rounded-lg border border-amber-200 dark:border-amber-700/30 bg-white dark:bg-[#0F1523] p-2" />
@@ -607,7 +641,6 @@ const { view } = Astro.params;
                             </div>
                             <img id="view-logo" class="h-20 w-auto object-contain hidden" />
                             <p id="no-logo" class="text-[10px] text-slate-400 italic">Belum diupload</p>
-                            <button id="btn-del-logo" data-field="logo" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                         <!-- Stempel -->
                         <div class="flex flex-col items-center gap-3 p-5 rounded-2xl bg-slate-50 dark:bg-[#0F1523] border border-slate-100 dark:border-slate-800 relative group" id="card-asset-stempel">
@@ -620,7 +653,6 @@ const { view } = Astro.params;
                             </div>
                             <img id="view-stempel" class="h-20 w-auto object-contain hidden" />
                             <p id="no-stempel" class="text-[10px] text-slate-400 italic">Belum diupload</p>
-                            <button id="btn-del-stempel" data-field="stempel" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                         <!-- TTD -->
                         <div class="flex flex-col items-center gap-3 p-5 rounded-2xl bg-slate-50 dark:bg-[#0F1523] border border-slate-100 dark:border-slate-800 relative group" id="card-asset-ttd">
@@ -633,7 +665,6 @@ const { view } = Astro.params;
                             </div>
                             <img id="view-ttd" class="h-20 w-auto object-contain hidden" />
                             <p id="no-ttd" class="text-[10px] text-slate-400 italic">Belum diupload</p>
-                            <button id="btn-del-ttd" data-field="ttd" class="asset-del-btn hidden opacity-0 group-hover:opacity-100 absolute bottom-3 right-3 p-1.5 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
                 </div>
@@ -855,6 +886,11 @@ const { view } = Astro.params;
               </div>
               <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                  <select id="filter-kelas" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Kelas</option></select>
+                 <div id="filter-kompetensi-wrap" class="hidden">
+                   <select id="filter-kompetensi" class="bg-[#0F1523] border border-amber-600/50 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500 cursor-pointer">
+                     <option value="">Semua Kompetensi</option>
+                   </select>
+                 </div>
                  <select id="filter-status" class="bg-[#0F1523] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 cursor-pointer"><option value="">Semua Status</option><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select>
                  <button id="btn-add-siswa" class="admin-only hidden btn-primary !text-white text-xs !py-2 !px-4 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Tambah Siswa</button>
               </div>
@@ -870,7 +906,7 @@ const { view } = Astro.params;
               </div>
               <div class="overflow-x-auto custom-scrollbar flex-1">
                  <table class="w-full text-left border-collapse">
-                    <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-6 py-4 w-12 text-center"><input type="checkbox" id="check-all" class="rounded bg-[#172033] border-slate-700 w-4 h-4 cursor-pointer accent-indigo-500"></th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Siswa</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Rata-Rata</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Aksi</th></tr></thead>
+                    <thead><tr class="border-b border-slate-800 bg-[#0F1523]"><th class="px-6 py-4 w-12 text-center"><input type="checkbox" id="check-all" class="rounded bg-[#172033] border-slate-700 w-4 h-4 cursor-pointer accent-indigo-500"></th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Siswa</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</th><th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kompetensi</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Rata-Rata</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th><th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Aksi</th></tr></thead>
                     <tbody id="siswa-table" class="divide-y divide-slate-800/50"></tbody>
                  </table>
               </div>
@@ -951,6 +987,10 @@ const { view } = Astro.params;
           <div class="bg-[#111827] px-5 py-3.5 col-span-2">
             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Tempat, Tanggal Lahir</p>
             <p id="detail-ttl" class="text-sm font-bold text-slate-300">-</p>
+          </div>
+          <div class="bg-[#111827] px-5 py-3.5 col-span-2" id="detail-kompetensi-row">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Kompetensi Keahlian</p>
+            <p id="detail-kompetensi" class="text-sm font-bold text-indigo-400">-</p>
           </div>
         </div>
 
@@ -1075,18 +1115,127 @@ const { view } = Astro.params;
   </section>
 
   <!-- VIEW: SYNC -->
-  <section id="view-sync" class="hidden space-y-6 animate-fade-in">
-    <div class="flex items-center gap-4 mb-2"><div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center flex-shrink-0"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div><div><h2 class="text-xl font-black font-outfit text-white">Sinkronisasi Cloud</h2><p class="text-xs text-slate-400 mt-0.5">Generate data JSON statis dari database lokal, lalu deploy ke hosting.</p></div></div>
-    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3"><svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><h3 class="text-sm font-bold text-white">Generate &amp; Export JSON</h3></div>
-      <div class="p-6">
-        <div class="max-w-sm space-y-4">
-          <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password Admin</label><div class="relative"><input type="password" id="input-sync-password" placeholder="Masukkan password Anda..." autocomplete="new-password" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 pr-12 text-sm text-white focus:border-indigo-500 outline-none transition-all"><button type="button" onclick="togglePw('input-sync-password','eye-sync')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"><svg id="eye-sync" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button></div></div>
-          <div class="flex gap-3"><button id="btn-generate-json" class="btn-primary flex-1 flex items-center justify-center gap-2 py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Generate &amp; Perbarui</button><a id="btn-download-json" href="/data.json" download="data.json" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-sm transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Download</a></div>
+  <section id="view-sync" class="hidden space-y-5 animate-fade-in">
+    <div class="flex items-center gap-4 mb-2">
+      <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-black font-outfit text-white">Sinkronisasi Cloud</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Generate → Unduh file JSON → Upload ke hosting.</p>
+      </div>
+    </div>
+
+    <!-- INDIKATOR STATUS SINKRONISASI DB vs JSON -->
+    <div id="sync-status-card" class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-800 bg-[#0F1523] flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-2 h-2 rounded-full bg-slate-600 animate-pulse" id="sync-status-dot"></div>
+          <h3 class="text-sm font-bold text-white">Status Sinkronisasi DB ↔ JSON</h3>
         </div>
-        <div id="sync-logs" class="mt-6 hidden"><div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Log Eksekusi</h3></div><pre id="sync-log-content" class="bg-[#0B0F19] border border-slate-800 rounded-xl p-4 text-[11px] text-emerald-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-48"></pre></div>
-        <div class="mt-6 pt-5 border-t border-slate-800">
-          <button type="button" id="btn-toggle-upload-pw" class="flex items-center gap-2 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>Set Password admin-upload.php<svg id="icon-toggle-pw" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+        <button onclick="loadSyncStatus()" id="btn-refresh-sync-status"
+          class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-400 transition-colors font-bold">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div class="p-5" id="sync-status-body">
+        <!-- Loading State -->
+        <div class="flex items-center gap-3 text-slate-500 text-sm animate-pulse">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Memeriksa status sinkronisasi...
+        </div>
+      </div>
+    </div>
+
+    <!-- LANGKAH 1: Generate JSON -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3">
+        <span class="w-6 h-6 rounded-full bg-indigo-500 text-white text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
+        <h3 class="text-sm font-bold text-white">Generate & Perbarui Data JSON</h3>
+      </div>
+      <div class="p-5">
+        <p class="text-xs text-slate-400 mb-4">Ambil data terbaru dari database dan perbarui file <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">data.json</code> aktif.</p>
+        <div class="max-w-sm space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password Admin</label>
+            <div class="relative">
+              <input type="password" id="input-sync-password" placeholder="Masukkan password Anda..." autocomplete="new-password" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 pr-12 text-sm text-white focus:border-indigo-500 outline-none transition-all">
+              <button type="button" onclick="togglePw('input-sync-password','eye-sync')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
+                <svg id="eye-sync" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+            </div>
+          </div>
+          <button id="btn-generate-json" class="btn-primary w-full flex items-center justify-center gap-2 py-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Generate & Perbarui data.json
+          </button>
+        </div>
+        <div id="sync-logs" class="mt-5 hidden">
+          <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Log Eksekusi</h3></div>
+          <pre id="sync-log-content" class="bg-[#0B0F19] border border-slate-800 rounded-xl p-4 text-[11px] text-emerald-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-48"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- LANGKAH 2: Unduh JSON -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3">
+        <span class="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
+        <h3 class="text-sm font-bold text-white">Unduh File data.json</h3>
+      </div>
+      <div class="p-5 flex items-center justify-between gap-4 flex-wrap border-b border-slate-800/60">
+        <div>
+          <p class="text-xs text-slate-400 leading-relaxed">Download file <code class="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-300">data.json</code> aktif ke komputer Anda,<br>kemudian upload secara manual ke direktori hosting.</p>
+        </div>
+        <a id="btn-download-json" href="/data.json" download="data.json"
+          class="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400 font-bold text-sm transition-all flex-shrink-0 group">
+          <svg class="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Unduh data.json (Aktif)
+        </a>
+      </div>
+      <!-- Daftar Arsip JSON -->
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Arsip File JSON</h4>
+          <button id="btn-refresh-archives" onclick="loadArchiveList()" class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div id="archive-list" class="space-y-2">
+          <p class="text-xs text-slate-500 text-center py-4">Memuat daftar arsip...</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- LANGKAH 3: Upload ke Hosting -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3">
+        <span class="w-6 h-6 rounded-full bg-violet-500 text-white text-xs font-black flex items-center justify-center flex-shrink-0">3</span>
+        <h3 class="text-sm font-bold text-white">Upload ke Hosting via admin-upload.php</h3>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600 dark:text-slate-400">Upload file <code class="bg-violet-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-violet-700 dark:text-violet-300">data.json</code> ke server hosting menggunakan endpoint berikut:</p>
+        <div class="flex items-center gap-3 bg-slate-100 dark:bg-[#0B0F19] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 group relative">
+          <svg class="w-4 h-4 text-violet-500 dark:text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          <code class="text-xs text-violet-700 dark:text-violet-300 font-mono truncate flex-1" id="upload-url-text">https://namadomain.com/admin-upload.php</code>
+          <button type="button" onclick="copyUploadUrl()" class="p-1.5 rounded-lg text-slate-400 hover:text-violet-600 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex-shrink-0" title="Salin URL">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+        </div>
+        <!-- Set Password Upload -->
+        <div class="border-t border-slate-800 pt-4">
+          <button type="button" id="btn-toggle-upload-pw" class="flex items-center gap-2 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            Set Password admin-upload.php
+            <svg id="icon-toggle-pw" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
           <div id="upload-pw-panel" class="hidden mt-4">
             <form id="form-upload-password" class="space-y-3" autocomplete="off">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1100,7 +1249,87 @@ const { view } = Astro.params;
         </div>
       </div>
     </div>
-    <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3"><svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p class="text-xs text-amber-300/80 leading-relaxed"><span class="font-bold text-amber-400">Catatan:</span> Upload JSON ke hosting menggunakan <code class="bg-amber-500/10 px-1 rounded" id="upload-url-text">https://namadomain.com/admin-upload.php</code></p></div>
+
+    <!-- LANGKAH 4: Bundle Deploy -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-800 bg-[#0F1523] flex items-center gap-3">
+        <span class="w-6 h-6 rounded-full bg-fuchsia-500 text-white text-xs font-black flex items-center justify-center flex-shrink-0">4</span>
+        <h3 class="text-sm font-bold text-white">Bundle untuk Self-Deploy Hosting</h3>
+        <span class="ml-auto text-[10px] bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 px-2 py-0.5 rounded-full font-bold">ZIP</span>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">Buat paket <code class="bg-fuchsia-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-fuchsia-700 dark:text-fuchsia-300">.zip</code> lengkap siap deploy — lembaga cukup extract ke <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">public_html/</code> dan portal langsung aktif.</p>
+        <div class="grid grid-cols-3 gap-2 mb-1">
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-fuchsia-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">index.html + _astro/</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">data.json</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">admin-upload.php</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">bundle-config.js</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">.htaccess</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
+            <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">README-DEPLOY.md</span>
+          </div>
+        </div>
+        <div class="flex items-end gap-3 flex-wrap">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Pilih Lembaga</label>
+            <select id="bundle-lembaga-select" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-fuchsia-500 outline-none transition-all">
+              <option value="">-- Memuat lembaga... --</option>
+            </select>
+          </div>
+          <button id="btn-create-bundle" onclick="createBundle()"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-500/20 hover:border-fuchsia-400 font-bold text-sm transition-all flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Buat Bundle ZIP
+          </button>
+        </div>
+        <div id="bundle-result" class="hidden">
+          <div class="bg-fuchsia-500/5 border border-fuchsia-500/20 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              </div>
+              <div>
+                <p id="bundle-file-name" class="text-sm font-bold text-white font-mono"></p>
+                <p id="bundle-file-meta" class="text-[10px] text-slate-500 mt-0.5"></p>
+              </div>
+            </div>
+            <a id="bundle-download-link" href="#" download class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/30 font-bold text-sm transition-all flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Unduh Bundle
+            </a>
+          </div>
+          <div class="mt-3 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-xl p-3">
+            <p class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">📦 Cara Deploy</p>
+            <ol class="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal list-inside">
+              <li>Extract isi ZIP ke <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">public_html/</code> hosting</li>
+              <li>Pastikan <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">index.html</code> langsung di root (bukan subfolder)</li>
+              <li>Set password di <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">admin-upload.php</code> — baris <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">UPLOAD_PASSWORD</code></li>
+              <li>Akses domain — portal aktif! Update data via <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">admin-upload.php</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="flex items-start gap-2.5 bg-slate-100 dark:bg-slate-800/30 rounded-xl p-3">
+          <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p class="text-xs text-slate-600 dark:text-slate-500 leading-relaxed">Bundle menggunakan folder <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">/dist</code>. Jika ada perubahan tampilan, jalankan <code class="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-700 dark:text-slate-300">npm run build</code> dulu sebelum membuat bundle.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Siswa Modal -->
@@ -1118,7 +1347,8 @@ const { view } = Astro.params;
             <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Jenis Kelamin</label><select id="siswa-jk" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
             <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tempat Lahir</label><input type="text" id="siswa-tempat-lahir" placeholder="Jakarta" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
             <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tanggal Lahir</label><input type="date" id="siswa-tanggal-lahir" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all date-input"></div>
-            <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status Kelulusan</label><select id="siswa-status" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Kompetensi Keahlian</label><input type="text" id="siswa-kompetensi" placeholder="Rekayasa Perangkat Lunak" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none transition-all"></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status Kelulusan</label><select id="siswa-status" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:border-indigo-500 outline-none"><option value="LULUS">LULUS</option><option value="TIDAK LULUS">TIDAK LULUS</option></select></div>
           </div>
         </div>
         <div class="p-6">
@@ -1135,8 +1365,31 @@ const { view } = Astro.params;
     <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in">
       <div class="p-6 border-b border-slate-800 flex items-center justify-between"><h3 class="text-white font-bold text-lg font-outfit">Import Data Siswa &amp; Nilai (.xlsx)</h3><button id="modal-import-close" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
       <div class="p-6 space-y-5">
-        <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 text-xs text-indigo-300 leading-relaxed"><p class="font-bold mb-2 text-indigo-200">Format kolom XLSX (baris pertama = header):</p><p class="font-mono">nisn | nama | jenis_kelamin | tempat_lahir | tanggal_lahir | kelas | status</p><p class="font-mono mt-1">+ kolom nilai: <span class="text-emerald-400">Matematika | Bahasa Indonesia | ...</span></p><p class="mt-2 text-slate-400">NISN sama = overwrite. <a id="btn-download-template" href="#" class="text-indigo-400 hover:text-indigo-300 font-bold">&darr; Download Template</a></p></div>
-        <div><input type="file" id="xlsx-file-input" accept=".xlsx,.xls" class="hidden"><button type="button" id="btn-pick-xlsx" class="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-xl p-8 hover:border-indigo-500 hover:bg-indigo-500/5 transition-all text-slate-400 hover:text-indigo-400"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="font-bold text-sm text-white mb-1">Klik untuk pilih file .xlsx</span></button><p id="xlsx-file-name" class="text-xs text-indigo-400 mt-2 font-medium text-center"></p></div>
+        <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 text-xs text-indigo-300 leading-relaxed"><p class="font-bold mb-2 text-indigo-200">Format kolom XLSX (baris pertama = header):</p><p class="font-mono">nisn | nama | jenis_kelamin | tempat_lahir | tanggal_lahir | kelas | <span class="text-amber-300">kompetensi_keahlian</span> | status</p><p class="font-mono mt-1">+ kolom nilai: <span class="text-emerald-400">Matematika | Bahasa Indonesia | ...</span></p><p class="mt-2 text-slate-400"><span class="text-amber-300/80">kompetensi_keahlian</span> opsional — isi untuk SMK/SMA. NISN sama = overwrite. <a id="btn-download-template" href="#" class="text-indigo-400 hover:text-indigo-300 font-bold">&darr; Download Template</a></p></div>
+        <!-- Drag & Drop Zone Import XLSX -->
+        <div id="xlsx-drop-zone" class="relative border-2 border-dashed border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all group">
+          <input type="file" id="xlsx-file-input" accept=".xlsx,.xls" class="hidden">
+          <!-- Ikon dokumen Excel -->
+          <div id="xlsx-drop-icon" class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="text-center pointer-events-none">
+            <p class="font-bold text-sm text-white mb-1">Drag &amp; Drop file .xlsx ke sini</p>
+            <p class="text-xs text-slate-500">atau <span class="text-indigo-400 font-bold">klik untuk memilih file</span></p>
+            <p class="text-[10px] text-slate-600 mt-1">Format: .xlsx / .xls</p>
+          </div>
+          <!-- Nama file yang dipilih -->
+          <p id="xlsx-file-name" class="text-xs text-emerald-400 font-bold font-mono hidden"></p>
+          <!-- Overlay saat dragging -->
+          <div id="xlsx-drag-overlay" class="absolute inset-0 rounded-[10px] bg-indigo-500/10 border-2 border-indigo-500 flex flex-col items-center justify-center gap-2 opacity-0 pointer-events-none transition-opacity">
+            <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-sm font-bold text-indigo-300">Lepas untuk upload</p>
+          </div>
+        </div>
         <div id="import-preview" class="hidden"><p class="text-xs text-slate-400">Preview: <span id="import-preview-count"></span> baris ditemukan</p></div>
         <div class="flex justify-end gap-3"><button id="modal-import-cancel" class="px-6 py-3 rounded-xl font-semibold bg-slate-700 hover:bg-slate-600 text-white">Batal</button><button id="btn-import-submit" class="btn-primary" disabled>Proses Import</button></div>
         <div id="import-result" class="hidden text-xs font-mono bg-[#0B0F19] border border-slate-800 rounded-xl p-4 text-emerald-400 whitespace-pre-wrap max-h-32 overflow-y-auto"></div>
@@ -1181,6 +1434,7 @@ const { view } = Astro.params;
   <script is:inline src={`/js/dash-crud.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-lembaga.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-history.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-sync.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-init.js?v=${_v}`}></script>
 
 </BaseLayout>

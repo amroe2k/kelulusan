@@ -16,13 +16,18 @@ import '../styles/global.css';
   <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 py-6">
     
     <!-- Header Branding (Optional for premium feel) -->
-    <div class="mb-6 text-center animate-fade-in">
-       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm mb-2">
+    <div class="mb-6 text-center animate-fade-in flex flex-col items-center gap-2">
+       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
           </span>
-          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Status Pengumuman: Aktif</span>
+          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Status Sistem: Aktif</span>
+       </div>
+       <!-- Dynamic SKL Status Badge -->
+       <div id="active-skl-badge" class="hidden">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="active-skl-text" class="text-[9px] font-black uppercase tracking-widest"></span>
        </div>
     </div>
 
@@ -34,8 +39,12 @@ import '../styles/global.css';
         
         <div class="relative z-10">
           <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl mb-4 shadow-xl shadow-indigo-500/20 bg-gradient-to-br from-indigo-500 to-indigo-700 rotate-3 group-hover:rotate-0 transition-transform duration-500">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+            <!-- Logo Lembaga: tampil jika ada, fallback ke icon mortarboard -->
+            <div id="logo-wrapper" class="inline-flex items-center justify-center w-28 h-28 rounded-3xl mb-4 shadow-2xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-500 to-indigo-700 overflow-hidden">
+              <!-- Logo lembaga (disembunyikan dulu, diisi via JS) -->
+              <img id="portal-logo" src="" alt="Logo Sekolah" class="hidden w-full h-full object-contain p-2" />
+              <!-- Fallback icon -->
+              <svg id="portal-logo-fallback" class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
             </div>
             <h1 class="text-3xl md:text-4xl font-black mb-2 tracking-tight text-slate-900 dark:text-white">
               Cek <span class="gradient-text">Kelulusan</span>
@@ -124,14 +133,41 @@ import '../styles/global.css';
                     <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
                     <div><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Rombongan Belajar</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kelas">-</p></div>
                   </div>
+                  <!-- Dynamic Field SMK: Kompetensi Keahlian -->
+                  <div class="hidden items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm" id="kompetensi-container">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+                    <div><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Kompetensi Keahlian</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kompetensi">-</p></div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Status Card -->
-              <div class="p-8 rounded-3xl text-center relative overflow-hidden bg-white dark:bg-white/5 border-2 border-slate-200 dark:border-white/10 shadow-inner">
-                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-6">Status Kelulusan</p>
-                <div id="res-status-container"></div>
-                <p class="text-[10px] text-slate-500 mt-6 leading-relaxed font-medium" id="result-subtitle">Tahun Ajaran 2024/2025</p>
+              <!-- Ultra-Modern Refined Status Widget -->
+              <div id="status-card-root" class="relative max-w-sm mx-auto group perspective-1000">
+                <!-- Background Decorative Blobs -->
+                <div id="blob-1" class="absolute -top-12 -left-12 w-40 h-40 bg-emerald-400/10 dark:bg-emerald-500/5 rounded-full blur-[60px] opacity-0 transition-all duration-1000 group-hover:scale-110"></div>
+                <div id="blob-2" class="absolute -bottom-12 -right-12 w-40 h-40 bg-indigo-400/10 dark:bg-indigo-500/5 rounded-full blur-[60px] opacity-0 transition-all duration-1000 group-hover:scale-110"></div>
+
+                <div id="status-card-inner" class="relative p-12 min-h-[420px] rounded-[3.5rem] bg-white/80 dark:bg-[#0a0a15]/80 backdrop-blur-xl border-2 text-center transition-all duration-700 flex flex-col justify-between shadow-[0_25px_60px_-15px_rgba(0,0,0,0.06)] overflow-hidden">
+                  <!-- Subtle Dot Grid Pattern -->
+                  <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none" style="background-image: radial-gradient(circle, currentColor 1px, transparent 1px); background-size: 24px 24px;"></div>
+                  
+                  <!-- Corner Accents -->
+                  <div class="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-slate-200 dark:border-white/5 rounded-tl-xl opacity-50"></div>
+                  <div class="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-slate-200 dark:border-white/5 rounded-br-xl opacity-50"></div>
+                  
+                  <div class="relative">
+                    <span class="block text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 mb-2">Status Kelulusan</span>
+                    <div class="h-0.5 w-8 bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mx-auto"></div>
+                  </div>
+                  
+                  <div id="res-status-display" class="relative flex-1 flex flex-col items-center justify-center py-8">
+                    <!-- Status Text & Icon Injected via JS -->
+                  </div>
+                  
+                  <div class="relative pt-6 border-t border-black/5 dark:border-white/5">
+                    <p class="text-[11px] font-black text-slate-400 dark:text-slate-600 tracking-[0.2em] uppercase opacity-80" id="result-subtitle">Tahun Ajaran 2024/2025</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -181,23 +217,41 @@ import '../styles/global.css';
   <!-- PDF iframe (hidden, identical to admin) -->
   <iframe id="skl-iframe" style="position:absolute;top:0;left:-9999px;width:794px;height:1123px;border:none;" title="SKL Preview"></iframe>
 
-  <style>
+  <style is:global>
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
-    
-    .badge-premium-lulus {
-       @apply inline-flex items-center gap-2 px-10 py-4 rounded-3xl font-black text-2xl tracking-[0.2em] shadow-xl shadow-emerald-500/20 border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-500;
+    .status-card-lulus {
+       @apply bg-[#f0fdf4]/90 border-[#bcf5d4] shadow-[0_25px_60px_-15px_rgba(16,185,129,0.1)];
     }
-    .badge-premium-tidak {
-       @apply inline-flex items-center gap-2 px-10 py-4 rounded-3xl font-black text-2xl tracking-[0.2em] shadow-xl shadow-red-500/20 border-2 border-red-500/50 bg-red-500/10 text-red-500;
+    .status-card-tidak {
+       @apply bg-[#fff1f2]/90 border-[#ffd1d9] shadow-[0_25px_60px_-15px_rgba(244,63,94,0.1)];
+    }
+    .dark .status-card-lulus, .dark .status-card-tidak {
+       background: #111125 !important;
+       @apply border-white/5 shadow-none;
+    }
+    .dark .status-card-lulus {
+       border-color: #065f46 !important;
+    }
+    .dark .status-card-tidak {
+       border-color: #9f1239 !important;
     }
   </style>
 
-  <!-- CDN Libraries -->
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Float animation: is:global agar tidak di-scope oleh Astro -->
+  <style is:global>
+    @keyframes portalFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-14px); }
+    }
+    #logo-wrapper {
+      animation: portalFloat 3.5s ease-in-out infinite;
+      will-change: transform;
+    }
+  </style>
+
+
+  <!-- CDN Libraries: html2canvas & jsPDF tidak diperlukan (menggunakan window.print) -->
 
   <script is:inline>
   // ─── SHA-256 ───
@@ -268,13 +322,92 @@ import '../styles/global.css';
 
     // Load data.json
     let isAnnouncementTime = false;
+
+    // ── Integrity Verification ──────────────────────────────────────────
+    async function verifyIntegrity(meta) {
+      if (!meta || !meta._integrity) return false;
+      // Gunakan secret per-lembaga dari bundle-config.js, fallback ke default
+      const secret = (typeof window !== 'undefined' && window.BUNDLE_SECRET)
+        ? window.BUNDLE_SECRET
+        : 'kls-portal-integrity-2026';
+      const payload = [
+        meta.lembaga_id, meta.lembaga_nama, meta.lembaga_slug,
+        meta.sekolah, meta.nss, meta.npsn, meta.kepala_sekolah
+      ].map(v => v ?? '').join('|');
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        'raw', enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+      );
+      const sig      = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+      const computed = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('');
+      return computed === meta._integrity;
+    }
+
     try {
       const res = await fetch('/data.json', { cache: 'no-store' });
       if (!res.ok) throw new Error();
       data = await res.json();
+
+      // ── Cek Integrity ──
+      if (data._meta) {
+        if (data._meta._integrity) {
+          const valid = await verifyIntegrity(data._meta);
+          if (!valid) {
+            const banner = document.createElement('div');
+            banner.id = 'integrity-warning';
+            banner.innerHTML = `
+              <div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fca5a5;padding:12px 20px;font-size:13px;font-family:monospace;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+                <svg style="width:18px;height:18px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span><strong>PERINGATAN INTEGRITAS:</strong> File data.json telah dimodifikasi secara tidak sah. Portal tidak dapat menampilkan data kelulusan. Hubungi administrator.</span>
+              </div>`;
+            document.body.prepend(banner);
+            btnSubmit.disabled = true;
+            showToast('Integritas data tidak valid. Data mungkin telah dimanipulasi.', 'error');
+            return;
+          }
+        } else {
+          // File lama tanpa _integrity — biarkan lanjut
+          console.warn('[Portal] data.json belum memiliki _integrity. Generate ulang untuk proteksi.');
+        }
+      }
+
       if (data._meta) {
         $('sekolah-name-display').textContent = data._meta.sekolah;
         $('result-subtitle').textContent = 'Tahun Ajaran ' + data._meta.tahun_ajaran;
+
+        // ─── Tampilkan Mode SKL Aktif ───
+        const sklBadge = $('active-skl-badge');
+        const sklText = $('active-skl-text');
+        const currentSklType = getEffectiveSklType(data._meta);
+        
+        if (sklBadge && sklText) {
+          if (currentSklType === 'skl2') {
+            sklBadge.className = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 animate-fade-in';
+            sklText.textContent = 'Mode: SKL 2 (Transkrip Lengkap)';
+          } else {
+            sklBadge.className = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 animate-fade-in';
+            sklText.textContent = 'Mode: SKL 1 (Hanya Kelulusan)';
+          }
+        }
+
+
+        // ─── Inject Logo Lembaga ───
+        if (data._meta.logo) {
+          const logoEl  = $('portal-logo');
+          const fallbackEl = $('portal-logo-fallback');
+          const wrapperEl  = $('logo-wrapper');
+          if (logoEl && fallbackEl) {
+            logoEl.src = data._meta.logo;
+            logoEl.classList.remove('hidden');
+            fallbackEl.classList.add('hidden');
+            // Hapus gradient bg — tampilkan bg putih bersih agar logo terbaca
+            if (wrapperEl) {
+              wrapperEl.classList.remove('bg-gradient-to-br','from-indigo-500','to-indigo-700');
+              wrapperEl.classList.add('bg-white','dark:bg-slate-800');
+            }
+          }
+        }
 
         // ─── GATE: Cek Tanggal Pengumuman ───
         const tglStr = data._meta.tanggal_pengumuman;
@@ -290,6 +423,16 @@ import '../styles/global.css';
           }
         } else {
           isAnnouncementTime = true;
+        }
+
+        // ─── Auto-search from URL ───
+        const urlParams = new URLSearchParams(window.location.search);
+        const nisnParam = urlParams.get('nisn');
+        if (nisnParam && isAnnouncementTime) {
+          nisnInput.value = nisnParam;
+          setTimeout(() => {
+            searchForm.dispatchEvent(new Event('submit'));
+          }, 500);
         }
       }
     } catch {
@@ -390,18 +533,58 @@ import '../styles/global.css';
       $('res-nisn').textContent  = 'NISN: ' + s.nisn_display;
       $('res-ttl').textContent   = s.tempat_lahir + ', ' + s.tanggal_lahir;
       $('res-kelas').textContent = s.kelas;
+      
+      const isSmk = (data._meta.jenjang || '').toUpperCase() === 'SMK';
+      const smkKompetensi = s.kompetensi_keahlian || data._meta.kompetensi_keahlian || '';
+      const kompContainer = $('kompetensi-container');
+      if (kompContainer) {
+        if (isSmk && smkKompetensi) {
+          kompContainer.classList.remove('hidden');
+          kompContainer.classList.add('flex');
+          $('res-kompetensi').textContent = smkKompetensi;
+        } else {
+          kompContainer.classList.add('hidden');
+          kompContainer.classList.remove('flex');
+        }
+      }
 
       const isLulus = s.status.toUpperCase() === 'LULUS';
-      const statusEl = $('res-status-container');
-      statusEl.innerHTML = isLulus
-        ? '<div class="badge-premium-lulus bounce-in">LULUS</div>'
-        : '<div class="badge-premium-tidak bounce-in">TIDAK LULUS</div>';
+      const statusCard = $('status-card-inner');
+      const statusDisplay = $('res-status-display');
+      const blob1 = $('blob-1');
+      const blob2 = $('blob-2');
+      
+      if (isLulus) {
+        blob1.className = 'absolute -top-12 -left-12 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-[60px] opacity-100 transition-all duration-1000 group-hover:scale-125';
+        blob2.className = 'absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-400/20 dark:bg-indigo-500/10 rounded-full blur-[60px] opacity-100 transition-all duration-1000 group-hover:scale-125';
+        statusCard.className = 'relative p-12 min-h-[420px] rounded-[3.5rem] border-2 text-center transition-all duration-700 flex flex-col justify-between status-card-lulus overflow-hidden';
+        statusDisplay.innerHTML = `
+          <div class="mb-4 w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-emerald-500 transform -rotate-6 group-hover:rotate-0 transition-transform duration-500">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h2 class="text-6xl md:text-7xl font-black tracking-tighter text-emerald-600 dark:text-emerald-400 drop-shadow-sm">LULUS</h2>
+          <p class="mt-2 text-[10px] font-bold text-emerald-600/60 dark:text-emerald-400/40 tracking-[0.2em] uppercase">Selamat atas pencapaian Anda!</p>
+        `;
+      } else {
+        blob1.className = 'absolute -top-12 -left-12 w-48 h-48 bg-rose-400/10 dark:bg-rose-500/5 rounded-full blur-[60px] opacity-100 transition-all duration-1000';
+        blob2.className = 'absolute -bottom-12 -right-12 w-48 h-48 bg-slate-400/10 dark:bg-slate-500/5 rounded-full blur-[60px] opacity-100 transition-all duration-1000';
+        statusCard.className = 'relative p-12 min-h-[420px] rounded-[3.5rem] border-2 text-center transition-all duration-700 flex flex-col justify-between status-card-tidak overflow-hidden';
+        statusDisplay.innerHTML = `
+          <div class="mb-4 w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-rose-500 transform rotate-6 group-hover:rotate-0 transition-transform duration-500">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </div>
+          <h2 class="text-5xl md:text-6xl font-black tracking-tight text-rose-600 dark:text-rose-400 uppercase drop-shadow-sm">Tidak Lulus</h2>
+          <p class="mt-2 text-[10px] font-bold text-rose-600/60 dark:text-rose-400/40 tracking-[0.2em] uppercase">Tetap semangat & terus mencoba!</p>
+        `;
+      }
+
+      const isSkl2 = getEffectiveSklType(data._meta) === 'skl2';
 
       const rataEl = $('res-rata-rata');
       rataEl.textContent = s.rata_rata ? s.rata_rata.toFixed(2) : '-';
       $('res-jml-mapel').textContent = (s.nilai && s.nilai.length) ? s.nilai.length : '-';
 
-      if (getEffectiveSklType(data._meta) === 'skl1') {
+      if (!isSkl2) {
         $('ui-tabel-nilai').style.display = 'none';
       } else {
         $('ui-tabel-nilai').style.display = '';
@@ -424,6 +607,16 @@ import '../styles/global.css';
               </td>`;
             nilaiTbody.appendChild(tr);
           });
+        } else {
+          nilaiTbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="px-6 py-10 text-center text-slate-500 dark:text-slate-400">
+                <svg class="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="font-bold text-sm">Data Nilai Belum Tersedia</p>
+                <p class="text-[10px] mt-1 tracking-widest uppercase">Silakan hubungi administrator sekolah.</p>
+              </td>
+            </tr>
+          `;
         }
       }
 
@@ -463,69 +656,42 @@ import '../styles/global.css';
         const sklType = getEffectiveSklType(m);
         const htmlDoc = buildSklHtml(m, s, s.nilai || [], sklType);
 
-        // Write to hidden iframe — gunakan readyState polling (lebih andal dari onload)
-        const iframe = document.getElementById('skl-iframe');
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(htmlDoc);
-        iframe.contentDocument.close();
+        // Buka window baru untuk print — lebih andal dari html2canvas+jsPDF
+        // Mendukung WebP, Google Fonts, dan semua format gambar secara native
+        const printWin = window.open('', '_blank', 'width=900,height=750,scrollbars=yes');
+        if (!printWin) {
+          showToast('Pop-up diblokir! Izinkan pop-up untuk situs ini, lalu coba lagi.', 'error');
+          return;
+        }
 
-        // Poll hingga iframe selesai memuat
+        printWin.document.open();
+        printWin.document.write(htmlDoc);
+        printWin.document.close();
+
+        // Poll hingga dokumen & semua aset (gambar, font) selesai dimuat
         await new Promise(resolve => {
           const poll = setInterval(() => {
-            if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+            if (printWin.document && printWin.document.readyState === 'complete') {
               clearInterval(poll);
               resolve();
             }
-          }, 50);
-          setTimeout(() => { clearInterval(poll); resolve(); }, 5000); // max 5s fallback
+          }, 80);
+          setTimeout(() => { clearInterval(poll); resolve(); }, 6000);
         });
-        await new Promise(r => setTimeout(r, 1500)); // tunggu Google Fonts + gambar render
+        // Extra: tunggu Google Fonts render sepenuhnya
+        await new Promise(r => setTimeout(r, 1500));
 
-        // Render canvas from iframe body
-        const iframeBody = iframe.contentDocument.body;
-        const canvas = await html2canvas(iframeBody, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,      // allow cross-origin images (logo, stempel, ttd)
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 794,
-          windowHeight: 1123,
-        });
+        // Trigger print dialog (Ctrl+P) — user pilih "Save as PDF"
+        printWin.focus();
+        printWin.print();
 
-        // Generate PDF
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p','mm','a4');
-        const pw = pdf.internal.pageSize.getWidth();
-        const ph = pdf.internal.pageSize.getHeight();
-        const imgH = (canvas.height * pw) / canvas.width;
-        const imgData = canvas.toDataURL('image/png');
-
-        if (imgH > ph) {
-          let yPos = 0;
-          const pageH = canvas.width * (ph / pw);
-          while (yPos < canvas.height) {
-            const portion = document.createElement('canvas');
-            portion.width  = canvas.width;
-            portion.height = Math.min(pageH, canvas.height - yPos);
-            portion.getContext('2d').drawImage(canvas, 0, yPos, canvas.width, portion.height, 0, 0, canvas.width, portion.height);
-            if (yPos > 0) pdf.addPage();
-            pdf.addImage(portion.toDataURL('image/png'),'PNG',0,0,pw,portion.height*pw/canvas.width);
-            yPos += pageH;
-          }
-        } else {
-          pdf.addImage(imgData,'PNG',0,0,pw,imgH);
-        }
-
-        const prefix = m.jenis_skl === 'skl1' ? 'SKL1' : 'SKL2';
-        const nisnStr = s.nisn || (s.nisn_display ? s.nisn_display.replace(/\*/g,'x') : '0000000000');
-        const fname = prefix + '-' + s.nama.replace(/\s+/g,'_') + '-' + nisnStr + '.pdf';
-        pdf.save(fname);
-        showToast('Dokumen PDF berhasil diunduh.', 'success');
+        // Tutup window otomatis setelah user selesai
+        setTimeout(() => { try { printWin.close(); } catch(e) {} }, 3000);
+        showToast('Dialog cetak terbuka — pilih "Simpan sebagai PDF" untuk mengunduh.', 'success');
 
       } catch (err) {
         console.error('PDF error:', err);
-        showToast('Gagal membuat PDF. Coba lagi.', 'error');
+        showToast('Gagal membuka PDF. Pastikan pop-up tidak diblokir, lalu coba lagi.', 'error');
       } finally {
         btnDownload.innerHTML = orig;
         btnDownload.disabled  = false;
@@ -553,7 +719,9 @@ import '../styles/global.css';
     const logoHtml = meta.logo ? `<img src="${meta.logo}" style="height:90px;width:90px;object-fit:contain;" crossorigin="anonymous" />` : `<div style="width:90px;height:90px;border:2px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;background:#fafafa;">LOGO</div>`;
     const stempelHtml = meta.stempel ? `<img src="${meta.stempel}" crossorigin="anonymous" style="position:absolute;top:15px;left:-10px;width:140px;height:140px;object-fit:contain;opacity:0.6;pointer-events:none;" />` : '';
     const ttdHtml = meta.ttd ? `<img src="${meta.ttd}" crossorigin="anonymous" style="height:70px;margin:0 auto 4px auto;display:block;" />` : `<div style="height:70px;"></div>`;
-    const nilaiRows = nilai.map((n,i) => `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 10px;text-align:center;color:#666;font-size:11px;">${i+1}</td><td style="padding:8px 10px;color:#333;">${n.mapel}</td><td style="padding:8px 10px;text-align:center;font-weight:700;color:#111;">${n.nilai}</td></tr>`).join('');
+    const nilaiRows = nilai.length > 0 
+      ? nilai.map((n,i) => `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 10px;text-align:center;color:#666;font-size:11px;">${i+1}</td><td style="padding:8px 10px;color:#333;">${n.mapel}</td><td style="padding:8px 10px;text-align:center;font-weight:700;color:#111;">${n.nilai}</td></tr>`).join('')
+      : `<tr><td colspan="3" style="padding:30px 10px;text-align:center;color:#64748b;font-size:11px;font-style:italic;">Data Rincian Nilai belum tersedia atau belum diunggah oleh pihak sekolah.</td></tr>`;
     const kota = meta.kota || (meta.alamat ? (meta.alamat.split(',')[1] || meta.alamat.split(',')[0]).trim() : '........');
     const sklBody = isSklNilai ? `
       <p class="intro-text">Kepala <strong>${meta.sekolah||'Sekolah'}</strong> menerangkan bahwa berdasarkan hasil Rapat Pleno Dewan Guru tentang Penetapan Kelulusan Peserta Didik, dinyatakan bahwa:</p>

@@ -99,7 +99,7 @@ function renderHistoryTable(rows) {
 async function setActiveJson(fileName) {
   const c = await Swal.fire({
     title: 'Jadikan Aktif?',
-    html: `File <code class="text-violet-400">${escHtml(fileName)}</code> akan menggantikan <code>data.json</code> aktif.`,
+    html: `File <code class="text-violet-400">${escHtml(fileName)}</code> akan menggantikan <code>data.json</code> aktif di server lokal ini.<br><small class="text-slate-500">⚠ Tidak mempengaruhi hosting mandiri lembaga.</small>`,
     icon: 'question', showCancelButton: true,
     confirmButtonText: 'Ya, Set Aktif', cancelButtonText: 'Batal',
     background:'#111827', color:'#e2e8f0', confirmButtonColor:'#7c3aed'
@@ -136,7 +136,22 @@ async function restoreJson(id, lembagaId, lembagaNama, fileName) {
   const res = await r.json();
 
   if (res.success) {
-    showToast(`✓ ${res.imported} siswa berhasil direstore ke ${lembagaNama}!`, 'success');
+    showToast(`✓ ${res.imported} siswa berhasil direstore ke ${lembagaNama}! Menyinkronkan JSON...`, 'success');
+
+    // ── Auto-regenerate data.json + bundle-config.js setelah restore ──
+    try {
+      const syncRes = await (await fetch('/api/sync-data.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }
+      })).json();
+      if (syncRes.success) {
+        showToast(`✓ JSON tersinkronisasi — ${syncRes.jumlah_siswa} siswa dimuat.`, 'success');
+      } else {
+        showToast('⚠ Restore DB selesai, tapi sync JSON gagal: ' + (syncRes.error || '?'), 'warning');
+      }
+    } catch(e) {
+      showToast('⚠ Restore selesai, sync JSON tidak dapat dijangkau.', 'warning');
+    }
+
     await renderJsonHistory();
   } else {
     showToast(res.error||'Restore gagal','error');

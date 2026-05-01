@@ -1,5 +1,8 @@
 <?php
 session_start();
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 require 'db.php';
 
 if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'guru')) {
@@ -100,11 +103,11 @@ if ($method === 'POST') {
         }
 
         $insertSiswa = $pdo->prepare("
-            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, status)
-            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status)
+            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE nama=VALUES(nama), jenis_kelamin=VALUES(jenis_kelamin),
             tempat_lahir=VALUES(tempat_lahir), tanggal_lahir=VALUES(tanggal_lahir),
-            kelas=VALUES(kelas), status=VALUES(status)
+            kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), status=VALUES(status)
         ");
 
         $imported = 0;
@@ -117,8 +120,9 @@ if ($method === 'POST') {
             $col = array_combine($header, array_map('trim', $row));
 
             $nisn          = $col['nisn'] ?? '';
-            $nama          = $col['nama'] ?? '';
+            $nama          = mb_convert_case(mb_strtolower(trim($col['nama'] ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
             $kelas         = $col['kelas'] ?? '';
+            $kompetensi    = $col['kompetensi_keahlian'] ?? '';
             $status        = strtoupper($col['status'] ?? 'LULUS');
             $jk            = strtoupper($col['jenis_kelamin'] ?? 'L');
             $tempat_lahir  = $col['tempat_lahir'] ?? '';
@@ -139,7 +143,7 @@ if ($method === 'POST') {
             }
 
             try {
-                $insertSiswa->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $status]);
+                $insertSiswa->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi ?: null, $status]);
                 $imported++;
             } catch (Exception $e) {
                 $errors[] = "Baris " . ($i + 2) . ": " . $e->getMessage();
@@ -167,19 +171,20 @@ if ($method === 'POST') {
         $imported = 0; $skipped = 0; $errors = [];
 
         $stmt = $pdo->prepare("
-            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, status)
-            VALUES (UUID(), :lembaga, :nisn, :nama, :jk, :tempat, :tgl, :kelas, :status)
+            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status)
+            VALUES (UUID(), :lembaga, :nisn, :nama, :jk, :tempat, :tgl, :kelas, :kompetensi, :status)
             ON DUPLICATE KEY UPDATE
               nama=VALUES(nama), jenis_kelamin=VALUES(jenis_kelamin),
               tempat_lahir=VALUES(tempat_lahir), tanggal_lahir=VALUES(tanggal_lahir),
-              kelas=VALUES(kelas), status=VALUES(status)
+              kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), status=VALUES(status)
         ");
 
         $pdo->beginTransaction();
         foreach ($rows as $i => $col) {
             $nisn   = trim($col['nisn']   ?? '');
-            $nama   = trim($col['nama']   ?? '');
+            $nama   = mb_convert_case(mb_strtolower(trim($col['nama']   ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
             $kelas  = trim($col['kelas']  ?? '');
+            $kompetensi = trim($col['kompetensi_keahlian'] ?? '');
             $status = strtoupper($col['status'] ?? 'LULUS');
             $jk     = strtoupper($col['jenis_kelamin'] ?? 'L');
             $tempat = trim($col['tempat_lahir'] ?? '');
@@ -190,7 +195,7 @@ if ($method === 'POST') {
             if (!in_array($jk, ['L','P'])) $jk = 'L';
 
             try {
-                $stmt->execute([':lembaga'=>$lembagaId, ':nisn'=>$nisn,':nama'=>$nama,':jk'=>$jk,':tempat'=>$tempat,':tgl'=>$tgl,':kelas'=>$kelas,':status'=>$status]);
+                $stmt->execute([':lembaga'=>$lembagaId, ':nisn'=>$nisn,':nama'=>$nama,':jk'=>$jk,':tempat'=>$tempat,':tgl'=>$tgl,':kelas'=>$kelas,':kompetensi'=>$kompetensi ?: null,':status'=>$status]);
                 $imported++;
             } catch(\Exception $e) {
                 $errors[] = "Baris ".($i+2).": ".$e->getMessage();
@@ -223,7 +228,7 @@ if ($method === 'POST') {
     // ── create ────────────────────────────────────────────────────────────
     if ($action === 'create') {
         $nisn          = trim($data['nisn'] ?? '');
-        $nama          = trim($data['nama'] ?? '');
+        $nama          = mb_convert_case(mb_strtolower(trim($data['nama'] ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         $kelas         = trim($data['kelas'] ?? '');
         $status        = $data['status'] ?? 'LULUS';
         $jk            = $data['jenis_kelamin'] ?? 'L';
@@ -251,7 +256,7 @@ if ($method === 'POST') {
     // ── update ────────────────────────────────────────────────────────────
     if ($action === 'update') {
         $id            = $data['id'];
-        $nama          = trim($data['nama'] ?? '');
+        $nama          = mb_convert_case(mb_strtolower(trim($data['nama'] ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         $kelas         = trim($data['kelas'] ?? '');
         $status        = $data['status'] ?? 'LULUS';
         $jk            = $data['jenis_kelamin'] ?? 'L';

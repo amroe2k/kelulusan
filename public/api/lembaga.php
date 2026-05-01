@@ -81,23 +81,47 @@ if ($method === 'POST') {
     if ($act === 'delete') {
         $id = $body['id'] ?? '';
         if (!$id) { echo json_encode(['success'=>false,'error'=>'ID diperlukan']); exit; }
+
         // Cek apakah aktif
         $aktif = $pdo->prepare("SELECT aktif FROM lembaga WHERE id = ?");
         $aktif->execute([$id]);
         if ((int)($aktif->fetchColumn()) === 1) {
             echo json_encode(['success'=>false,'error'=>'Tidak bisa hapus lembaga yang sedang aktif']); exit;
         }
-        // Hapus siswa & nilainya
-        $siswaIds = $pdo->prepare("SELECT id FROM siswa WHERE lembaga_id = ?");
-        $siswaIds->execute([$id]);
-        foreach ($siswaIds->fetchAll(PDO::FETCH_COLUMN) as $sid) {
-            $pdo->prepare("DELETE FROM nilai WHERE siswa_id = ?")->execute([$sid]);
+
+        // Kumpulkan file arsip sebelum dihapus dari DB
+        $arsipFiles = $pdo->prepare("SELECT file_name FROM json_history WHERE lembaga_id = ? AND file_name IS NOT NULL");
+        $arsipFiles->execute([$id]);
+        $fileNames = $arsipFiles->fetchAll(PDO::FETCH_COLUMN);
+
+        $pdo->beginTransaction();
+        try {
+            // Hapus nilai siswa
+            $siswaIds = $pdo->prepare("SELECT id FROM siswa WHERE lembaga_id = ?");
+            $siswaIds->execute([$id]);
+            foreach ($siswaIds->fetchAll(PDO::FETCH_COLUMN) as $sid) {
+                $pdo->prepare("DELETE FROM nilai WHERE siswa_id = ?")->execute([$sid]);
+            }
+            $pdo->prepare("DELETE FROM siswa       WHERE lembaga_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM pengaturan  WHERE lembaga_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM json_history WHERE lembaga_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM lembaga     WHERE id = ?")->execute([$id]);
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            echo json_encode(['success'=>false,'error'=>'Gagal menghapus: '.$e->getMessage()]);
+            exit;
         }
-        $pdo->prepare("DELETE FROM siswa      WHERE lembaga_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM pengaturan WHERE lembaga_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM json_history WHERE lembaga_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM lembaga WHERE id = ?")->execute([$id]);
-        echo json_encode(['success' => true]);
+
+        // Hapus file fisik arsip (di luar transaction — tidak kritis jika gagal)
+        $exportsDir = dirname(__DIR__) . '/exports/';
+        $deletedFiles = 0;
+        foreach ($fileNames as $fn) {
+            $fp = $exportsDir . basename($fn);
+            if (file_exists($fp) && unlink($fp)) $deletedFiles++;
+        }
+
+        echo json_encode(['success'=>true, 'deleted_files'=>$deletedFiles]);
         exit;
     }
 

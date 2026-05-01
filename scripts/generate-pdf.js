@@ -120,7 +120,7 @@ function buildSklHtml(siswa, meta, nilai) {
     <tr><td>NISN</td><td>:</td><td>${siswa.nisn || '-'}</td></tr>
     <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir}, ${formatTanggal(siswa.tanggal_lahir)}</td></tr>
     <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-    ${meta.jenjang === 'SMK' && meta.kompetensi_keahlian ? `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${meta.kompetensi_keahlian}</td></tr>` : ''}
+    ${(meta.jenjang || '').toUpperCase() === 'SMK' && siswa.kompetensi_keahlian ? `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${siswa.kompetensi_keahlian}</td></tr>` : ''}
     <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran}</td></tr>
   </table>
 

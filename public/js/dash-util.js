@@ -1,6 +1,9 @@
 const $ = id => document.getElementById(id);
 let auth=null,allSiswa=[],allData=null,currentView='overview',importedRows=[];
 
+// ─── HTML Escape Helper ───────────────────────────────────────────────────
+function escHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 // ─── Date Helpers ─────────────────────────────────────────────
 // Bulan Indonesia untuk parsing & display
 const BULAN_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -224,7 +227,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
 
   const siswa = siswaData || { nama:'AHMAD FAUZAN MAULANA', nisn:'1234567890',
     tempat_lahir:'Bandung', tanggal_lahir:'2007-05-15', kelas:'XII IPA 1', status:'LULUS',
-    kompetensi_keahlian: meta.kompetensi_keahlian||'' };
+    kompetensi_keahlian: '' };
   const nilai = nilaiData && nilaiData.length ? nilaiData : [
     {mapel:'Pendidikan Agama dan Budi Pekerti',nilai:88},{mapel:'Pendidikan Pancasila dan Kewarganegaraan',nilai:84},
     {mapel:'Bahasa Indonesia',nilai:86},{mapel:'Matematika',nilai:78},
@@ -241,7 +244,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
 
   // SMK extra header line
   const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
-  const smkKompetensi = siswa.kompetensi_keahlian || meta.kompetensi_keahlian || '';
+  const smkKompetensi = siswa.kompetensi_keahlian || '';
   const smkHeaderLine = isSmk && smkKompetensi
     ? `<p style="margin-top:3px; font-weight:700; color:#4f46e5;">Kompetensi Keahlian: ${smkKompetensi}</p>`
     : '';

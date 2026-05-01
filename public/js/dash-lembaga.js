@@ -159,10 +159,23 @@ async function activateLembaga(id, nama) {
   const res = await r.json();
   if (!res.success) { showToast(res.error||'Gagal','error'); return; }
 
-  showToast(`✓ ${nama} berhasil diaktifkan! Memuat ulang sistem...`, 'success');
-  setTimeout(() => {
-    window.location.reload();
-  }, 1000);
+  showToast(`✓ ${nama} berhasil diaktifkan! Menyinkronkan data...`, 'success');
+
+  // ── Auto-regenerate data.json untuk lembaga baru ──────────────────────
+  try {
+    const syncRes = await (await fetch('/api/sync-data.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    })).json();
+    if (syncRes.success) {
+      showToast(`✓ Data JSON tersinkronisasi — ${syncRes.jumlah_siswa} siswa dimuat. Memuat ulang...`, 'success');
+    } else {
+      showToast('⚠ Lembaga aktif, tapi sync JSON gagal: ' + (syncRes.error || '?'), 'warning');
+    }
+  } catch(e) {
+    showToast('⚠ Lembaga aktif, sync JSON tidak dapat dijangkau.', 'warning');
+  }
+
+  setTimeout(() => { window.location.reload(); }, 1500);
 }
 
 async function deleteLembaga(id, nama) {

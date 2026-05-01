@@ -29,6 +29,15 @@ const sha256   = str => crypto.createHash('sha256').update(str).digest('hex');
 const uuid     = ()  => crypto.randomUUID();
 const maskNISN = n   => (!n || n.length < 6) ? n : n.slice(0,3) + '****' + n.slice(-3);
 
+// ─── Integrity Protection ─────────────────────────────────────────────
+function computeIntegrity(m, secret) {
+  const payload = [
+    m.lembaga_id, m.lembaga_nama, m.lembaga_slug,
+    m.sekolah, m.nss, m.npsn, m.kepala_sekolah
+  ].map(v => v ?? '').join('|');
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+}
+
 // Konversi Date object / ISO string → 'YYYY-MM-DD'
 const toDateString = (d) => {
   if (!d) return null;
@@ -77,15 +86,16 @@ async function exportData() {
   const conn = await mysql.createConnection(DB);
   console.log('✓ Terhubung ke database:', DB.database);
 
-  // 1. Ambil lembaga aktif
+  // 1. Ambil lembaga aktif (beserta integrity_secret)
   const [lembagaRows] = await conn.execute(
-    'SELECT * FROM lembaga WHERE aktif = 1 LIMIT 1'
+    'SELECT *, integrity_secret FROM lembaga WHERE aktif = 1 LIMIT 1'
   );
   if (lembagaRows.length === 0) {
     console.error('✗ Tidak ada lembaga aktif. Aktifkan dulu via dashboard.');
     await conn.end(); process.exit(1);
   }
   const lembaga = lembagaRows[0];
+  const INTEGRITY_SECRET = lembaga.integrity_secret || 'kls-portal-integrity-2026';
   console.log(`✓ Lembaga aktif: ${lembaga.nama} [${lembaga.slug}]`);
 
   // 2. Meta Sekolah (pengaturan milik lembaga aktif)
@@ -128,12 +138,19 @@ async function exportData() {
     logo:               m.logo    || null,
     stempel:            m.stempel || null,
     ttd:                m.ttd     || null,
+    kop_surat:          m.kop_surat || null,
   };
+
+  // Tambahkan integrity hash (dengan secret per-lembaga)
+  meta._integrity = computeIntegrity(meta, INTEGRITY_SECRET);
   console.log(`✓ Meta: ${meta.sekolah} (${meta.tahun_ajaran})`);
+  console.log(`✓ Secret   : ${INTEGRITY_SECRET}`);
+  console.log(`✓ Integrity: ${meta._integrity.slice(0, 16)}...`);
+
 
   // 3. Data Siswa milik lembaga aktif
   const [siswaRows] = await conn.execute(
-    `SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, status
+    `SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status
      FROM siswa WHERE lembaga_id = ? ORDER BY nama ASC`,
     [lembaga.id]
   );
@@ -158,6 +175,7 @@ async function exportData() {
       nisn_display: maskNISN(s.nisn.toString()),
       nama:         s.nama,
       kelas:        s.kelas,
+      kompetensi_keahlian: s.kompetensi_keahlian || '',
       jenis_kelamin:s.jenis_kelamin,
       tempat_lahir: s.tempat_lahir,
       tanggal_lahir:formatTanggal(s.tanggal_lahir),
@@ -174,6 +192,15 @@ async function exportData() {
   const outPath  = path.join(process.cwd(), 'public', 'data.json');
   await fs.writeFile(outPath, jsonStr, 'utf-8');
 
+  // 4b. Tulis bundle-config.js dengan secret per-lembaga
+  const bundleConfigPath = path.join(process.cwd(), 'public', 'bundle-config.js');
+  const bundleConfigContent =
+    `/* AUTO-GENERATED — DO NOT EDIT */\n` +
+    `/* Bundle: ${lembaga.slug} */\n` +
+    `window.BUNDLE_SECRET = '${INTEGRITY_SECRET}';\n`;
+  await fs.writeFile(bundleConfigPath, bundleConfigContent, 'utf-8');
+  console.log(`✓ bundle-config.js ditulis untuk ${lembaga.slug}`);
+
   // 5. Simpan arsip ke public/exports/
   const exportsDir = path.join(process.cwd(), 'public', 'exports');
   await fs.mkdir(exportsDir, { recursive: true });
@@ -187,6 +214,27 @@ async function exportData() {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [uuid(), lembaga.id, lembaga.nama, lembaga.slug, archiveName, siswaRows.length, lulus, tidakLulus]
   );
+
+  // 7. ── Retention Policy: simpan max 5 arsip per lembaga ─────────────────
+  //    Hapus entri lama (file_name IS NOT NULL) jika > 5
+  const [histRows] = await conn.execute(
+    `SELECT id, file_name FROM json_history
+     WHERE lembaga_id = ? AND file_name IS NOT NULL
+     ORDER BY generated_at DESC`,
+    [lembaga.id]
+  );
+  if (histRows.length > 5) {
+    const toDelete = histRows.slice(5); // entri ke-6 dst
+    for (const row of toDelete) {
+      // Hapus file fisik
+      const filePath = path.join(process.cwd(), 'public', 'exports', row.file_name);
+      try { await fs.unlink(filePath); console.log(`  ✓ Hapus arsip lama: ${row.file_name}`); }
+      catch (e) { /* file mungkin sudah tidak ada */ }
+      // Hapus record DB
+      await conn.execute('DELETE FROM json_history WHERE id = ?', [row.id]);
+    }
+    console.log(`  ✓ Cleanup: ${toDelete.length} arsip lama dihapus (retensi max 5).`);
+  }
 
   await conn.end();
 

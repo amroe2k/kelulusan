@@ -31,7 +31,9 @@ function switchView(id){
   currentView=id;
   const newPath=`/dashboard/${id}`;
   if(window.location.pathname!==newPath) window.history.pushState(null,null,newPath);
-  ['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'].forEach(v=>{const el=$(`view-${v}`);if(el)el.classList.add('hidden');});
+  // Gunakan VALID_VIEWS dari dash-init.js (konstanta bersama)
+  (typeof VALID_VIEWS !== 'undefined' ? VALID_VIEWS : ['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'])
+    .forEach(v=>{const el=$(`view-${v}`);if(el)el.classList.add('hidden');});
   const a=$(`view-${id}`); if(a)a.classList.remove('hidden');
   const titles={
     overview:'Pusat Kendali',
@@ -44,12 +46,22 @@ function switchView(id){
   };
   if($('page-title'))$('page-title').textContent=titles[id]||id;
   renderSidebar();
-  if(id==='overview')renderOverview();
+  if(id==='overview'){
+    // Selalu fetch ulang dari server agar data selalu fresh
+    ['ov-total','ov-lulus','ov-tidak','ov-rata'].forEach(eid=>{
+      const el=$(eid); if(el) el.textContent='...';
+    });
+    fetch(`/api/siswa.php?t=${Date.now()}`).then(r=>r.json()).then(d=>{
+      if(d.success){ allSiswa=d.data||[]; }
+      renderOverview();
+    }).catch(()=>renderOverview());
+  }
   if(id==='lembaga')renderLembaga();
   if(id==='identitas')renderIdentitas();
   if(id==='siswa-data')loadAndRenderSiswa();
   if(id==='pengguna')renderPengguna();
   if(id==='json-history')renderJsonHistory();
+  if(id==='sync'){ loadArchiveList(); populateBundleSelect(); if(typeof loadSyncStatus==='function') loadSyncStatus(); }
   // Re-apply sidebar collapse state after re-render
   applySidebarCollapse(false);
 }

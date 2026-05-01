@@ -1,5 +1,8 @@
 <?php
 session_start();
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 require 'db.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -28,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Build dynamic SET clause untuk hanya update kolom yang dikirim
-    $fields = ['sekolah','npsn','nss','jenjang','tahun_ajaran','alamat','kota','kepala_sekolah','nip_kepsek','tanggal_pengumuman','nomor_surat_suffix','tanggal_skl2','telepon','email','domain'];
+    $fields = ['sekolah','npsn','nss','jenjang','kompetensi_keahlian','tahun_ajaran','alamat','kota','kepala_sekolah','nip_kepsek','tanggal_pengumuman','nomor_surat_suffix','tanggal_skl2','telepon','email','domain'];
     $sets = []; $vals = [];
     foreach($fields as $f){
         if(isset($data[$f])){ $sets[]="$f=?"; $vals[]=$data[$f]; }

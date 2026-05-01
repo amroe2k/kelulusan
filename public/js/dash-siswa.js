@@ -23,6 +23,17 @@ async function loadAndRenderSiswa(){
       fk.innerHTML='<option value="">Semua Kelas</option>'+kelasSet.map(k=>`<option value="${k}">${k}</option>`).join('');
       fk.value=cur;
     }
+    // Populate kompetensi keahlian filter (hanya tampil jika ada data KK)
+    const kkSet=[...new Set(allSiswa.map(s=>s.kompetensi_keahlian).filter(Boolean))].sort();
+    const fkk=$('filter-kompetensi');
+    if(fkk){
+      const cur=fkk.value;
+      fkk.innerHTML='<option value="">Semua Kompetensi</option>'+kkSet.map(k=>`<option value="${k}">${k}</option>`).join('');
+      fkk.value=cur;
+      // Tampilkan/sembunyikan dropdown KK berdasarkan apakah ada data
+      const kkWrap=$('filter-kompetensi-wrap');
+      if(kkWrap) kkWrap.classList.toggle('hidden', kkSet.length===0);
+    }
     renderSiswaTable(allSiswa);
     if(typeof renderOverview==='function') renderOverview();
   }catch(e){showToast('Gagal memuat data siswa','error');}
@@ -32,6 +43,7 @@ function renderSiswaTable(list){
   const search=($('search-siswa')?.value||'').toLowerCase();
   const filter=$('filter-status')?.value||'';
   const filterKelas=$('filter-kelas')?.value||'';
+  const filterKompetensi=$('filter-kompetensi')?.value||'';
   const isGuru=auth?.role==='guru';
   const kelasFilter=isGuru?(auth.kelas||''):''; // guru only sees their kelas
   const isAdmin=auth?.role==='admin';
@@ -39,6 +51,7 @@ function renderSiswaTable(list){
   let rows=list.filter(s=>{
     if(kelasFilter&&!s.kelas.includes(kelasFilter))return false;
     if(filterKelas&&s.kelas!==filterKelas)return false;
+    if(filterKompetensi&&(s.kompetensi_keahlian||'')!==filterKompetensi)return false;
     if(search&&!s.nama.toLowerCase().includes(search)&&!String(s.nisn||'').includes(search))return false;
     if(filter&&s.status!==filter)return false;
     return true;
@@ -73,6 +86,7 @@ function renderSiswaTable(list){
       <td class="px-4 py-3 text-center"><input type="checkbox" class="row-check w-4 h-4 accent-indigo-500 cursor-pointer" data-id="${s.id}"></td>
       <td class="px-4 py-3"><p class="text-sm font-bold text-white">${s.nama}</p><div class="flex items-center gap-1.5 group"><p class="text-xs text-slate-500 font-mono">${s.nisn||''}</p>${s.nisn?`<button class="copy-nisn opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-indigo-400" data-nisn="${s.nisn}" title="Salin NISN"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td>
       <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-md bg-[#172033] border border-slate-700 text-xs font-medium text-slate-300">${s.kelas}</span></td>
+      <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase">${s.kompetensi_keahlian||'-'}</span></td>
       <td class="px-4 py-3 text-center"><span class="text-sm font-bold ${parseFloat(s.rata_rata||0)>=75?'text-emerald-400':'text-rose-400'}">${s.rata_rata?parseFloat(s.rata_rata).toFixed(1):'-'}</span></td>
       <td class="px-4 py-3 text-center">
         <button class="toggle-status status-pill ${isLulus?'lulus':'tidak'}" data-id="${s.id}" data-status="${s.status}">
@@ -109,7 +123,13 @@ function renderSiswaTable(list){
       btn.innerHTML='<span class="animate-pulse text-xs">...</span>';
       const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update_status',keys:[id],status:next})});
       const res=await r.json();
-      if(res.success){const s=allSiswa.find(x=>x.id===id);if(s)s.status=next;renderSiswaTable(allSiswa);showToast('Status diperbarui','success');}
+      if(res.success){
+        const s=allSiswa.find(x=>x.id===id);
+        if(s)s.status=next;
+        renderSiswaTable(allSiswa);
+        if(typeof renderOverview === 'function') renderOverview();
+        showToast('Status diperbarui','success');
+      }
       else showToast('Gagal','error');
     };
   });
@@ -131,7 +151,12 @@ function renderSiswaTable(list){
       showConfirm(`Hapus ${s?.nama}?`,'Data tidak dapat dikembalikan.',async()=>{
         const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',id:btn.dataset.id})});
         const res=await r.json();
-        if(res.success){allSiswa=allSiswa.filter(x=>x.id!==btn.dataset.id);renderSiswaTable(allSiswa);showToast('Data dihapus','success');}
+        if(res.success){
+          allSiswa=allSiswa.filter(x=>x.id!==btn.dataset.id);
+          renderSiswaTable(allSiswa);
+          if(typeof renderOverview==='function') renderOverview();
+          showToast('Data dihapus','success');
+        }
         else showToast(res.error||'Gagal','error');
       });
     };
@@ -155,7 +180,14 @@ async function applyBulk(st){
   if(!ids.length)return;
   const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update_status',keys:ids,status:st})});
   const res=await r.json();
-  if(res.success){ids.forEach(id=>{const s=allSiswa.find(x=>x.id===id);if(s)s.status=st;});$('check-all').checked=false;updateBulkButtons();renderSiswaTable(allSiswa);showToast(`${res.updated} status diperbarui!`,'success');}
+  if(res.success){
+    ids.forEach(id=>{const s=allSiswa.find(x=>x.id===id);if(s)s.status=st;});
+    $('check-all').checked=false;
+    updateBulkButtons();
+    renderSiswaTable(allSiswa);
+    if(typeof renderOverview === 'function') renderOverview();
+    showToast(`${res.updated} status diperbarui!`,'success');
+  }
   else showToast('Gagal','error');
 }
 
@@ -176,6 +208,12 @@ function openSiswaDetail(s) {
   if($('detail-jk'))       $('detail-jk').textContent       = s.jenis_kelamin==='L'?'Laki-laki':'Perempuan';
   if($('detail-ttl'))      $('detail-ttl').textContent      = `${s.tempat_lahir||'-'}, ${s.tanggal_lahir_display||'-'}`;
   if($('detail-rata'))     $('detail-rata').textContent     = s.rata_rata ? parseFloat(s.rata_rata).toFixed(2) : '-';
+
+  // Kompetensi Keahlian — tampilkan row hanya jika ada data
+  const kkEl = $('detail-kompetensi');
+  const kkRow = $('detail-kompetensi-row');
+  if(kkEl) kkEl.textContent = s.kompetensi_keahlian || '-';
+  if(kkRow) kkRow.style.display = s.kompetensi_keahlian ? '' : 'none';
 
   // Status badge
   const statusEl = $('detail-status');

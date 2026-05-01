@@ -177,6 +177,9 @@ kelulusan/
 
 ## 📦 Workflow Publish & Deploy ke Hosting
 
+> 📖 **Panduan lengkap & step-by-step tersedia di: [DEPLOY.md](./DEPLOY.md)**  
+> Mencakup deploy frontend ke shared hosting (cPanel) **dan** deploy dashboard admin ke VPS.
+
 ### Persiapan Data
 Sebelum deploy, pastikan data sudah diekspor:
 ```bash

@@ -33,6 +33,8 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
     <title>{title}</title>
+    <!-- Bundle Integrity Config (per-lembaga secret, auto-generated) -->
+    <script src="/bundle-config.js" is:inline></script>
   </head>
   <body class="antialiased">
     <slot />
@@ -78,10 +80,15 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
         });
       };
 
-      window.showConfirm = function(msg, onConfirm) {
+      window.showConfirm = function(title, msg, onConfirm) {
+        if (typeof msg === 'function') {
+          onConfirm = msg;
+          msg = title;
+          title = 'Konfirmasi Tindakan';
+        }
         const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
-          title: 'Konfirmasi Tindakan',
+          title: title,
           html: `<p style="font-family: 'Poppins', sans-serif;">${msg}</p>`,
           icon: 'warning',
           showCancelButton: true,
