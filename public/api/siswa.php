@@ -168,6 +168,7 @@ if ($method === 'POST') {
     // ── import_json
     if ($action === 'import_json') {
         $rows     = $data['rows'] ?? [];
+        file_put_contents(__DIR__ . '/import_debug.json', json_encode($rows, JSON_PRETTY_PRINT));
         $imported = 0; $skipped = 0; $errors = [];
 
         $stmt = $pdo->prepare("
@@ -179,6 +180,10 @@ if ($method === 'POST') {
               kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), status=VALUES(status)
         ");
 
+        $delNilai = $pdo->prepare("DELETE FROM nilai WHERE siswa_id = ?");
+        $insNilai = $pdo->prepare("INSERT INTO nilai (id, siswa_id, mapel, nilai, urutan) VALUES (UUID(), ?, ?, ?, ?)");
+        $getId = $pdo->prepare("SELECT id FROM siswa WHERE nisn = ? AND lembaga_id = ? LIMIT 1");
+
         $pdo->beginTransaction();
         foreach ($rows as $i => $col) {
             $nisn   = trim($col['nisn']   ?? '');
@@ -186,16 +191,31 @@ if ($method === 'POST') {
             $kelas  = trim($col['kelas']  ?? '');
             $kompetensi = trim($col['kompetensi_keahlian'] ?? '');
             $status = strtoupper($col['status'] ?? 'LULUS');
-            $jk     = strtoupper($col['jenis_kelamin'] ?? 'L');
             $tempat = trim($col['tempat_lahir'] ?? '');
             $tgl    = !empty($col['tanggal_lahir']) ? $col['tanggal_lahir'] : null;
 
             if (!$nisn || !$nama || !$kelas) { $skipped++; continue; }
             if (!in_array($status, ['LULUS','TIDAK LULUS'])) $status = 'LULUS';
-            if (!in_array($jk, ['L','P'])) $jk = 'L';
+            // Normalise jenis_kelamin: accept L/P or full words (Laki-laki/Perempuan)
+            $rawJk = strtoupper(trim($col['jenis_kelamin'] ?? 'L'));
+            if (str_starts_with($rawJk, 'L')) $jk = 'L';
+            elseif (str_starts_with($rawJk, 'P')) $jk = 'P';
+            else $jk = 'L';
 
             try {
                 $stmt->execute([':lembaga'=>$lembagaId, ':nisn'=>$nisn,':nama'=>$nama,':jk'=>$jk,':tempat'=>$tempat,':tgl'=>$tgl,':kelas'=>$kelas,':kompetensi'=>$kompetensi ?: null,':status'=>$status]);
+                
+                $getId->execute([$nisn, $lembagaId]);
+                $sId = $getId->fetchColumn();
+
+                if ($sId) {
+                    $delNilai->execute([$sId]);
+                    if (!empty($col['nilai']) && is_array($col['nilai'])) {
+                        foreach ($col['nilai'] as $idx => $n) {
+                            $insNilai->execute([$sId, $n['mapel'], $n['nilai'], $idx]);
+                        }
+                    }
+                }
                 $imported++;
             } catch(\Exception $e) {
                 $errors[] = "Baris ".($i+2).": ".$e->getMessage();
@@ -285,6 +305,21 @@ if ($method === 'POST') {
         $pdo->prepare("DELETE FROM nilai WHERE siswa_id = ?")->execute([$id]);
         $pdo->prepare("DELETE FROM siswa WHERE id = ?")->execute([$id]);
         echo json_encode(['success' => true]);
+        exit;
+    }
+
+    if ($action === 'delete_all') {
+        if ($_SESSION['role'] !== 'admin') {
+            echo json_encode(['error' => 'Hanya Admin yang dapat menghapus semua data.']);
+            exit;
+        }
+        $lid = $_SESSION['lembaga_id'];
+        $count = $pdo->prepare("SELECT COUNT(*) FROM siswa WHERE lembaga_id = ?");
+        $count->execute([$lid]);
+        $total = (int)$count->fetchColumn();
+        $pdo->prepare("DELETE n FROM nilai n INNER JOIN siswa s ON n.siswa_id = s.id WHERE s.lembaga_id = ?")->execute([$lid]);
+        $pdo->prepare("DELETE FROM siswa WHERE lembaga_id = ?")->execute([$lid]);
+        echo json_encode(['success' => true, 'deleted' => $total]);
         exit;
     }
 

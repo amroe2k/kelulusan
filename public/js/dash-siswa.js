@@ -1,6 +1,8 @@
 // Siswa CRUD + Table rendering
 let currentSiswaPage = 1;
-const itemsPerPage = 5;
+let selectedIds = new Set();
+let _lastFilteredRows = [];
+const ITEMS_PER_PAGE = 5;
 
 async function loadAndRenderSiswa(){
   try{
@@ -12,31 +14,40 @@ async function loadAndRenderSiswa(){
       return;
     }
     allSiswa=d.data||[];
+    selectedIds.clear();
     // Reset search/filter saat load fresh
     const si=$('search-siswa'); if(si) si.value='';
+    const fs=$('filter-status'); if(fs) fs.value='';
+    const fk_=$('filter-kelas'); if(fk_) fk_.value='';
+    const fkk_=$('filter-kompetensi'); if(fkk_) fkk_.value='';
     currentSiswaPage = 1;
-    // Populate kelas filter dropdown
-    const kelasSet=[...new Set(allSiswa.map(s=>s.kelas).filter(Boolean))].sort();
-    const fk=$('filter-kelas');
-    if(fk){
-      const cur=fk.value;
-      fk.innerHTML='<option value="">Semua Kelas</option>'+kelasSet.map(k=>`<option value="${k}">${k}</option>`).join('');
-      fk.value=cur;
-    }
-    // Populate kompetensi keahlian filter (hanya tampil jika ada data KK)
-    const kkSet=[...new Set(allSiswa.map(s=>s.kompetensi_keahlian).filter(Boolean))].sort();
-    const fkk=$('filter-kompetensi');
-    if(fkk){
-      const cur=fkk.value;
-      fkk.innerHTML='<option value="">Semua Kompetensi</option>'+kkSet.map(k=>`<option value="${k}">${k}</option>`).join('');
-      fkk.value=cur;
-      // Tampilkan/sembunyikan dropdown KK berdasarkan apakah ada data
-      const kkWrap=$('filter-kompetensi-wrap');
-      if(kkWrap) kkWrap.classList.toggle('hidden', kkSet.length===0);
-    }
-    renderSiswaTable(allSiswa);
-    if(typeof renderOverview==='function') renderOverview();
+    // Populate Kompetensi (semua) → Kelas menyesuaikan
+    repopulateKelasByKompetensi('');
   }catch(e){showToast('Gagal memuat data siswa','error');}
+}
+
+// Repopulate Kelas berdasarkan Kompetensi yang dipilih
+function repopulateKelasByKompetensi(selectedKompetensi){
+  // 1. Populate Kompetensi (selalu semua opsi)
+  const kkSet = [...new Set(allSiswa.map(s=>s.kompetensi_keahlian).filter(Boolean))].sort();
+  const fkk = $('filter-kompetensi');
+  if(fkk && !selectedKompetensi){
+    // Hanya repopulate kompetensi jika tidak ada yang dipilih (fresh load)
+    fkk.innerHTML = '<option value="">Semua Kompetensi</option>' + kkSet.map(k=>`<option value="${k}">${k}</option>`).join('');
+    fkk.value = selectedKompetensi;
+  }
+  // 2. Populate Kelas — filter berdasarkan kompetensi yang dipilih
+  const source = selectedKompetensi
+    ? allSiswa.filter(s => (s.kompetensi_keahlian||'') === selectedKompetensi)
+    : allSiswa;
+  const kelasSet = [...new Set(source.map(s=>s.kelas).filter(Boolean))].sort();
+  const fk = $('filter-kelas');
+  if(fk){
+    fk.innerHTML = '<option value="">Semua Kelas</option>' + kelasSet.map(k=>`<option value="${k}">${k}</option>`).join('');
+    fk.value = ''; // Reset kelas saat kompetensi berubah
+  }
+  renderSiswaTable(allSiswa);
+  if(typeof renderOverview==='function') renderOverview();
 }
 
 function renderSiswaTable(list){
@@ -49,7 +60,7 @@ function renderSiswaTable(list){
   const isAdmin=auth?.role==='admin';
 
   let rows=list.filter(s=>{
-    if(kelasFilter&&!s.kelas.includes(kelasFilter))return false;
+    if(kelasFilter&&!s.kelas.startsWith(kelasFilter))return false; // guru: startsWith untuk partial match yg aman
     if(filterKelas&&s.kelas!==filterKelas)return false;
     if(filterKompetensi&&(s.kompetensi_keahlian||'')!==filterKompetensi)return false;
     if(search&&!s.nama.toLowerCase().includes(search)&&!String(s.nisn||'').includes(search))return false;
@@ -57,18 +68,19 @@ function renderSiswaTable(list){
     return true;
   });
 
+  _lastFilteredRows = rows; // Simpan untuk Pilih Semua
   if($('table-count'))$('table-count').textContent=`${rows.length} Data Ditampilkan`;
   const tbody=$('siswa-table'); tbody.innerHTML='';
 
   // Pagination logic
-  const totalPages = Math.ceil(rows.length / itemsPerPage) || 1;
+  const totalPages = Math.ceil(rows.length / ITEMS_PER_PAGE) || 1;
   if (currentSiswaPage > totalPages) currentSiswaPage = totalPages;
-  const startIndex = (currentSiswaPage - 1) * itemsPerPage;
-  const paginatedRows = rows.slice(startIndex, startIndex + itemsPerPage);
+  const startIndex = (currentSiswaPage - 1) * ITEMS_PER_PAGE;
+  const paginatedRows = rows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const pagContainer = $('pagination-container');
   if(pagContainer) {
-    if(rows.length > itemsPerPage) {
+    if(rows.length > ITEMS_PER_PAGE) {
       pagContainer.classList.remove('hidden');
       $('page-indicator').textContent = `${currentSiswaPage} / ${totalPages}`;
       $('btn-prev-page').disabled = currentSiswaPage === 1;
@@ -78,12 +90,16 @@ function renderSiswaTable(list){
     }
   }
 
+  // Update banner Pilih Semua
+  updateSelectAllBanner(rows.length);
+
   paginatedRows.forEach(s=>{
     const isLulus=s.status==='LULUS';
+    const isChecked = selectedIds.has(s.id);
     const tr=document.createElement('tr');
-    tr.className='hover:bg-[#131b2c] transition-colors';
+    tr.className=`hover:bg-[#131b2c] transition-colors${isChecked?' bg-indigo-500/5':''}`;
     tr.innerHTML=`
-      <td class="px-4 py-3 text-center"><input type="checkbox" class="row-check w-4 h-4 accent-indigo-500 cursor-pointer" data-id="${s.id}"></td>
+      <td class="px-4 py-3 text-center"><input type="checkbox" class="row-check w-4 h-4 accent-indigo-500 cursor-pointer" data-id="${s.id}"${isChecked?' checked':''}></td>
       <td class="px-4 py-3"><p class="text-sm font-bold text-white">${s.nama}</p><div class="flex items-center gap-1.5 group"><p class="text-xs text-slate-500 font-mono">${s.nisn||''}</p>${s.nisn?`<button class="copy-nisn opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-indigo-400" data-nisn="${s.nisn}" title="Salin NISN"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td>
       <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-md bg-[#172033] border border-slate-700 text-xs font-medium text-slate-300">${s.kelas}</span></td>
       <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase">${s.kompetensi_keahlian||'-'}</span></td>
@@ -162,13 +178,61 @@ function renderSiswaTable(list){
     };
   });
 
-  // Check-all
-  $('check-all').onchange=e=>{tbody.querySelectorAll('.row-check').forEach(c=>c.checked=e.target.checked);updateBulkButtons();};
-  tbody.querySelectorAll('.row-check').forEach(c=>c.onchange=updateBulkButtons);
+  // Check-all → pilih/batalkan SEMUA data terfilter (lintas halaman)
+  const checkAll = $('check-all');
+  if(checkAll){
+    const allFiltered = _lastFilteredRows.every(s=>selectedIds.has(s.id));
+    checkAll.checked = _lastFilteredRows.length > 0 && allFiltered;
+    checkAll.indeterminate = !allFiltered && _lastFilteredRows.some(s=>selectedIds.has(s.id));
+    checkAll.onchange=e=>{
+      if(e.target.checked){
+        _lastFilteredRows.forEach(s=>selectedIds.add(s.id));
+      } else {
+        _lastFilteredRows.forEach(s=>selectedIds.delete(s.id));
+      }
+      renderSiswaTable(allSiswa);
+    };
+  }
+  tbody.querySelectorAll('.row-check').forEach(c=>{
+    c.onchange=()=>{
+      if(c.checked) selectedIds.add(c.dataset.id);
+      else selectedIds.delete(c.dataset.id);
+      updateBulkButtons();
+      // Update check-all state
+      const ca=$('check-all');
+      if(ca){
+        const allSel=_lastFilteredRows.every(s=>selectedIds.has(s.id));
+        ca.checked=allSel && _lastFilteredRows.length>0;
+        ca.indeterminate=!allSel&&_lastFilteredRows.some(s=>selectedIds.has(s.id));
+      }
+    };
+  });
+}
+
+function updateSelectAllBanner(totalFiltered){
+  const banner=$('select-all-banner');
+  if(!banner) return;
+  const n=selectedIds.size;
+  if(n===0){ banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  const allSelected = n>=totalFiltered && totalFiltered>0;
+  banner.innerHTML=`<span class="text-indigo-300 font-bold">${n}</span> dari <span class="font-bold text-white">${totalFiltered}</span> data terpilih.
+    ${!allSelected?`<button onclick="selectAllFiltered()" class="ml-2 text-indigo-400 hover:text-indigo-200 font-bold underline text-xs">Pilih semua ${totalFiltered} data</button>`:
+    `<button onclick="clearAllSelected()" class="ml-2 text-rose-400 hover:text-rose-200 font-bold underline text-xs">Batalkan semua</button>`}`;
+}
+
+function selectAllFiltered(){
+  _lastFilteredRows.forEach(s=>selectedIds.add(s.id));
+  renderSiswaTable(allSiswa);
+}
+
+function clearAllSelected(){
+  selectedIds.clear();
+  renderSiswaTable(allSiswa);
 }
 
 function updateBulkButtons(){
-  const n=document.querySelectorAll('.row-check:checked').length;
+  const n = selectedIds.size;
   $('btn-bulk-lulus')?.classList.toggle('hidden',!n);
   $('btn-bulk-tidak')?.classList.toggle('hidden',!n);
   $('selected-count')?.classList.toggle('hidden',!n);
@@ -176,19 +240,41 @@ function updateBulkButtons(){
 }
 
 async function applyBulk(st){
-  const ids=Array.from(document.querySelectorAll('.row-check:checked')).map(c=>c.dataset.id);
+  const ids=[...selectedIds];
   if(!ids.length)return;
   const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update_status',keys:ids,status:st})});
   const res=await r.json();
   if(res.success){
     ids.forEach(id=>{const s=allSiswa.find(x=>x.id===id);if(s)s.status=st;});
-    $('check-all').checked=false;
+    selectedIds.clear();
+    if($('check-all')) $('check-all').checked=false;
     updateBulkButtons();
     renderSiswaTable(allSiswa);
     if(typeof renderOverview === 'function') renderOverview();
     showToast(`${res.updated} status diperbarui!`,'success');
   }
   else showToast('Gagal','error');
+}
+
+async function deleteAllSiswa(){
+  const total = allSiswa.length;
+  if(!total){ showToast('Tidak ada data siswa untuk dihapus.','info'); return; }
+  showConfirm(
+    `Hapus semua ${total} data siswa?`,
+    'PERINGATAN: Seluruh data siswa dan nilai akan dihapus permanen!',
+    async()=>{
+      const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete_all'})});
+      const res=await r.json();
+      if(res.success){
+        allSiswa=[];
+        selectedIds.clear();
+        if($('check-all')) $('check-all').checked=false;
+        renderSiswaTable(allSiswa);
+        if(typeof renderOverview==='function') renderOverview();
+        showToast(`${res.deleted} data siswa berhasil dihapus`,'success');
+      } else showToast(res.error||'Gagal menghapus data','error');
+    }
+  );
 }
 
 // --- Detail Siswa Modal ----------------------------------------------------

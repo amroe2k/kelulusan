@@ -154,12 +154,27 @@ function initProfileEvents() {
     const wrap = $('pw-strength-wrap');
     const bar  = $('pw-strength-bar');
     const lbl  = $('pw-strength-label');
+    const dots = document.querySelectorAll('.pw-dot');
+    
     if (!wrap) return;
     if (!pw) { wrap.classList.add('hidden'); return; }
     wrap.classList.remove('hidden');
+    
     const s = checkPasswordStrength(pw);
     if (bar) { bar.style.width = s.width; bar.style.background = s.color; }
     if (lbl) { lbl.textContent = s.label; lbl.style.color = s.color; }
+    
+    // Update dots
+    const score = parseInt(s.width) / 20; // 0-5
+    dots.forEach((dot, i) => {
+      if (i < score) {
+        dot.style.background = s.color;
+        dot.style.opacity = '1';
+      } else {
+        dot.style.background = '';
+        dot.style.opacity = '0.3';
+      }
+    });
   });
 
   // Save profile name
@@ -236,13 +251,15 @@ function initProfileEvents() {
     }
   });
 
-  // Profile logout button
-  $('profile-btn-logout')?.addEventListener('click', () => showConfirm(
-    'Keluar Sistem', 'Yakin ingin mengakhiri sesi aktif?',
-    async () => {
-      try { await fetch('/api/logout.php'); } catch (e) {}
-      sessionStorage.removeItem('auth');
-      window.location.href = '/login';
-    }
-  ));
+  // Logout buttons
+  ['profile-btn-logout', 'profile-btn-logout-top'].forEach(id => {
+    $(id)?.addEventListener('click', () => showConfirm(
+      'Keluar Sistem', 'Yakin ingin mengakhiri sesi aktif?',
+      async () => {
+        try { await fetch('/api/logout.php'); } catch (e) {}
+        sessionStorage.removeItem('auth');
+        window.location.href = '/login';
+      }
+    ));
+  });
 }

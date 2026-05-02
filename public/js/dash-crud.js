@@ -174,7 +174,19 @@ function initImport(){
       const raw = window.XLSX.utils.sheet_to_json(ws, {defval:''});
       importedRows = raw.map(row => {
         const obj = {};
-        Object.keys(row).forEach(k => { obj[k.toLowerCase().trim().replace(/\s+/g,'_')] = row[k]; });
+        const keyMap = {}; // normalized_key -> original_key (for mapel names)
+        Object.keys(row).forEach(k => {
+          let nk = k.toLowerCase().trim().replace(/\s+/g,'_');
+          // Jika key sudah ada (misal ada kolom "kompetensi_keahlian" dan "Kompetensi Keahlian"), jangan ditimpa!
+          if (obj[nk] !== undefined) {
+             let suffix = 2;
+             while(obj[`${nk}_${suffix}`] !== undefined) suffix++;
+             nk = `${nk}_${suffix}`;
+          }
+          obj[nk] = row[k];
+          keyMap[nk] = k; // preserve original for mapel display
+        });
+        obj.__keyMap = keyMap; // attach for later use
         return obj;
       }).filter(r => r.nisn && r.nama);
       $('import-preview').classList.remove('hidden');
@@ -240,23 +252,35 @@ function initImport(){
     }
     if(!importedRows.length) return;
     const rows = importedRows.map(row => {
+      // Baca jurusan atau kompetensi_keahlian dari file
+      let jurusanVal = String(row.jurusan || row.kompetensi_keahlian || row['kompetensi keahlian'] || '').trim();
+
       const siswa = {
         nisn:String(row.nisn||'').trim(),
         nama:String(row.nama||'').trim(),
-        jenis_kelamin:(row.jenis_kelamin||'L').toString().toUpperCase().charAt(0),
+        jenis_kelamin:row.jenis_kelamin||'L', // PHP will normalize L/P/Laki-laki/Perempuan
         tempat_lahir:row.tempat_lahir||'',
         kelas:row.kelas||'',
         status:(row.status||'LULUS').toString().toUpperCase(),
-        kompetensi_keahlian: String(row.kompetensi_keahlian||row['kompetensi keahlian']||'').trim()||null,
+        kompetensi_keahlian: jurusanVal || null,
       };
       const tgl = row.tanggal_lahir;
       if(tgl instanceof Date) siswa.tanggal_lahir = tgl.toISOString().slice(0,10);
       else if(tgl) siswa.tanggal_lahir = String(tgl).slice(0,10);
       else siswa.tanggal_lahir = null;
+      
+      // Extract nilai: use __keyMap to recover original (proper-cased) column names
+      const keyMap = row.__keyMap || {};
+      const BASE_SKIP = new Set(['no','nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','jurusan','kompetensi_keahlian','kompetensi keahlian','status','rata-rata','rata_rata','__keymap']);
       const nilai = [];
-      Object.keys(row).forEach((k,i) => {
-        const nk = k.toLowerCase().trim().replace(/\s+/g,'_');
-        if(!BASE_COLS_SET.has(nk)) nilai.push({mapel:k, nilai:parseFloat(row[k])||0, urutan:i});
+      Object.keys(row).forEach((nk, i) => {
+        const lowerKey = nk.toLowerCase();
+        if(BASE_SKIP.has(lowerKey)) return;
+        if(nk === '__keyMap') return;
+        
+        const originalName = keyMap[nk] || nk; // original casing from Excel
+        const v = parseFloat(row[nk]);
+        if(!isNaN(v) && originalName) nilai.push({mapel: originalName, nilai: v, urutan: i});
       });
       siswa.nilai = nilai;
       return siswa;

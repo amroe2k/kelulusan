@@ -40,13 +40,51 @@ function renderIdentitas(){
   $('id-sekolah').textContent=m.sekolah||'-'; $('id-npsn').textContent=m.npsn||'-'; $('id-nss').textContent=m.nss||'-';
   $('id-tapel').textContent=m.tahun_ajaran||'-'; $('id-alamat').textContent=m.alamat||'-';
   $('id-telepon').textContent=m.telepon||'-'; $('id-email').textContent=m.email||'-';
-  $('id-kepsek').textContent=m.kepala_sekolah||'-'; $('id-nip').textContent='NIP. '+(m.nip_kepsek||'-');
+  $('id-kepsek').textContent=m.kepala_sekolah||'-';
+  // Jabatan (opsional)
+  if($('id-jabatan')){
+    if(m.jabatan_kepsek){ $('id-jabatan').textContent=m.jabatan_kepsek; $('id-jabatan').classList.remove('hidden'); }
+    else { $('id-jabatan').classList.add('hidden'); }
+  }
+  if($('id-nip')) {
+    const mode = m.id_kepsek_mode || 'nip';
+    if($('id-nip')) $('id-nip').textContent = m.nip_kepsek||'-';
+    if($('id-nuptk')) $('id-nuptk').textContent = m.nuptk_kepsek||'-';
+    // Badge aktif pada read view
+    if($('id-id-kepsek-mode-badge')) {
+      const badge = $('id-id-kepsek-mode-badge');
+      if(mode==='nuptk'){
+        badge.textContent='NUPTK Aktif di SKL';
+        badge.className='inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400';
+      } else {
+        badge.textContent='NIP Aktif di SKL';
+        badge.className='inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400';
+      }
+    }
+  }
   $('id-tgl').textContent=m.tanggal_pengumuman ? formatTglDisplay(m.tanggal_pengumuman) : '-';
   // New fields
   if($('id-jenjang')) $('id-jenjang').textContent = m.jenjang||'SMA';
   if($('id-tgl-skl2')) $('id-tgl-skl2').textContent = m.tanggal_skl2 ? formatTglDisplay(m.tanggal_skl2) : '-';
   if($('id-kota')) $('id-kota').textContent = m.kota||'-';
-  if($('id-nomor-surat')) $('id-nomor-surat').textContent = m.nomor_surat_suffix ? ('XXX'+m.nomor_surat_suffix) : '-';
+  if($('id-nomor-surat')) {
+    const mode = m.nomor_surat_mode || 'auto';
+    if(mode === 'static') {
+      if($('id-nomor-mode')) {
+          $('id-nomor-mode').textContent = 'Statis';
+          $('id-nomor-mode').className = 'px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400';
+      }
+      $('id-nomor-surat').className = 'text-violet-600 dark:text-violet-400 font-mono text-sm font-medium bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-lg inline-block';
+      $('id-nomor-surat').textContent = m.nomor_surat_statis ? m.nomor_surat_statis : '-';
+    } else {
+      if($('id-nomor-mode')) {
+          $('id-nomor-mode').textContent = 'Auto';
+          $('id-nomor-mode').className = 'px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400';
+      }
+      $('id-nomor-surat').className = 'text-indigo-600 dark:text-indigo-400 font-mono text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-lg inline-block';
+      $('id-nomor-surat').textContent = m.nomor_surat_suffix ? ('XXX'+m.nomor_surat_suffix) : '-';
+    }
+  }
   // Domain
   if(m.domain){
     $('id-domain')&&($('id-domain').textContent='https://'+m.domain);
@@ -221,12 +259,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
   // --- Siswa events ---
   $('search-siswa')?.addEventListener('input',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
   $('filter-status')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
+  $('filter-kompetensi')?.addEventListener('change',()=>{ currentSiswaPage=1; repopulateKelasByKompetensi($('filter-kompetensi').value); });
   $('filter-kelas')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
-  $('filter-kompetensi')?.addEventListener('change',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
   $('btn-prev-page')?.addEventListener('click',()=>{ if(currentSiswaPage>1) { currentSiswaPage--; renderSiswaTable(allSiswa); } });
   $('btn-next-page')?.addEventListener('click',()=>{ currentSiswaPage++; renderSiswaTable(allSiswa); });
   $('btn-bulk-lulus')?.addEventListener('click',()=>applyBulk('LULUS'));
   $('btn-bulk-tidak')?.addEventListener('click',()=>applyBulk('TIDAK LULUS'));
+  $('btn-hapus-semua')?.addEventListener('click',()=>deleteAllSiswa());
   $('btn-add-siswa')?.addEventListener('click',()=>openSiswaModal());
   $('btn-add-mapel')?.addEventListener('click',()=>addNilaiRow());
   $('form-siswa')?.addEventListener('submit',saveSiswa);
@@ -265,8 +304,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   // --- Identitas events ---
   $('btn-edit-identitas')?.addEventListener('click',()=>{
     const m=allData._meta;
-    ['sekolah','npsn','nss','tapel','alamat','kota','kepsek','nip','tgl','telepon','email','domain'].forEach(k=>{
-      const map={sekolah:'sekolah',npsn:'npsn',nss:'nss',tapel:'tahun_ajaran',alamat:'alamat',kota:'kota',kepsek:'kepala_sekolah',nip:'nip_kepsek',tgl:'tanggal_pengumuman',telepon:'telepon',email:'email',domain:'domain'};
+    ['sekolah','npsn','nss','tapel','alamat','kota','kepsek','jabatan','nip','nuptk','tgl','telepon','email','domain'].forEach(k=>{
+      const map={sekolah:'sekolah',npsn:'npsn',nss:'nss',tapel:'tahun_ajaran',alamat:'alamat',kota:'kota',kepsek:'kepala_sekolah',jabatan:'jabatan_kepsek',nip:'nip_kepsek',nuptk:'nuptk_kepsek',tgl:'tanggal_pengumuman',telepon:'telepon',email:'email',domain:'domain'};
       const el=$(`input-${k}`);
       if(el){
         let val=m[map[k]]||'';
@@ -277,6 +316,20 @@ document.addEventListener('DOMContentLoaded',async()=>{
     // New fields prefill
     if($('input-jenjang')) $('input-jenjang').value = m.jenjang||'SMA';
     if($('input-nomor-surat')) $('input-nomor-surat').value = m.nomor_surat_suffix||'';
+    if($('input-nomor-surat-statis')) $('input-nomor-surat-statis').value = m.nomor_surat_statis||'';
+    // Set radio mode
+    const mode = m.nomor_surat_mode || 'auto';
+    const radioAuto = $('mode-auto'), radioStatic = $('mode-static');
+    if(radioAuto) radioAuto.checked = mode === 'auto';
+    if(radioStatic) radioStatic.checked = mode === 'static';
+    // Show correct section
+    $('section-nomor-auto')?.classList.toggle('hidden', mode !== 'auto');
+    $('section-nomor-static')?.classList.toggle('hidden', mode !== 'static');
+    // Set id_kepsek_mode radio
+    const idKepsekMode = m.id_kepsek_mode || 'nip';
+    const radioNip = $('mode-id-nip'), radioNuptk = $('mode-id-nuptk');
+    if(radioNip) radioNip.checked = idKepsekMode === 'nip';
+    if(radioNuptk) radioNuptk.checked = idKepsekMode === 'nuptk';
     // tanggal_skl2
     if($('input-tgl-skl2')){
       let v=m.tanggal_skl2||'';
@@ -292,6 +345,18 @@ document.addEventListener('DOMContentLoaded',async()=>{
     $('identitas-view')?.classList.add('hidden');
     $('identitas-edit')?.classList.remove('hidden');
     $('btn-edit-identitas')?.classList.add('hidden');
+    // Radio toggle listener (attach once per open)
+    document.querySelectorAll('[name="nomor_surat_mode"]').forEach(radio => {
+      radio.onchange = () => {
+        const isStatic = $('mode-static')?.checked;
+        $('section-nomor-auto')?.classList.toggle('hidden', isStatic);
+        $('section-nomor-static')?.classList.toggle('hidden', !isStatic);
+      };
+    });
+    // id_kepsek_mode radio listener (already wired via HTML, just refresh)
+    document.querySelectorAll('[name="id_kepsek_mode"]').forEach(radio => {
+      radio.onchange = () => {}; // no section to hide/show, both inputs always visible
+    });
   });
   $('btn-cancel-identitas')?.addEventListener('click',()=>{
     $('identitas-edit')?.classList.add('hidden');
@@ -301,7 +366,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('form-identitas')?.addEventListener('submit',async e=>{
     e.preventDefault();
     const rawDomain=($('input-domain')?.value||'').trim().replace(/^https?:\/\//,'');
-    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,nip_kepsek:$('input-nip').value,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_suffix:$('input-nomor-surat')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain};
+    const nomorMode = $('mode-static')?.checked ? 'static' : 'auto';
+    const idKepsekMode = $('mode-id-nuptk')?.checked ? 'nuptk' : 'nip';
+    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,jabatan_kepsek:$('input-jabatan')?.value||'',nip_kepsek:$('input-nip').value,nuptk_kepsek:$('input-nuptk')?.value||'',id_kepsek_mode:idKepsekMode,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_mode:nomorMode,nomor_surat_suffix:$('input-nomor-surat')?.value||'',nomor_surat_statis:$('input-nomor-surat-statis')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain};
     // Hanya kirim gambar jika user benar-benar mengubahnya (data-changed='true')
     // Jika data-changed='clear', kirim null untuk hapus gambar dari DB
     document.querySelectorAll('.img-zone').forEach(zone=>{
@@ -459,8 +526,16 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('modal-skl-print')?.addEventListener('click',()=> {
     const iframe = $('skl-iframe');
     if(iframe && iframe.contentWindow) {
+      const originalTitle = document.title;
+      if (_sklCurrentSiswa) {
+         document.title = `SKL - ${_sklCurrentSiswa.nama} - ${_sklCurrentSiswa.nisn || '0000000000'}`;
+      } else {
+         document.title = `SKL - Preview`;
+      }
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
+      // Restore title after print dialog opens
+      setTimeout(() => { document.title = originalTitle; }, 1000);
     }
   });
   $('modal-skl-preview')?.addEventListener('click',e=>{

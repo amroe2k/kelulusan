@@ -116,17 +116,21 @@ if ($method === 'POST') {
                     "UPDATE pengaturan SET
                         sekolah = ?, nss = ?, npsn = ?, alamat = ?, kota = ?,
                         jenjang = ?, kompetensi_keahlian = ?, kepala_sekolah = ?,
-                        nip_kepsek = ?, tahun_ajaran = ?, telepon = ?, email = ?,
-                        domain = ?, nomor_surat_suffix = ?,
+                        jabatan_kepsek = ?, nip_kepsek = ?, nuptk_kepsek = ?, id_kepsek_mode = ?,
+                        tahun_ajaran = ?, telepon = ?, email = ?,
+                        domain = ?, nomor_surat_mode = ?, nomor_surat_suffix = ?, nomor_surat_statis = ?,
                         tanggal_pengumuman = ?, tanggal_skl2 = ?
                      WHERE lembaga_id = ?"
                 )->execute([
                     $meta['sekolah'] ?? '', $meta['nss'] ?? '', $meta['npsn'] ?? '',
                     $meta['alamat'] ?? '', $meta['kota'] ?? '', $meta['jenjang'] ?? 'SMA',
                     $meta['kompetensi_keahlian'] ?? '', $meta['kepala_sekolah'] ?? '',
-                    $meta['nip_kepsek'] ?? '', $meta['tahun_ajaran'] ?? '',
+                    $meta['jabatan_kepsek'] ?? '', $meta['nip_kepsek'] ?? '',
+                    $meta['nuptk_kepsek'] ?? '', $meta['id_kepsek_mode'] ?? 'nip',
+                    $meta['tahun_ajaran'] ?? '',
                     $meta['telepon'] ?? '', $meta['email'] ?? '', $meta['domain'] ?? '',
-                    $meta['nomor_surat_suffix'] ?? '',
+                    $meta['nomor_surat_mode'] ?? 'auto',
+                    $meta['nomor_surat_suffix'] ?? '', $meta['nomor_surat_statis'] ?? '',
                     $meta['tanggal_pengumuman'] ?? null, $meta['tanggal_skl2'] ?? null,
                     $lembagaId
                 ]);

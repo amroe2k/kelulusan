@@ -37,7 +37,7 @@ function formatTanggal(dateVal) {
 // ─── SKL HTML Template ───────────────────────────────────────────────────────
 function buildSklHtml(siswa, meta, nilai) {
   const rataRata = nilai.length
-    ? (nilai.reduce((s,n) => s + parseFloat(n.nilai), 0) / nilai.length).toFixed(2)
+    ? (nilai.reduce((s,n) => s + parseFloat(n.nilai), 0) / nilai.length).toFixed(1)
     : '-';
 
   const logoHtml = meta.logo
@@ -70,23 +70,23 @@ function buildSklHtml(siswa, meta, nilai) {
   body { font-family:'Times New Roman',Times,serif; background:#fff; color:#1a1a1a; width:794px; min-height:1123px; padding:25px 55px 35px; }
   .header { display:flex; align-items:center; gap:20px; border-bottom:4px double #333; padding-bottom:14px; margin-bottom:18px; }
   .header-text { flex:1; text-align:center; }
-  .header-text h1 { font-size:14px; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
-  .header-text h2 { font-size:20px; font-weight:bold; text-transform:uppercase; letter-spacing:2px; margin:4px 0; }
-  .header-text p  { font-size:11px; }
-  .title-skl { text-align:center; margin:18px 0 6px; }
-  .title-skl h3 { font-size:16px; font-weight:bold; text-transform:uppercase; text-decoration:underline; letter-spacing:2px; }
-  .title-skl p  { font-size:12px; }
-  .body-text { font-size:13px; line-height:1.8; margin:14px 0; }
-  .data-siswa { border-collapse:collapse; width:100%; margin:10px 0; font-size:13px; }
-  .data-siswa td { padding:3px 0; vertical-align:top; }
-  .data-siswa td:nth-child(2) { width:10px; text-align:center; }
-  .nilai-table { border-collapse:collapse; width:100%; margin:14px 0; font-size:12px; }
+  .header-text h1 { font-size:16px; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
+  .header-text h2 { font-size:22px; font-weight:bold; text-transform:uppercase; letter-spacing:2px; margin:4px 0; }
+  .header-text p  { font-size:13px; }
+  .title-skl { text-align:center; margin:18px 0 30px; }
+  .title-skl h3 { font-size:18px; font-weight:bold; text-transform:uppercase; text-decoration:underline; letter-spacing:2px; }
+  .title-skl p  { font-size:14px; }
+  .body-text { font-size:15px; line-height:1.8; margin:14px 0; }
+  .data-siswa { border-collapse:collapse; width:100%; margin:10px 0; font-size:15px; line-height:1.8; }
+  .data-siswa td { padding:5px 0; vertical-align:top; }
+  .data-siswa td:nth-child(2) { width:15px; text-align:center; }
+  .nilai-table { border-collapse:collapse; width:100%; margin:14px 0; font-size:14px; }
   .nilai-table th { border:1px solid #bbb; padding:5px 8px; background:#f0f0f0; text-align:center; }
   .status-box { text-align:center; margin:20px 0; }
   .status-badge { display:inline-block; font-size:20px; font-weight:bold; border:2.5px solid #333; padding:8px 50px; letter-spacing:3px; ${isLulus ? 'color:#166534;border-color:#166534;' : 'color:#991b1b;border-color:#991b1b;'} }
   .ttd-area { display:flex; justify-content:flex-end; margin-top:40px; }
   .ttd-box { text-align:center; position:relative; min-width:200px; }
-  .footer-note { font-size:10px; color:#555; text-align:center; margin-top:30px; border-top:1px solid #ddd; padding-top:8px; }
+  .footer-note { font-size:12px; color:#555; text-align:center; margin-top:30px; border-top:1px solid #ddd; padding-top:8px; }
 </style>
 </head>
 <body>
@@ -154,17 +154,20 @@ function buildSklHtml(siswa, meta, nilai) {
     <span class="status-badge">${siswa.status}</span>
   </div>
 
-  <p class="body-text" style="margin-top:40px;">Demikian pengumuman ini disampaikan untuk diketahui dan dipergunakan sebagaimana mestinya.</p>
+  <p class="body-text" style="margin-top:40px;">Surat Keterangan ini dibuat untuk dipergunakan sebagaimana mestinya dan hanya berlaku sampai diterbitkan Ijazah Asli tahun ajaran ${meta.tahun_ajaran || '-'}</p>
 
   <!-- TTD -->
   <div class="ttd-area">
     <div class="ttd-box">
       ${stempelHtml}
-      <p style="font-size:12px;">${meta.kota || (meta.alamat ? meta.alamat.split(',')[0] : '........')}, ${meta.tanggal_pengumuman || formatTanggal(new Date())}</p>
-      <p style="font-size:12px;">Kepala Sekolah,</p>
+      <p style="font-size:14px;">${meta.kota || (meta.alamat ? meta.alamat.split(',')[0] : '........')}, ${meta.tanggal_pengumuman || formatTanggal(new Date())}</p>
+      <p style="font-size:14px;">Kepala Sekolah,</p>
       ${ttdHtml}
-      <p style="font-size:13px;font-weight:bold;border-top:1px solid #333;padding-top:4px;">${meta.kepala_sekolah}</p>
-      <p style="font-size:11px;">NIP. ${meta.nip_kepsek || '-'}</p>
+      <p style="font-size:15px;font-weight:bold;border-top:1px solid #333;padding-top:4px;">${meta.kepala_sekolah}</p>
+      ${meta.jabatan_kepsek ? `<p style="font-size:13px;font-weight:600;">${meta.jabatan_kepsek}</p>` : ''}
+      ${meta.id_kepsek_mode === 'nuptk'
+        ? (meta.nuptk_kepsek ? `<p style="font-size:13px;">NUPTK. ${meta.nuptk_kepsek}</p>` : '')
+        : (meta.nip_kepsek   ? `<p style="font-size:13px;">NIP. ${meta.nip_kepsek}</p>`      : '')}
     </div>
   </div>
 

@@ -140,17 +140,27 @@ $meta = [
     'kota'                       => $m['kota'] ?? '',
     'jenjang'                    => $m['jenjang'] ?? 'SMA',
     'kompetensi_keahlian'        => $m['kompetensi_keahlian'] ?? '',
+    // Kepala Sekolah
     'kepala_sekolah'             => $m['kepala_sekolah'],
-    'nip_kepsek'                 => $m['nip_kepsek'],
+    'jabatan_kepsek'             => $m['jabatan_kepsek'] ?? '',
+    'nip_kepsek'                 => $m['nip_kepsek'] ?? '',
+    'nuptk_kepsek'               => $m['nuptk_kepsek'] ?? '',
+    'id_kepsek_mode'             => $m['id_kepsek_mode'] ?? 'nip',
+    // Tahun & Tanggal
     'tahun_ajaran'               => $m['tahun_ajaran'],
     'tanggal_pengumuman'         => $m['tanggal_pengumuman'] ? toDateString($m['tanggal_pengumuman']) : null,
     'tanggal_pengumuman_display' => $m['tanggal_pengumuman'] ? formatTanggal($m['tanggal_pengumuman']) : null,
     'tanggal_skl2'               => $m['tanggal_skl2'] ? toDateString($m['tanggal_skl2']) : null,
     'tanggal_skl2_display'       => $m['tanggal_skl2'] ? formatTanggal($m['tanggal_skl2']) : null,
+    // Nomor Surat
+    'nomor_surat_mode'           => $m['nomor_surat_mode'] ?? 'auto',
     'nomor_surat_suffix'         => $m['nomor_surat_suffix'] ?? '',
+    'nomor_surat_statis'         => $m['nomor_surat_statis'] ?? '',
+    // Kontak & Domain
     'telepon'                    => $m['telepon'] ?? '',
     'email'                      => $m['email'] ?? '',
     'domain'                     => $m['domain'] ?? '',
+    // Aset Visual
     'logo'                       => $m['logo'] ?? null,
     'stempel'                    => $m['stempel'] ?? null,
     'ttd'                        => $m['ttd'] ?? null,
