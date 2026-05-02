@@ -67,8 +67,8 @@ Sejak versi terbaru, build dapat dilakukan secara **terpisah** antara portal sis
 | Mode | Command | Output | Isi |
 |---|---|---|---|
 | Build standar (semua) | `npm run build` | `dist/` | Semua halaman |
-| Build frontend saja | `npm run build:frontend` | `dist/frontend/` | Portal siswa + login |
-| Build dashboard saja | `npm run build:dashboard` | `dist/dashboard/` | Semua halaman `/dashboard/*` |
+| Build frontend saja | `npm run build:frontend` | `dist/frontend/` | Portal siswa saja (index, 404) — **login tidak disertakan** |
+| Build dashboard saja | `npm run build:dashboard` | `dist/dashboard/` | Semua halaman `/dashboard/*` + login |
 | Build keduanya | `npm run build:all` | `dist/frontend/` + `dist/dashboard/` | Keduanya terpisah |
 
 ### Cara Kerja
@@ -78,10 +78,11 @@ Script `scripts/build-split.mjs` menangani pemisahan secara otomatis:
 ```
 npm run build:frontend
   │
-  ├─ Sembunyikan sementara: src/pages/dashboard/
+  ├─ Sembunyikan sementara: src/pages/dashboard/ + src/pages/login.astro
   ├─ Jalankan: astro build --config astro.config.frontend.mjs
-  ├─ Output: dist/frontend/  (hanya index.html + login/)
-  └─ Kembalikan: src/pages/dashboard/  ← selalu dikembalikan, bahkan jika error
+  ├─ Output: dist/frontend/  (hanya index.html + 404.html)
+  ├─ Cleanup: hapus dist/frontend/login/ jika ada (safety net)
+  └─ Kembalikan: src/pages/dashboard/ + src/pages/login.astro  ← selalu dikembalikan, bahkan jika error
 ```
 
 ```

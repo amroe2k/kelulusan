@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "dev:php": "php -S localhost:8090 -t public",
     "dev:all": "start /B php -S localhost:8090 -t public && astro dev",
-    "build": "astro build",
+    "build": "node scripts/build-split.mjs --target=all",
     "build:frontend": "node scripts/build-split.mjs --target=frontend",
     "build:dashboard": "node scripts/build-split.mjs --target=dashboard",
     "build:all": "node scripts/build-split.mjs --target=all",
@@ -19,7 +19,7 @@
     "export-users": "node scripts/export-users.js",
     "db:setup": "node scripts/migrate.js && node scripts/seed.js && node scripts/export-data.js && node scripts/export-users.js",
     "generate-pdf": "node scripts/generate-pdf.js",
-    "publish": "node scripts/export-data.js && node scripts/export-users.js && node scripts/generate-pdf.js && astro build",
+    "publish": "node scripts/export-data.js && node scripts/export-users.js && node scripts/generate-pdf.js && node scripts/build-split.mjs --target=all",
     "deploy": "node scripts/deploy.js"
   },
   "dependencies": {

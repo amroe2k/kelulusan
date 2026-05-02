@@ -216,10 +216,10 @@ npm run build:all
 
 | Output | Isi | Tujuan Deploy |
 |---|---|---|
-| `dist/frontend/` | `index.html`, `login/` | Shared hosting / cPanel |
-| `dist/dashboard/` | `dashboard/*/` | VPS / subdomain admin |
+| `dist/frontend/` | `index.html`, `404.html` | Shared hosting / cPanel |
+| `dist/dashboard/` | `dashboard/*/` + `login/` | VPS / subdomain admin |
 
-> 💡 **Cara kerja `build:frontend`**: Script sementara menyembunyikan folder `dashboard/` dari Astro sehingga hanya halaman publik yang di-build. Sebaliknya saat `build:dashboard`, halaman `index.astro` dan `login.astro` disembunyikan sementara. File selalu dikembalikan setelah build selesai (termasuk jika terjadi error).
+> 💡 **Cara kerja `build:frontend`**: Script sementara menyembunyikan folder `dashboard/` **dan** `login.astro` dari Astro, sehingga hanya halaman publik yang di-build (`index.html` + `404.html`). Setelah build, folder output juga dibersihkan dari sisa artefak yang tidak diinginkan. Sebaliknya saat `build:dashboard`, halaman `index.astro`, `login.astro`, dan `404.astro` disembunyikan sementara — kemudian `login.astro` tetap diikutsertakan di output dashboard. File selalu dikembalikan setelah build selesai (termasuk jika terjadi error).
 
 ### Deploy ke Hosting (Shared Hosting / cPanel)
 

@@ -4,8 +4,8 @@
  * Script untuk membangun Frontend dan Dashboard Admin secara terpisah.
  *
  * Output:
- *   dist/frontend/   → Hanya halaman publik (index, login)
- *   dist/dashboard/  → Hanya halaman admin dashboard
+ *   dist/frontend/   → Hanya halaman publik (index, 404) — login TIDAK disertakan
+ *   dist/dashboard/  → Hanya halaman admin dashboard (termasuk login)
  *
  * Cara pakai:
  *   node scripts/build-split.mjs --target=frontend
@@ -89,8 +89,10 @@ const PAGE_GROUPS = {
   frontend: {
     label: 'Frontend Publik',
     outDir: 'dist/frontend',
-    hideOnBuild: ['dashboard'],   // sembunyikan folder dashboard
+    hideOnBuild: ['dashboard', 'login.astro'],   // sembunyikan folder dashboard & halaman login admin
     config: 'astro.config.frontend.mjs',
+    // Folder yang dihapus paksa dari output setelah build (safety net)
+    cleanAfterBuild: ['login', 'dashboard'],
   },
   // Halaman yang DISEMBUNYIKAN saat build dashboard
   dashboard: {
@@ -98,6 +100,7 @@ const PAGE_GROUPS = {
     outDir: 'dist/dashboard',
     hideOnBuild: ['index.astro', 'login.astro', '404.astro'],  // sembunyikan halaman publik
     config: 'astro.config.dashboard.mjs',
+    cleanAfterBuild: [],
   },
 };
 
@@ -122,7 +125,19 @@ async function buildTarget(name) {
     log(c.red, `\n✗ Build gagal: ${err.message}`);
     process.exitCode = 1;
   } finally {
-    // 3. Kembalikan file yang disembunyikan
+    // 3. Hapus folder yang tidak boleh ada di output (safety net)
+    const outPath = path.join(ROOT, group.outDir);
+    if (group.cleanAfterBuild?.length) {
+      for (const dir of group.cleanAfterBuild) {
+        const target = path.join(outPath, dir);
+        if (fs.existsSync(target)) {
+          fs.rmSync(target, { recursive: true, force: true });
+          log(c.dim, `  🧹 Cleaned: ${group.outDir}/${dir}`);
+        }
+      }
+    }
+
+    // 4. Kembalikan file yang disembunyikan
     if (hiddenList.length) {
       log(c.yellow, `\nMengembalikan file halaman...`);
       restorePages(hiddenList);
