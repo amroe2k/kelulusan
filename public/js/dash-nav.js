@@ -8,11 +8,18 @@ function renderSidebar(){
     {id:'siswa-data',label:'Data Kelulusan',icon:'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'},
     {id:'pengguna',label:'Manajemen Akun',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'},
     {id:'json-history',label:'Riwayat JSON',icon:'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'},
-    {id:'sync',label:'Sinkronisasi Cloud',icon:'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'}
+    {id:'sync',label:'Sinkronisasi Cloud',icon:'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'},
+    {id:'__divider__'},
+    {id:'profile',label:'Profil Saya',icon:'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'}
   ];
   const role=auth?.role||'admin';
   const isDark=document.documentElement.classList.contains('dark');
   items.forEach(item=>{
+    if(item.id==='__divider__'){
+      const div=document.createElement('div');
+      div.style.cssText='height:1px;background:rgba(148,163,184,.1);margin:6px 12px;';
+      nav.appendChild(div); return;
+    }
     if(role==='guru'&&item.id!=='siswa-data')return;
     const isActive=currentView===item.id;
     const el=document.createElement('div');
@@ -42,7 +49,8 @@ function switchView(id){
     'siswa-data':'Data Kelulusan',
     pengguna:'Manajemen Akun',
     'json-history':'Riwayat JSON',
-    sync:'Sinkronisasi Cloud'
+    sync:'Sinkronisasi Cloud',
+    profile:'Profil Saya'
   };
   if($('page-title'))$('page-title').textContent=titles[id]||id;
   renderSidebar();
@@ -68,6 +76,7 @@ function switchView(id){
   if(id==='pengguna')renderPengguna();
   if(id==='json-history')renderJsonHistory();
   if(id==='sync'){ loadArchiveList(); populateBundleSelect(); if(typeof loadSyncStatus==='function') loadSyncStatus(); }
+  if(id==='profile' && typeof renderProfile==='function') renderProfile();
   // Re-apply sidebar collapse state after re-render
   applySidebarCollapse(false);
 }

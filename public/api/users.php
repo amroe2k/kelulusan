@@ -2,10 +2,49 @@
 session_start();
 require 'db.php';
 
+// ── Self-service actions (any authenticated user) ────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        exit(json_encode(['error' => 'Unauthorized']));
+    }
+    $data   = getJsonBody();
+    $action = $data['action'] ?? '';
+
+    // ── update_self ─────────────────────────────────────────────────────────
+    if ($action === 'update_self') {
+        $nama = trim($data['nama'] ?? '');
+        if (!$nama) { echo json_encode(['error' => 'Nama tidak boleh kosong.']); exit; }
+        $pdo->prepare("UPDATE users SET nama=? WHERE id=?")->execute([$nama, $_SESSION['user_id']]);
+        $_SESSION['nama'] = $nama;
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // ── change_password ─────────────────────────────────────────────────────
+    if ($action === 'change_password') {
+        $oldPw = $data['old_password'] ?? '';
+        $newPw = $data['new_password'] ?? '';
+        if (!$oldPw || !$newPw) { echo json_encode(['error' => 'Semua field wajib diisi.']); exit; }
+        if (strlen($newPw) < 8)  { echo json_encode(['error' => 'Password baru minimal 8 karakter.']); exit; }
+        $row = $pdo->prepare("SELECT password_hash FROM users WHERE id=?");
+        $row->execute([$_SESSION['user_id']]);
+        $user = $row->fetch(PDO::FETCH_ASSOC);
+        if (!$user || $user['password_hash'] !== hash('sha256', $oldPw)) {
+            echo json_encode(['error' => 'Password lama tidak sesuai.']); exit;
+        }
+        $pdo->prepare("UPDATE users SET password_hash=? WHERE id=?")->execute([hash('sha256', $newPw), $_SESSION['user_id']]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
+
+// ── Admin-only routes ────────────────────────────────────────────────────────
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     http_response_code(401);
     exit(json_encode(['error' => 'Unauthorized — hanya Admin']));
 }
+
 
 $method = $_SERVER['REQUEST_METHOD'];
 

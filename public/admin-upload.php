@@ -587,6 +587,23 @@ $isAuth = !empty($_SESSION['upload_auth']);
             Masuk ke Panel
           </button>
         </form>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center;">
+          <a href="/" style="
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+            text-decoration: none; padding: 0.6rem 1.25rem;
+            border: 1px solid var(--border); border-radius: 12px;
+            background: transparent;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          "
+          onmouseover="this.style.color='var(--primary)'; this.style.borderColor='var(--primary)'; this.style.background='var(--primary-glow)'; this.style.transform='translateY(-2px)';"
+          onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border)'; this.style.background='transparent'; this.style.transform='translateY(0)';">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Kembali ke Beranda
+          </a>
+        </div>
+
       </div>
     </div>
   </div>

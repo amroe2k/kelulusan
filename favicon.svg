@@ -1,33 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Background: white rounded square -->
-  <rect width="64" height="64" rx="14" fill="#f0f2ff"/>
-  <rect width="64" height="64" rx="14" fill="url(#bg-grad)" opacity="0.15"/>
   <defs>
-    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#4338ca"/>
-    </linearGradient>
-    <linearGradient id="cap-grad" x1="0" y1="0" x2="0.5" y2="1">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#4338ca"/>
+    <!-- Background gradient matching the provided image -->
+    <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
     </linearGradient>
   </defs>
 
-  <!-- Mortarboard brim (flat horizontal ellipse) -->
-  <ellipse cx="32" cy="34" rx="18" ry="5" fill="url(#cap-grad)"/>
+  <!-- Background rounded square -->
+  <rect width="64" height="64" rx="16" fill="url(#bg_grad)"/>
 
-  <!-- Cap top (diamond/rhombus) -->
-  <polygon points="32,14 50,28 32,34 14,28" fill="url(#cap-grad)"/>
+  <!-- Minimalist Outline Cap (Konsep 3) -->
+  <!-- Cap top diamond outline -->
+  <path d="M32 18l18 10-18 10-18-10z" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Cap body/brim outline -->
+  <path d="M18 28v6c0 3.5 6.5 6.5 14 6.5s14-3 14-6.5v-6" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
 
-  <!-- Cap top highlight -->
-  <polygon points="32,14 50,28 32,28" fill="#ffffff" opacity="0.12"/>
-
-  <!-- Left side of mortarboard -->
-  <path d="M14,28 L14,36 C14,39 22,42 32,42 C42,42 50,39 50,36 L50,28 L32,34 Z" fill="#4338ca"/>
-
-  <!-- Tassel string -->
-  <line x1="50" y1="28" x2="50" y2="42" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
-  <!-- Tassel ball -->
-  <circle cx="50" cy="43" r="2.5" fill="#6366f1"/>
+  <!-- Tassel string and ball -->
+  <line x1="50" y1="28" x2="50" y2="38" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="50" cy="42" r="2.5" fill="white"/>
 </svg>

@@ -1,7 +1,7 @@
 // Identitas, Pengguna, Sync, Init
 
 // ── Konstanta Global ──────────────────────────────────────────────────────
-const VALID_VIEWS = ['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync'];
+const VALID_VIEWS = ['overview','lembaga','identitas','siswa-data','pengguna','json-history','sync','profile'];
 // ─── Asset helpers ───
 function getAssetEnabled(field){
   return localStorage.getItem('asset_'+field+'_enabled') !== '0';
@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
   if($('sb-nama'))$('sb-nama').textContent=auth.nama||'';
   if($('sb-role'))$('sb-role').textContent=(auth.role||'admin').toUpperCase();
   $('sb-avatar').textContent=auth.nama.charAt(0).toUpperCase();
+
+  // Load saved avatar
+  const _savedAvatar = localStorage.getItem(`avatar_${auth.id || auth.username}`);
+  if (_savedAvatar && typeof applyAvatar === 'function') applyAvatar(_savedAvatar);
 
   // Show admin-only elements
   if(auth.role==='admin'){
@@ -393,6 +397,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   });
 
 
+
+  // Init Profile Events
+  if (typeof initProfileEvents === 'function') initProfileEvents();
 
   window.addEventListener('popstate',()=>{
     const parts=window.location.pathname.split('/').filter(Boolean);

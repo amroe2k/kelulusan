@@ -361,8 +361,14 @@ const { view } = Astro.params;
       <!-- Brand Logo -->
       <div id="sb-brand" class="h-20 flex items-center px-8 border-b border-slate-800/50">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
+          <div class="w-10 h-10 rounded-xl flex-shrink-0 shadow-lg shadow-indigo-500/30 overflow-hidden" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+            <svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+              <!-- Minimalist Outline Cap (Konsep 3 style) -->
+              <path d="M20 11l12 6.5-12 6.5-12-6.5z" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11 17.5v4c0 2.2 4 4.2 9 4.2s9-2 9-4.2v-4" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+              <line x1="32" y1="17.5" x2="32" y2="24" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+              <circle cx="32" cy="27" r="1.5" fill="white"/>
+            </svg>
           </div>
           <div class="flex flex-col min-w-0">
             <span class="text-white font-black text-lg tracking-tight font-outfit leading-none">AdminPortal</span>
@@ -394,20 +400,21 @@ const { view } = Astro.params;
 
       <!-- User Profile -->
       <div class="sb-profile-box p-4 border-t border-slate-800/50 bg-[#0F1523]">
-        <div class="sb-profile-card bg-[#172033] rounded-2xl p-4 flex items-center justify-between border border-slate-700/50">
+        <div class="sb-profile-card bg-[#172033] rounded-2xl p-4 flex items-center justify-between border border-slate-700/50 hover:border-indigo-500/40 hover:bg-[#1c2844] transition-all cursor-pointer group"
+          onclick="switchView('profile')" title="Buka Profil Saya">
           <div class="flex items-center gap-3 overflow-hidden">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-inner" id="sb-avatar">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-inner overflow-hidden" id="sb-avatar">
               A
             </div>
             <div class="min-w-0">
-              <p class="text-white text-xs font-bold truncate uppercase" id="sb-nama">Administrator</p>
+              <p class="text-white text-xs font-bold truncate uppercase group-hover:text-indigo-300 transition-colors" id="sb-nama">Administrator</p>
               <div class="flex items-center gap-1.5 mt-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-[9px] font-medium text-slate-400">Online</span>
+                <span class="text-[9px] font-medium text-slate-400 group-hover:text-indigo-400 transition-colors">Lihat Profil</span>
               </div>
             </div>
           </div>
-          <button id="btn-logout" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Keluar">
+          <button id="btn-logout" onclick="event.stopPropagation()" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Keluar">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
           </button>
         </div>
@@ -1425,6 +1432,188 @@ const { view } = Astro.params;
     </div>
   </section>
 
+  <!-- ── VIEW: PROFILE ── -->
+  <section id="view-profile" class="hidden space-y-6 animate-fade-in max-w-3xl mx-auto">
+
+    <!-- Header -->
+    <div>
+      <h2 class="text-2xl font-black font-outfit text-white tracking-tight">Profil Saya</h2>
+      <p class="text-xs text-slate-400 mt-1">Kelola informasi akun dan foto profil Anda.</p>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="bg-[#111827] border border-slate-800 rounded-3xl overflow-hidden">
+
+      <!-- Avatar Hero -->
+      <div class="relative h-28 bg-gradient-to-r from-indigo-600/30 via-violet-600/20 to-fuchsia-600/10">
+        <div class="absolute inset-0" style="background:radial-gradient(ellipse at 30% 50%,rgba(99,102,241,.25),transparent 70%)"></div>
+      </div>
+
+      <div class="px-8 pb-8 -mt-14">
+        <!-- Avatar Upload Zone -->
+        <div class="relative w-28 h-28 mb-5">
+          <div id="profile-avatar-zone"
+            class="w-28 h-28 rounded-3xl border-4 border-[#111827] overflow-hidden cursor-pointer relative group shadow-2xl shadow-indigo-500/30 transition-all duration-300"
+            style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
+            <!-- Avatar img (hidden if no photo) -->
+            <img id="profile-avatar-img" src="" alt="Avatar"
+              class="w-full h-full object-cover hidden absolute inset-0 z-10"/>
+            <!-- Initials fallback -->
+            <div id="profile-avatar-initials"
+              class="w-full h-full flex items-center justify-center text-white font-black text-4xl font-outfit select-none">
+              A
+            </div>
+            <!-- Hover overlay -->
+            <div class="absolute inset-0 z-20 bg-black/50 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span class="text-[10px] font-bold text-white/90">Ubah</span>
+            </div>
+            <input type="file" id="profile-avatar-input" accept="image/*" class="hidden"/>
+          </div>
+          <!-- Drop hint badge -->
+          <div id="profile-drop-hint" class="absolute -bottom-2 -right-2 hidden">
+            <span class="px-2 py-1 rounded-lg bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-lg">Drop!</span>
+          </div>
+        </div>
+
+        <!-- Drag & Drop drop zone overlay (full page) -->
+        <div id="profile-dragover-overlay"
+          class="fixed inset-0 z-[999] hidden items-center justify-center pointer-events-none">
+          <div class="bg-[#111827]/95 border-2 border-dashed border-indigo-500 rounded-3xl p-12 flex flex-col items-center gap-4 shadow-2xl">
+            <svg class="w-16 h-16 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <p class="text-indigo-300 font-black text-xl font-outfit">Lepaskan untuk upload foto</p>
+            <p class="text-slate-400 text-sm">JPG, PNG, WebP · Maks 3MB</p>
+          </div>
+        </div>
+
+        <!-- Name & Role -->
+        <div class="mb-6">
+          <h3 id="profile-display-name" class="text-2xl font-black text-white font-outfit">Administrator</h3>
+          <div class="flex items-center gap-2 mt-1">
+            <span id="profile-display-role" class="role-badge admin">admin</span>
+            <span class="text-slate-600">·</span>
+            <span id="profile-display-username" class="text-xs font-mono text-slate-500">@username</span>
+          </div>
+        </div>
+
+        <!-- Edit Info Form -->
+        <form id="form-profile" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Nama Lengkap <span class="text-rose-400">*</span>
+              </label>
+              <input type="text" id="profile-nama" required placeholder="Nama Anda"
+                class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 text-sm text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Username</label>
+              <input type="text" id="profile-username" placeholder="Username (tidak bisa diubah)"
+                disabled class="w-full bg-[#0a0d1a] border border-slate-800 rounded-xl py-3 px-4 text-sm text-slate-500 outline-none cursor-not-allowed font-mono">
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-800/60">
+            <button type="submit" id="btn-save-profile"
+              class="btn-primary flex items-center gap-2 text-sm !py-2.5 !px-6">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Change Password Card -->
+    <div class="bg-[#111827] border border-slate-800 rounded-3xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-white font-outfit">Ganti Password</h3>
+      </div>
+      <div class="p-6">
+        <form id="form-profile-password" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password Lama</label>
+            <div class="relative">
+              <input type="password" id="profile-pw-old" placeholder="••••••••"
+                class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 pr-11 text-sm text-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+              <button type="button" onclick="togglePw('profile-pw-old','eye-pw-old')"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 p-1">
+                <svg id="eye-pw-old" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password Baru</label>
+              <div class="relative">
+                <input type="password" id="profile-pw-new" placeholder="Min. 8 karakter"
+                  class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 pr-11 text-sm text-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+                <button type="button" onclick="togglePw('profile-pw-new','eye-pw-new')"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 p-1">
+                  <svg id="eye-pw-new" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Konfirmasi</label>
+              <input type="password" id="profile-pw-confirm" placeholder="Ulangi password baru"
+                class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-3 px-4 text-sm text-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+            </div>
+          </div>
+          <!-- Strength bar -->
+          <div id="pw-strength-wrap" class="hidden space-y-1">
+            <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+              <div id="pw-strength-bar" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
+            </div>
+            <p id="pw-strength-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"></p>
+          </div>
+          <div class="flex justify-end pt-2 border-t border-slate-800/60">
+            <button type="submit" class="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm
+              bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 hover:border-amber-400 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              Perbarui Password
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="bg-rose-500/5 border border-rose-500/20 rounded-3xl p-6 flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <h4 class="text-sm font-bold text-rose-400 font-outfit">Keluar dari Sesi</h4>
+        <p class="text-xs text-slate-500 mt-0.5">Akhiri sesi aktif dan kembali ke halaman login.</p>
+      </div>
+      <button id="profile-btn-logout"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 font-bold text-sm transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Keluar
+      </button>
+    </div>
+
+  </section>
+
   <!-- Siswa Modal -->
   <div id="modal-siswa" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
     <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl animate-fade-in max-h-[90vh] flex flex-col">
@@ -1528,6 +1717,7 @@ const { view } = Astro.params;
   <script is:inline src={`/js/dash-lembaga.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-history.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-sync.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-profile.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-init.js?v=${_v}`}></script>
 
 </BaseLayout>
