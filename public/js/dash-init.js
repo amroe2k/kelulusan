@@ -86,12 +86,25 @@ function renderIdentitas(){
     }
   }
   // Domain
-  if(m.domain){
-    $('id-domain')&&($('id-domain').textContent='https://'+m.domain);
-    // Update URL di sync card
-    const urlEl=$('upload-url-text');
-    if(urlEl)urlEl.textContent=`https://${m.domain}/admin-upload.php`;
+  const fallbackDomain = 'namadomain.com';
+  const displayDomain = m.domain ? m.domain : fallbackDomain;
+  
+  if($('id-domain')) $('id-domain').textContent = 'https://' + displayDomain;
+  
+  if($('id-pengumuman')) {
+    const peng = (m.pengumuman || '').trim();
+    if(peng) {
+        $('id-pengumuman').innerHTML = peng;
+        $('id-pengumuman').classList.remove('italic', 'text-slate-400');
+    } else {
+        $('id-pengumuman').textContent = '- Belum ada pengumuman -';
+        $('id-pengumuman').classList.add('italic', 'text-slate-400');
+    }
   }
+  
+  // Update URL di sync card
+  const urlEl=$('upload-url-text');
+  if(urlEl)urlEl.textContent=`https://${displayDomain}/admin-upload.php`;
   if(auth?.role==='admin')$('btn-edit-identitas')?.classList.remove('hidden');
   // Tampilkan gambar di view mode
   const setViewImg=(id,noId,delBtnId,src)=>{
@@ -204,7 +217,22 @@ document.addEventListener('DOMContentLoaded',async()=>{
   // ─── Sidebar Collapse ───
   window.applySidebarCollapse = function(toggle) {
     const sb = $('dash-sidebar');
+    const overlay = $('sidebar-overlay');
     if (!sb) return;
+    
+    const isMobile = window.innerWidth < 1024;
+    
+    if (isMobile) {
+      if (toggle) {
+        const isActive = sb.classList.toggle('mobile-active');
+        if (overlay) overlay.classList.toggle('active', isActive);
+      } else {
+        sb.classList.remove('mobile-active');
+        if (overlay) overlay.classList.remove('active');
+      }
+      return;
+    }
+
     let collapsed = localStorage.getItem('sb-collapsed') === '1';
     if (toggle) {
       collapsed = !collapsed;
@@ -235,7 +263,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const namaLembaga = d?._meta?.lembaga_nama || d?._meta?.sekolah || '';
     const sbLembaga = $('sb-lembaga-nama');
     if(sbLembaga && namaLembaga) sbLembaga.textContent = namaLembaga;
-    if(currentView==='identitas') renderIdentitas();
+    
+    // Selalu panggil renderIdentitas agar elemen global (seperti upload URL) ter-update
+    if(typeof renderIdentitas === 'function') renderIdentitas();
+    
     if(currentView==='overview') renderOverview();
   }).catch(e=>console.error('[data.php]',e));
 
@@ -263,6 +294,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('btn-next-page')?.addEventListener('click',()=>{ currentSiswaPage++; renderSiswaTable(allSiswa); });
   $('btn-bulk-lulus')?.addEventListener('click',()=>applyBulk('LULUS'));
   $('btn-bulk-tidak')?.addEventListener('click',()=>applyBulk('TIDAK LULUS'));
+  // Footer variants (ID unik, bukan duplikat)
+  $('btn-bulk-lulus-footer')?.addEventListener('click',()=>applyBulk('LULUS'));
+  $('btn-bulk-tidak-footer')?.addEventListener('click',()=>applyBulk('TIDAK LULUS'));
   $('btn-hapus-semua')?.addEventListener('click',()=>deleteAllSiswa());
   $('btn-add-siswa')?.addEventListener('click',()=>openSiswaModal());
   $('btn-add-mapel')?.addEventListener('click',()=>addNilaiRow());
@@ -299,6 +333,46 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('btn-export-siswa')?.addEventListener('click',exportXlsx);
   initImport();
 
+  // --- Initialize Quill Editor for Pengumuman ---
+  let quillPengumuman = null;
+  if ($('editor-pengumuman') && typeof Quill !== 'undefined') {
+    quillPengumuman = new Quill('#editor-pengumuman', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link', 'clean']
+        ]
+      },
+      placeholder: 'Tuliskan pengumuman tambahan seperti jadwal cap 3 jari, pengambilan SKHU, dll...'
+    });
+    quillPengumuman.on('text-change', function() {
+      if ($('input-pengumuman')) $('input-pengumuman').value = quillPengumuman.root.innerHTML;
+    });
+
+    // Add tooltips to buttons
+    const titles = {
+      'bold': 'Tebal (Ctrl+B)',
+      'italic': 'Miring (Ctrl+I)',
+      'underline': 'Garis Bawah (Ctrl+U)',
+      'strike': 'Coret',
+      'list': { 'ordered': 'Daftar Angka', 'bullet': 'Daftar Simbol' },
+      'link': 'Tambah Tautan',
+      'clean': 'Hapus Format'
+    };
+    quillPengumuman.getModule('toolbar').container.querySelectorAll('button, .ql-picker').forEach(el => {
+      let type = Array.from(el.classList).find(c => c.startsWith('ql-'))?.replace('ql-', '');
+      if (!type) return;
+      let title = titles[type];
+      if (typeof title === 'object') {
+        const val = el.value || el.getAttribute('value');
+        title = title[val] || type;
+      }
+      if (title) el.setAttribute('title', title);
+    });
+  }
+
   // --- Identitas events ---
   $('btn-edit-identitas')?.addEventListener('click',()=>{
     const m=allData._meta;
@@ -315,6 +389,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
     if($('input-jenjang')) $('input-jenjang').value = m.jenjang||'SMA';
     if($('input-nomor-surat')) $('input-nomor-surat').value = m.nomor_surat_suffix||'';
     if($('input-nomor-surat-statis')) $('input-nomor-surat-statis').value = m.nomor_surat_statis||'';
+    if($('input-pengumuman')) {
+      $('input-pengumuman').value = m.pengumuman||'';
+      if(quillPengumuman) quillPengumuman.root.innerHTML = m.pengumuman||'';
+    }
     // Set radio mode
     const mode = m.nomor_surat_mode || 'auto';
     const radioAuto = $('mode-auto'), radioStatic = $('mode-static');
@@ -328,6 +406,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const radioNip = $('mode-id-nip'), radioNuptk = $('mode-id-nuptk');
     if(radioNip) radioNip.checked = idKepsekMode === 'nip';
     if(radioNuptk) radioNuptk.checked = idKepsekMode === 'nuptk';
+    // Tampilkan section yang sesuai dengan mode aktif saat load
+    $('section-nip')?.classList.toggle('hidden', idKepsekMode !== 'nip');
+    $('section-nuptk')?.classList.toggle('hidden', idKepsekMode !== 'nuptk');
     // tanggal_skl2
     if($('input-tgl-skl2')){
       let v=m.tanggal_skl2||'';
@@ -351,9 +432,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
         $('section-nomor-static')?.classList.toggle('hidden', !isStatic);
       };
     });
-    // id_kepsek_mode radio listener (already wired via HTML, just refresh)
+    // id_kepsek_mode radio listener — toggle section NIP / NUPTK
     document.querySelectorAll('[name="id_kepsek_mode"]').forEach(radio => {
-      radio.onchange = () => {}; // no section to hide/show, both inputs always visible
+      radio.onchange = () => {
+        const isNuptk = $('mode-id-nuptk')?.checked;
+        $('section-nip')?.classList.toggle('hidden', isNuptk);
+        $('section-nuptk')?.classList.toggle('hidden', !isNuptk);
+      };
     });
   });
   $('btn-cancel-identitas')?.addEventListener('click',()=>{
@@ -366,7 +451,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const rawDomain=($('input-domain')?.value||'').trim().replace(/^https?:\/\//,'');
     const nomorMode = $('mode-static')?.checked ? 'static' : 'auto';
     const idKepsekMode = $('mode-id-nuptk')?.checked ? 'nuptk' : 'nip';
-    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,jabatan_kepsek:$('input-jabatan')?.value||'',nip_kepsek:$('input-nip').value,nuptk_kepsek:$('input-nuptk')?.value||'',id_kepsek_mode:idKepsekMode,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_mode:nomorMode,nomor_surat_suffix:$('input-nomor-surat')?.value||'',nomor_surat_statis:$('input-nomor-surat-statis')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain};
+    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,jabatan_kepsek:$('input-jabatan')?.value||'',nip_kepsek:$('input-nip').value,nuptk_kepsek:$('input-nuptk')?.value||'',id_kepsek_mode:idKepsekMode,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_mode:nomorMode,nomor_surat_suffix:$('input-nomor-surat')?.value||'',nomor_surat_statis:$('input-nomor-surat-statis')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain,pengumuman:$('input-pengumuman')?.value||''};
     // Hanya kirim gambar jika user benar-benar mengubahnya (data-changed='true')
     // Jika data-changed='clear', kirim null untuk hapus gambar dari DB
     document.querySelectorAll('.img-zone').forEach(zone=>{
@@ -747,9 +832,194 @@ async function createBundle() {
       }
 
       showToast('Bundle berhasil: ' + data.zip_name + ' (' + data.size_kb + ' KB)', 'success');
+      if(typeof loadBundleList === 'function') loadBundleList(); // Refresh manajemen bundle
     } else {
       showToast(data.error || 'Gagal membuat bundle.', 'error');
     }
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
   finally { btn.innerHTML = orig; btn.disabled = false; }
+}
+
+// ── Bundle Management: List, Delete, Delete All ──────────────────────────────
+
+async function loadBundleList() {
+  const container  = document.getElementById('bundle-list');
+  const infoBar    = document.getElementById('bundle-storage-info');
+  const infoText   = document.getElementById('bundle-storage-text');
+  const countBadge = document.getElementById('bundle-count-badge');
+  if (!container) return;
+
+  // Animasi loading
+  container.innerHTML = `
+    <div class="flex items-center justify-center gap-2 py-6 text-slate-500">
+      <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      <span class="text-xs">Memuat daftar bundle...</span>
+    </div>`;
+
+  try {
+    const res  = await fetch('/api/delete-bundle.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list' })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Gagal memuat');
+
+    const files = data.data || [];
+
+    // Update storage info bar
+    if (infoBar && files.length > 0) {
+      const totalMb = files.reduce((s, f) => s + (f.size_bytes || 0), 0) / (1024 * 1024);
+      infoBar.classList.remove('hidden');
+      if (infoText) infoText.textContent = `Total penyimpanan: ${totalMb.toFixed(1)} MB digunakan`;
+      if (countBadge) countBadge.textContent = `${files.length} Bundle`;
+    } else if (infoBar) {
+      infoBar.classList.add('hidden');
+    }
+
+    if (files.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-8 gap-2 text-slate-600">
+          <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <p class="text-xs">Belum ada bundle tersimpan.</p>
+          <p class="text-[10px] text-slate-600">Buat bundle baru di Langkah 4.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = files.map(f => {
+      const tgl  = f.created_at
+        ? new Date(f.created_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+        : '-';
+      const sizeTxt = f.size_mb >= 1 ? `${f.size_mb} MB` : `${f.size_kb} KB`;
+      // Warna ukuran: hijau < 50MB, kuning 50-150MB, merah > 150MB
+      const sizeColor = f.size_mb > 150 ? 'text-rose-400' : f.size_mb > 50 ? 'text-amber-400' : 'text-emerald-400';
+
+      return `
+      <div id="bundle-row-${f.file_name.replace(/[^a-z0-9]/gi,'_')}" class="flex items-center justify-between gap-3 bg-[#0F1523] border border-slate-800 rounded-xl px-4 py-3 hover:border-rose-500/20 transition-all group">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-fuchsia-500/10 text-fuchsia-400 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-white font-mono truncate" title="${f.file_name}">${f.file_name}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[10px] text-slate-500">${tgl}</span>
+              <span class="text-[10px] font-bold ${sizeColor}">${sizeTxt}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a href="${f.url}" download="${f.file_name}"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 text-xs font-bold transition-all" title="Unduh">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Unduh
+          </a>
+          <button onclick="deleteBundle('${f.file_name}')"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-400 text-rose-400 text-xs font-bold transition-all opacity-0 group-hover:opacity-100" title="Hapus bundle ini">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Hapus
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch (e) {
+    container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Gagal memuat daftar bundle: ${e.message}</p>`;
+  }
+}
+
+async function deleteBundle(fileName) {
+  showConfirm(
+    `Hapus bundle ini?`,
+    fileName,
+    async () => {
+      try {
+        const res  = await fetch('/api/delete-bundle.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', file_name: fileName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Bundle dihapus: ' + fileName, 'success');
+          loadBundleList(); // Refresh list
+        } else {
+          showToast(data.error || 'Gagal menghapus bundle.', 'error');
+        }
+      } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+  );
+}
+
+async function deleteAllBundles() {
+  const container = document.getElementById('bundle-list');
+  const count = container?.querySelectorAll('[id^="bundle-row-"]').length || 0;
+  if (!count) { showToast('Tidak ada bundle untuk dihapus.', 'info'); return; }
+
+  showConfirm(
+    `Hapus semua ${count} bundle?`,
+    'Seluruh file ZIP di folder bundles/ akan dihapus permanen dari server.',
+    async () => {
+      try {
+        const res  = await fetch('/api/delete-bundle.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete_all' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadBundleList();
+        } else {
+          showToast(data.error || 'Gagal.', 'error');
+        }
+      } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+  );
+}
+
+// ── Sync Tab Switcher ────────────────────────────────────────────────────────
+window.switchSyncTab = function(tabIndex) {
+  // Reset buttons
+  document.querySelectorAll('.sync-tab-btn').forEach(btn => {
+    btn.classList.remove('active', 'border-indigo-500', 'border-emerald-500', 'border-violet-500', 'border-fuchsia-500', 'border-rose-500', 'text-indigo-400', 'text-emerald-400', 'text-violet-400', 'text-fuchsia-400', 'text-rose-400');
+    btn.classList.add('border-transparent', 'text-slate-500');
+    // Matikan span styling
+    const span = btn.querySelector('span');
+    if (span) {
+      span.classList.remove('bg-indigo-500/20', 'bg-emerald-500/20', 'bg-violet-500/20', 'bg-fuchsia-500/20', 'bg-rose-500/20', 'text-indigo-400', 'text-emerald-400', 'text-violet-400', 'text-fuchsia-400', 'text-rose-400');
+      span.classList.add('bg-slate-800');
+    }
+  });
+
+  // Hide all contents
+  document.querySelectorAll('.sync-tab-content').forEach(content => {
+    content.classList.remove('block');
+    content.classList.add('hidden');
+  });
+
+  // Activate selected button
+  const activeBtn = document.getElementById('btn-sync-tab-' + tabIndex);
+  if (activeBtn) {
+    const colors = ['indigo', 'emerald', 'violet', 'fuchsia', 'rose'];
+    const c = colors[tabIndex - 1];
+    
+    activeBtn.classList.remove('border-transparent', 'text-slate-500');
+    activeBtn.classList.add('active', `border-${c}-500`, `text-${c}-400`);
+    
+    const span = activeBtn.querySelector('span');
+    if (span) {
+      span.classList.remove('bg-slate-800');
+      span.classList.add(`bg-${c}-500/20`, `text-${c}-400`);
+    }
+  }
+
+  // Show selected content
+  const activeContent = document.getElementById('sync-content-' + tabIndex);
+  if (activeContent) {
+    activeContent.classList.remove('hidden');
+    activeContent.classList.add('block');
+  }
 }

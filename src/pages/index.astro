@@ -64,7 +64,7 @@ import '../styles/global.css';
     <div class="absolute top-[30%] right-[20%] w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-slow" style="animation-delay:-4s;"></div>
   </div>
 
-  <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 py-6">
+  <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 md:p-12 pb-32 overflow-x-hidden">
     
     <!-- Header Branding (Optional for premium feel) -->
     <div class="mb-6 text-center animate-fade-in flex flex-col items-center gap-2">
@@ -74,11 +74,6 @@ import '../styles/global.css';
             <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
           </span>
           <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Status Sistem: Aktif</span>
-       </div>
-       <!-- Dynamic SKL Status Badge -->
-       <div id="active-skl-badge" class="hidden">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span id="active-skl-text" class="text-[9px] font-black uppercase tracking-widest"></span>
        </div>
     </div>
 
@@ -97,10 +92,16 @@ import '../styles/global.css';
               <!-- Fallback icon -->
               <svg id="portal-logo-fallback" class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
             </div>
-            <h1 class="text-3xl md:text-4xl font-black mb-2 tracking-tight text-slate-900 dark:text-white">
+            <h1 class="text-3xl md:text-4xl font-black mb-1 tracking-tight text-slate-900 dark:text-white uppercase">
               Cek <span class="gradient-text">Kelulusan</span>
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-base" id="sekolah-name-display">Memuat nama sekolah...</p>
+            <p class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight leading-tight mb-4" id="sekolah-name-display">Memuat nama sekolah...</p>
+            
+            <!-- Relocated SKL Mode Badge -->
+            <div id="active-skl-badge" class="hidden justify-center items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto w-fit">
+               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+               <span id="active-skl-text" class="text-[10px] font-black uppercase tracking-widest"></span>
+            </div>
           </div>
 
           <form id="search-form" class="space-y-5" novalidate>
@@ -140,10 +141,6 @@ import '../styles/global.css';
         </div>
       </div>
       
-      <!-- Footer Info -->
-      <p class="mt-6 text-center text-slate-400 dark:text-slate-600 text-[10px] font-bold uppercase tracking-[0.3em]">
-        &copy; {new Date().getFullYear()} Siswa Digital Portal &bull; Dikembangkan Secara Mandiri
-      </p>
     </section>
 
     <!-- ─── RESULT SECTION ─── -->
@@ -187,7 +184,7 @@ import '../styles/global.css';
                   <!-- Dynamic Field SMK: Kompetensi Keahlian -->
                   <div class="hidden items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm" id="kompetensi-container">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
-                    <div><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Kompetensi Keahlian</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kompetensi">-</p></div>
+                    <div><p id="lbl-kompetensi" class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Kompetensi Keahlian</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kompetensi">-</p></div>
                   </div>
                 </div>
               </div>
@@ -233,7 +230,7 @@ import '../styles/global.css';
               </div>
               
               <div class="bg-white dark:bg-black/30 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm">
-                <div id="ui-tabel-nilai" class="overflow-x-auto custom-scrollbar" style="max-height: 280px;">
+                <div id="ui-tabel-nilai" class="overflow-y-auto custom-scrollbar" style="max-height: 450px;">
                   <table class="w-full text-left">
                     <thead class="sticky top-0 bg-slate-50 dark:bg-[#1a1a2e] z-10">
                       <tr>
@@ -246,6 +243,22 @@ import '../styles/global.css';
                       <!-- Loaded via JS -->
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              <!-- Dynamic Pengumuman Area -->
+              <div id="pengumuman-container" class="hidden bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 shadow-sm">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-indigo-900 dark:text-indigo-300 mb-2">PENGUMUMAN TAMBAHAN</h4>
+                    <div id="pengumuman-content" class="text-sm text-indigo-800 dark:text-indigo-200/90 leading-relaxed font-medium">
+                      <!-- Loaded via JS -->
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -264,6 +277,21 @@ import '../styles/global.css';
       </div>
     </section>
   </main>
+
+  <!-- ─── PERSISTENT FLOATING FOOTER ─── -->
+  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md animate-fade-in" style="animation-delay: 1.5s;">
+    <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full py-2.5 px-6 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+      <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">&copy; {new Date().getFullYear()} Siswa Digital</p>
+      <div class="h-3 w-px bg-slate-200 dark:bg-white/10 hidden sm:block"></div>
+      <div class="flex items-center gap-2.5">
+        <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Presented by</span>
+        <a href="https://alfa-itsolusindo.web.id/" target="_blank" class="flex items-center gap-2 group">
+          <span class="text-[10px] font-black text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors tracking-widest uppercase">Alfa IT Solution</span>
+          <svg class="w-3 h-3 text-indigo-500 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
 
   <!-- PDF iframe (hidden, identical to admin) -->
   <iframe id="skl-iframe" style="position:absolute;top:0;left:-9999px;width:794px;height:1123px;border:none;" title="SKL Preview"></iframe>
@@ -610,17 +638,36 @@ import '../styles/global.css';
       $('res-ttl').textContent   = s.tempat_lahir + ', ' + s.tanggal_lahir;
       $('res-kelas').textContent = s.kelas;
       
-      const isSmk = (data._meta.jenjang || '').toUpperCase() === 'SMK';
-      const smkKompetensi = s.kompetensi_keahlian || data._meta.kompetensi_keahlian || '';
+      // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
+      const resKompetensi = (s.kompetensi_keahlian || data._meta.kompetensi_keahlian || '').trim();
+      const isSmkUi = (data._meta.jenjang || '').toUpperCase() === 'SMK';
       const kompContainer = $('kompetensi-container');
       if (kompContainer) {
-        if (isSmk && smkKompetensi) {
+        if (resKompetensi) {
           kompContainer.classList.remove('hidden');
           kompContainer.classList.add('flex');
-          $('res-kompetensi').textContent = smkKompetensi;
+          $('res-kompetensi').textContent = resKompetensi;
+          const lblKomp = $('lbl-kompetensi');
+          if (lblKomp) {
+            lblKomp.textContent = isSmkUi ? 'Kompetensi Keahlian' : 'Peminatan';
+          }
         } else {
           kompContainer.classList.add('hidden');
           kompContainer.classList.remove('flex');
+        }
+      }
+
+
+
+      // Pengumuman Tambahan
+      const pengumuman = (data._meta.pengumuman || '').trim();
+      const pContainer = $('pengumuman-container');
+      if (pContainer) {
+        if (pengumuman) {
+          pContainer.classList.remove('hidden');
+          $('pengumuman-content').innerHTML = pengumuman; // Use innerHTML to allow basic tags
+        } else {
+          pContainer.classList.add('hidden');
         }
       }
 
@@ -788,13 +835,16 @@ import '../styles/global.css';
     const nomorSurat = (meta.nomor_surat_mode === 'static' && meta.nomor_surat_statis)
       ? meta.nomor_surat_statis
       : (meta.nomor_surat_suffix ? `${sklNum}${meta.nomor_surat_suffix}` : `${sklNum}/${meta.npsn||'SKL'}/${now.getFullYear()}`);
+    // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
+    const kompetensi = (siswa.kompetensi_keahlian || meta.kompetensi_keahlian || '').trim();
     const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
-    const smkKompetensi = siswa.kompetensi_keahlian || meta.kompetensi_keahlian || '';
-    const smkHeaderLine = isSmk && smkKompetensi ? `<p style="margin-top:3px;font-weight:700;color:#4f46e5;">Kompetensi Keahlian: ${smkKompetensi}</p>` : '';
+    const kompetensiLabel = isSmk ? 'Kompetensi Keahlian' : 'Peminatan';
+    const kompetensiHeaderLine = kompetensi ? `<p style="margin-top:3px;font-weight:700;color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>` : '';
     const tglPengumuman = isSklNilai
       ? (meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : fmt(meta.tanggal_pengumuman||now.toISOString().split('T')[0]))
       : (meta.tanggal_pengumuman ? fmt(meta.tanggal_pengumuman) : fmt(now.toISOString().split('T')[0]));
     const logoHtml = meta.logo ? `<img src="${meta.logo}" style="height:90px;width:90px;object-fit:contain;" crossorigin="anonymous" />` : `<div style="width:90px;height:90px;border:2px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;background:#fafafa;">LOGO</div>`;
+    const kopSuratHtml = meta.kop_surat ? `<img src="${meta.kop_surat}" style="width:100%;max-height:130px;object-fit:contain;display:block;" crossorigin="anonymous" />` : '';
     const stempelHtml = meta.stempel ? `<img src="${meta.stempel}" crossorigin="anonymous" style="position:absolute;top:15px;left:-10px;width:140px;height:140px;object-fit:contain;opacity:0.6;pointer-events:none;" />` : '';
     const ttdHtml = meta.ttd ? `<img src="${meta.ttd}" crossorigin="anonymous" style="height:70px;margin:0 auto 4px auto;display:block;" />` : `<div style="height:70px;"></div>`;
     const nilaiRows = nilai.length > 0 
@@ -808,7 +858,7 @@ import '../styles/global.css';
         <tr><td>NISN</td><td>:</td><td>${siswa.nisn||siswa.nisn_display||'-'}</td></tr>
         <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${fmt(siswa.tanggal_lahir)}</td></tr>
         <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-        ${isSmk&&smkKompetensi?`<tr><td>Kompetensi Keahlian</td><td>:</td><td>${smkKompetensi}</td></tr>`:''}
+        ${kompetensi?`<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>`:''}
         <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
       </table>
       <p class="intro-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari satuan pendidikan dengan rincian nilai sebagai berikut:</p>
@@ -821,7 +871,7 @@ import '../styles/global.css';
         <tr><td>NISN</td><td>:</td><td>${siswa.nisn||siswa.nisn_display||'-'}</td></tr>
         <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${fmt(siswa.tanggal_lahir)}</td></tr>
         <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-        ${isSmk&&smkKompetensi?`<tr><td>Kompetensi Keahlian</td><td>:</td><td>${smkKompetensi}</td></tr>`:''}
+        ${kompetensi?`<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>`:''}
         <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
       </table>
       <div class="result-status" style="margin:30px 0 20px;"><span class="badge ${siswa.status==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span></div>
@@ -832,6 +882,7 @@ import '../styles/global.css';
     // Return FULL HTML document — identical to admin buildSklPreviewHtml (no dummy-badge)
     return `<!DOCTYPE html>
 <html lang="id"><head><meta charset="UTF-8">
+<title>SKL-${siswa.nama ? siswa.nama.replace(/\s+/g,'_') : 'Siswa'}-${siswa.nisn||'0000000000'}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -839,13 +890,13 @@ import '../styles/global.css';
   body { font-family:'Inter',sans-serif; background:#fff; color:#1e293b; width:794px; min-height:1123px; padding:0; margin:0; }
   .page { background:#fff; width:794px; min-height:1083px; padding:${isSklNilai ? '16px 36px 20px 56px' : '20px 35px 80px 55px'}; position:relative; overflow:hidden; }
   .watermark { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-30deg); font-size:100px; font-weight:900; color:rgba(0,0,0,0.02); text-transform:uppercase; white-space:nowrap; pointer-events:none; z-index:0; }
-  .header { display:flex; align-items:center; gap:20px; border-bottom:3px solid #1e293b; padding-bottom:10px; margin-bottom:10px; position:relative; z-index:1; }
+  .header { display:flex; align-items:center; gap:20px; border-bottom:5px double #0f172a; padding-bottom:10px; margin-bottom:10px; position:relative; z-index:1; }
   .header-text { flex:1; text-align:center; }
   .header-text h2 { font-family:'Outfit',sans-serif; font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0f172a; margin-bottom:4px; }
   .header-text p { font-size:12px; color:#475569; line-height:1.4; }
   .title-area { text-align:center; margin:${isSklNilai ? '6px 0 14px' : '10px 0 35px 0'}; position:relative; z-index:1; }
   .title-area h3 { font-family:'Outfit',sans-serif; font-size:${isSklNilai ? '16px' : '18px'}; font-weight:800; text-transform:uppercase; color:#0f172a; letter-spacing:3px; }
-  .title-area .line { width:150px; height:3px; background:#0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
+  .title-area .line { width:150px; height:0; border-bottom:3px solid #0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
   .title-area p { font-size:13px; font-weight:600; color:#64748b; margin-top:${isSklNilai ? '3px' : '5px'}; }
   .intro-text { font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position:relative; z-index:1; }
   .student-data { border-collapse:collapse; width:${isSklNilai ? 'calc(100% - 40px)' : 'calc(100% - 40px)'}; margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.3' : '1.4'}; position:relative; z-index:1; }
@@ -872,8 +923,9 @@ import '../styles/global.css';
   .footer-note { position:absolute; bottom:30px; left:56px; right:36px; font-size:11px; color:#94a3b8; text-align:center; padding-top:10px; border-top:1px solid #f1f5f9; font-style:italic; z-index:1; }
   .page2-footer { display:none; }
   .page-break-section { margin-top:30px; }
-  .page2-header { display:none; align-items:center; gap:20px; border-bottom:3px solid #1e293b; padding-bottom:10px; margin-bottom:20px; }
+  .page2-header { display:none; align-items:center; gap:20px; border-bottom:5px double #0f172a; padding-bottom:10px; margin-bottom:20px; }
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     @page { size:A4; margin:0 0 0 15mm; }
     html, body { width:210mm; min-height:297mm; overflow:visible; }
     .page { padding:${isSklNilai ? '16px 36px 20px 56px' : '20px 35px 60px 55px'}; min-height:297mm; overflow:visible; position:static; }
@@ -886,15 +938,17 @@ import '../styles/global.css';
   <div class="page">
     <div class="watermark">${meta.sekolah||'SKL'}</div>
     <div class="header">
-      ${logoHtml}
-      <div class="header-text">
-        <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
-        <p style="margin-top:4px;font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
-        <p>${meta.alamat||'-'}</p>
-        ${(meta.telepon||meta.email) ? `<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>` : ''}
-        ${smkHeaderLine}
-      </div>
-      <div style="width:90px;height:90px;flex-shrink:0;"></div>
+      ${kopSuratHtml ? kopSuratHtml : `
+        ${logoHtml}
+        <div class="header-text">
+          <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
+          <p style="margin-top:4px;font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
+          <p>${meta.alamat||'-'}</p>
+          ${(meta.telepon||meta.email) ? `<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>` : ''}
+          ${kompetensiHeaderLine}
+        </div>
+        <div style="width:90px;height:90px;flex-shrink:0;"></div>
+      `}
     </div>
     <div class="title-area">
       <h3>SURAT KETERANGAN LULUS</h3>
@@ -905,15 +959,17 @@ import '../styles/global.css';
     <div class="signature-area" style="${isSklNilai ? 'display:block;' : ''}" id="signature-section">
       ${isSklNilai ? `
       <div class="page2-header">
-        ${logoHtml}
-        <div class="header-text">
-          <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
-          <p style="margin-top:4px;font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
-          <p>${meta.alamat||'-'}</p>
-          ${(meta.telepon||meta.email) ? `<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>` : ''}
-          ${smkHeaderLine}
-        </div>
-        <div style="width:90px;height:90px;flex-shrink:0;"></div>
+        ${kopSuratHtml ? kopSuratHtml : `
+          ${logoHtml}
+          <div class="header-text">
+            <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
+            <p style="margin-top:4px;font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
+            <p>${meta.alamat||'-'}</p>
+            ${(meta.telepon||meta.email) ? `<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>` : ''}
+            ${kompetensiHeaderLine}
+          </div>
+          <div style="width:90px;height:90px;flex-shrink:0;"></div>
+        `}
       </div>
       <p class="intro-text" style="margin:20px 0;">Surat Keterangan ini dibuat untuk dipergunakan sebagaimana mestinya dan hanya berlaku sampai diterbitkan Ijazah Asli tahun ajaran ${meta.tahun_ajaran||'-'}</p>
       ` : ''}

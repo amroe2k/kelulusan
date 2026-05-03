@@ -222,7 +222,8 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   const now = new Date();
   const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
                  'Juli','Agustus','September','Oktober','November','Desember'];
-  const fmt = d => { if(!d) return '-'; const dt=new Date(d); return `${dt.getDate()} ${bulan[dt.getMonth()]} ${dt.getFullYear()}`; };
+  // Bug #2 fix: parse YYYY-MM-DD parts directly to avoid UTC midnight timezone off-by-one
+  const fmt = d => { if(!d) return '-'; if(typeof d==='string'&&!/^\d{4}-\d{2}-\d{2}$/.test(d.trim())) return d; const parts=typeof d==='string'?d.split('-'):null; if(parts&&parts.length===3) return `${parseInt(parts[2])} ${bulan[parseInt(parts[1])-1]} ${parts[0]}`; const dt=new Date(d); return `${dt.getDate()} ${bulan[dt.getMonth()]} ${dt.getFullYear()}`; };
   const maskNISN = n => n.slice(0,3)+'****'+n.slice(-3);
 
   const siswa = siswaData || { nama:'AHMAD FAUZAN MAULANA', nisn:'1234567890',
@@ -244,11 +245,12 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
         ? `${sklNum}${meta.nomor_surat_suffix}`
         : `${sklNum}/${meta.npsn||'SKL'}/${now.getFullYear()}`);
 
-  // SMK extra header line
+  // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
+  const kompetensi = (siswa.kompetensi_keahlian || '').trim();
   const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
-  const smkKompetensi = siswa.kompetensi_keahlian || '';
-  const smkHeaderLine = isSmk && smkKompetensi
-    ? `<p style="margin-top:3px; font-weight:700; color:#4f46e5;">Kompetensi Keahlian: ${smkKompetensi}</p>`
+  const kompetensiLabel = isSmk ? 'Kompetensi Keahlian' : 'Peminatan';
+  const kompetensiHeaderLine = kompetensi
+    ? `<p style="margin-top:3px; font-weight:700; color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>`
     : '';
 
   // SKL label: SKL1 tanpa nilai, SKL2 dengan nilai
@@ -260,19 +262,20 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   // Kop Surat: gunakan sebagai full-width header jika tersedia
   const kopSuratEnabled = (meta.kop_surat && localStorage.getItem('asset_kop_surat_enabled') !== '0');
   const kopSuratHtml = kopSuratEnabled
-    ? `<img src="${meta.kop_surat}" style="width:100%;max-height:130px;object-fit:contain;display:block;" />`
+    ? `<img src="${meta.kop_surat}" crossorigin="anonymous" style="width:100%;max-height:130px;object-fit:contain;display:block;" />`
     : null;
 
+  // Bug #4 fix: add crossorigin="anonymous" to all img assets for CORS compatibility
   const logoHtml = (meta.logo && localStorage.getItem('asset_logo_enabled') !== '0')
-    ? `<img src="${meta.logo}" style="height:90px;width:90px;object-fit:contain;" />`
+    ? `<img src="${meta.logo}" crossorigin="anonymous" style="height:90px;width:90px;object-fit:contain;" />`
     : `<div style="width:90px;height:90px;border:2px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;background:#fafafa;">LOGO</div>`;
 
   const stempelHtml = (meta.stempel && localStorage.getItem('asset_stempel_enabled') !== '0')
-    ? `<img src="${meta.stempel}" style="position:absolute;top:15px;left:-10px;width:140px;height:140px;object-fit:contain;opacity:0.6;pointer-events:none;" />`
+    ? `<img src="${meta.stempel}" crossorigin="anonymous" style="position:absolute;top:15px;left:-10px;width:140px;height:140px;object-fit:contain;opacity:0.6;pointer-events:none;" />`
     : '';
 
   const ttdHtml = (meta.ttd && localStorage.getItem('asset_ttd_enabled') !== '0')
-    ? `<img src="${meta.ttd}" style="height:70px;margin:0 auto 4px auto;display:block;" />`
+    ? `<img src="${meta.ttd}" crossorigin="anonymous" style="height:70px;margin:0 auto 4px auto;display:block;" />`
     : `<div style="height:70px;"></div>`;
 
   const nilaiRows = nilai.map((n,i)=>`
@@ -290,7 +293,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
       <tr><td>NISN</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
       <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
       <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-      ${isSmk && smkKompetensi ? `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${smkKompetensi}</td></tr>` : ''}
+      ${kompetensi ? `<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>` : ''}
       <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
     </table>
     <p class="intro-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari satuan pendidikan dengan rincian nilai sebagai berikut:</p>
@@ -320,7 +323,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
       <tr><td>NISN</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
       <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
       <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-      ${isSmk && smkKompetensi ? `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${smkKompetensi}</td></tr>` : ''}
+      ${kompetensi ? `<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>` : ''}
       <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
     </table>
     <div class="result-status" style="margin:30px 0 20px;">
@@ -361,6 +364,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     border: 1px solid #e2e8f0;
   }
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     @page { size: A4; margin: 0 0 0 15mm; }
     body { padding: 0; background: #fff; width: 210mm; min-height: 297mm; display:block; overflow:visible; }
     .page { box-shadow: none; border: none; padding: ${isSklNilai ? '16px 36px 20px 56px' : '20px 40px 60px 60px'}; min-height: 297mm; display: block; position: static; overflow: visible; }
@@ -388,7 +392,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     display:flex; 
     align-items:center; 
     gap:20px; 
-    border-bottom:3px solid #1e293b; 
+    border-bottom:5px double #0f172a; 
     padding-bottom:10px; 
     margin-bottom:10px; 
     position: relative;
@@ -401,7 +405,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   
   .title-area { text-align:center; margin:${isSklNilai ? '6px 0 14px' : '10px 0 35px 0'}; position: relative; z-index: 1; }
   .title-area h3 { font-family:'Outfit', sans-serif; font-size:${isSklNilai ? '16px' : '18px'}; font-weight:800; text-transform:uppercase; color:#0f172a; letter-spacing:3px; }
-  .title-area .line { width:150px; height:3px; background:#0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
+  .title-area .line { width:150px; height:0; border-bottom:3px solid #0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
   .title-area p  { font-size:13px; font-weight:600; color:#64748b; margin-top:${isSklNilai ? '3px' : '5px'}; }
   
   .intro-text { font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position: relative; z-index: 1; }
@@ -463,7 +467,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     display: none; /* hidden on screen — shown only on print via @media print */
     align-items:center;
     gap:20px;
-    border-bottom:3px solid #1e293b;
+    border-bottom:5px double #0f172a;
     padding-bottom:10px;
     margin-bottom:20px;
   }
@@ -481,7 +485,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
         <p style="margin-top:4px; font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
         <p>${meta.alamat||'-'}</p>
         <p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>
-        ${smkHeaderLine}
+        ${kompetensiHeaderLine}
       </div>
       <div style="width:90px;height:90px;flex-shrink:0;"></div>`
       }
@@ -497,7 +501,8 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     
     <div class="signature-area" style="${isSklNilai ? 'display:block;' : ''}" id="signature-section">
       ${isSklNilai ? `
-      <div class="page2-header" style="display:none;">
+      <!-- Bug #3 fix: display:none is already in CSS class — inline override would block @media print -->
+      <div class="page2-header">
         ${ kopSuratHtml
           ? kopSuratHtml
           : `${logoHtml}
@@ -506,7 +511,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
           <p style="margin-top:4px; font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
           <p>${meta.alamat||'-'}</p>
           ${(meta.telepon||meta.email)?`<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>`:''}
-          ${smkHeaderLine}
+          ${kompetensiHeaderLine}
         </div>
         <div style="width:90px;height:90px;flex-shrink:0;"></div>`
         }

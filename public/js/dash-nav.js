@@ -73,7 +73,7 @@ function switchView(id){
   if(id==='siswa-data')loadAndRenderSiswa();
   if(id==='pengguna')renderPengguna();
   if(id==='json-history')renderJsonHistory();
-  if(id==='sync'){ loadArchiveList(); populateBundleSelect(); if(typeof loadSyncStatus==='function') loadSyncStatus(); }
+  if(id==='sync'){ if(typeof renderIdentitas==='function') renderIdentitas(); loadArchiveList(); populateBundleSelect(); if(typeof loadSyncStatus==='function') loadSyncStatus(); if(typeof loadBundleList==='function') loadBundleList(); }
   if(id==='profile' && typeof renderProfile==='function') renderProfile();
   // Re-apply sidebar collapse state after re-render
   applySidebarCollapse(false);
@@ -95,7 +95,7 @@ function renderOverview(){
   }
 
   if(!allSiswa.length){
-    ['ov-total','ov-lulus','ov-tidak','ov-rata'].forEach(id=>{
+    ['ov-total','ov-lulus','ov-tidak','ov-rata','sd-siswa-count'].forEach(id=>{
       const el=$(id); if(el)el.textContent='...';
     });
     if($('kelas-chart'))$('kelas-chart').innerHTML='<div class="col-span-2 text-center py-8 text-slate-500 text-sm animate-pulse">Memuat data...</div>';
@@ -103,6 +103,7 @@ function renderOverview(){
   }
   const lulus=allSiswa.filter(s=>s.status==='LULUS');
   $('ov-total').textContent=allSiswa.length;
+  if($('sd-siswa-count')) $('sd-siswa-count').textContent = allSiswa.length + ' Siswa';
   $('ov-lulus').textContent=lulus.length;
   $('ov-tidak').textContent=allSiswa.length-lulus.length;
   const avg=allSiswa.length?(allSiswa.reduce((a,s)=>a+(parseFloat(s.rata_rata)||0),0)/allSiswa.length):0;

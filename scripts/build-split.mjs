@@ -59,23 +59,45 @@ function run(cmd, label = '', env = {}) {
 // ─── Helper: Buat folder public sementara tanpa bundles/ ─────────────────────
 /**
  * Membuat folder .tmp-public-build/ yang berisi hard links ke semua file
- * di public/, KECUALI folder bundles/ (berisi file ZIP besar yang bisa terkunci).
+ * di public/, dengan filter berbeda per target build:
+ *
+ *  - FRONTEND : hanya salin file statis publik (favicon, data.json, admin-upload.php).
+ *               Exclude: bundles/, js/ (dashboard scripts), api/, exports/, pdf/, previews/,
+ *                        users.json, sync-data.php, bundle-config.js.
+ *  - DASHBOARD: salin semua KECUALI bundles/ (file ZIP besar yang bisa terkunci).
+ *
  * Hard links tidak menyalin data — hanya referensi ke inode yang sama.
- * Proses ini sangat cepat bahkan untuk file kecil seperti JS/PHP.
  */
 const TMP_PUBLIC = path.join(ROOT, '.tmp-public-build');
 const REAL_PUBLIC = path.join(ROOT, 'public');
-const SKIP_IN_PUBLIC = new Set(['bundles']);
 
-function createFilteredPublicDir(src, dest) {
+// File/folder yang selalu di-skip untuk SEMUA target
+const SKIP_ALWAYS = new Set(['bundles']);
+
+// File/folder yang di-skip khusus saat build FRONTEND publik
+// (berisi file sensitif atau besar yang tidak dibutuhkan halaman portal siswa)
+const SKIP_FRONTEND = new Set([
+  'bundles',      // ZIP bundle besar
+  'js',           // Skrip dashboard admin — tidak dipakai index.astro
+  'api',          // Endpoint PHP backend admin
+  'exports',      // File JSON/Excel export history
+  'pdf',          // File PDF SKL yang sudah digenerate
+  'previews',     // Gambar preview
+  'users.json',   // Data pengguna/password — SENSITIF
+  'sync-data.php',     // PHP sync admin
+  'bundle-config.js',  // Konfigurasi bundle admin
+]);
+
+function createFilteredPublicDir(src, dest, skipSet = SKIP_ALWAYS) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src)) {
-    if (SKIP_IN_PUBLIC.has(entry)) continue;
+    if (skipSet.has(entry)) continue;
     const srcPath  = path.join(src, entry);
     const destPath = path.join(dest, entry);
     const stat = fs.statSync(srcPath);
     if (stat.isDirectory()) {
-      createFilteredPublicDir(srcPath, destPath);
+      // Subdirektori mewarisi skipSet yang sama
+      createFilteredPublicDir(srcPath, destPath, skipSet);
     } else {
       try {
         fs.linkSync(srcPath, destPath); // Hard link — instan, tanpa copy data
@@ -180,9 +202,11 @@ async function buildTarget(name) {
   // Bersihkan tmp dari run sebelumnya jika ada
   cleanFilteredPublicDir();
 
-  // Buat folder public sementara tanpa bundles/ (menggunakan hard links)
-  log(c.dim, `  → Mempersiapkan public/ sementara (melewati bundles/)...`);
-  createFilteredPublicDir(REAL_PUBLIC, TMP_PUBLIC);
+  // Buat folder public sementara dengan filter sesuai target build
+  const skipSet = (name === 'frontend') ? SKIP_FRONTEND : SKIP_ALWAYS;
+  const skipList = [...skipSet].join(', ');
+  log(c.dim, `  → Mempersiapkan public/ sementara (melewati: ${skipList})...`);
+  createFilteredPublicDir(REAL_PUBLIC, TMP_PUBLIC, skipSet);
 
   let hiddenList = [];
   try {

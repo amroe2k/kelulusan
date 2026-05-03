@@ -116,6 +116,8 @@ $meta = [
     'stempel'                  => $m['stempel'] ?? null,
     'ttd'                      => $m['ttd'] ?? null,
     'kop_surat'                => $m['kop_surat'] ?? null,
+    // Informasi Tambahan
+    'pengumuman'               => $m['pengumuman'] ?? null,
 ];
 
 // Inject integrity hash ke _meta

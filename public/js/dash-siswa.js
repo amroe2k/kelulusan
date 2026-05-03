@@ -233,10 +233,14 @@ function clearAllSelected(){
 
 function updateBulkButtons(){
   const n = selectedIds.size;
-  $('btn-bulk-lulus')?.classList.toggle('hidden',!n);
-  $('btn-bulk-tidak')?.classList.toggle('hidden',!n);
-  $('selected-count')?.classList.toggle('hidden',!n);
-  if($('selected-count'))$('selected-count').textContent=`${n} Dipilih`;
+  const show = !!n;
+  $('btn-bulk-lulus')?.classList.toggle('hidden', !show);
+  $('btn-bulk-tidak')?.classList.toggle('hidden', !show);
+  // Sync footer variants (terpisah ID agar tidak duplikat di DOM)
+  $('btn-bulk-lulus-footer')?.classList.toggle('hidden', !show);
+  $('btn-bulk-tidak-footer')?.classList.toggle('hidden', !show);
+  $('selected-count')?.classList.toggle('hidden', !show);
+  if($('selected-count')) $('selected-count').textContent = `${n} Dipilih`;
 }
 
 async function applyBulk(st){

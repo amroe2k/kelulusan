@@ -522,7 +522,13 @@ $isAuth = !empty($_SESSION['upload_auth']);
     justify-content: center;
     gap: 2rem;
     background: var(--bg);
-    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 1;
+    visibility: visible;
+    /* Transisi hanya aktif untuk hide, bukan saat muncul pertama kali */
+    transition: none;
+  }
+  #page-loader.ready-to-hide {
+    transition: opacity 0.35s ease, visibility 0.35s ease;
   }
   #page-loader.hidden {
     opacity: 0;
@@ -557,6 +563,20 @@ $isAuth = !empty($_SESSION['upload_auth']);
     text-transform: uppercase;
     letter-spacing: 0.2em;
     color: var(--text-muted);
+  }
+  .loader-status {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--primary);
+    margin-top: -0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .loader-status.visible {
+    opacity: 1;
   }
   .loader-track {
     width: 200px;
@@ -600,6 +620,7 @@ $isAuth = !empty($_SESSION['upload_auth']);
       </svg>
     </div>
     <p>Portal Kelulusan</p>
+    <span class="loader-status" id="loader-status"></span>
   </div>
   <div class="loader-track">
     <div class="loader-bar"></div>
@@ -848,21 +869,41 @@ $isAuth = !empty($_SESSION['upload_auth']);
 (function() {
   // ── Page Loader ──────────────────────────────────────────
   const loader = document.getElementById('page-loader');
+  const loaderStatus = document.getElementById('loader-status');
+  const LOADER_KEY = 'admin_loader_active';
+
   function hideLoader() {
-    if (loader) {
-      setTimeout(() => loader.classList.add('hidden'), 300);
-    }
+    if (!loader) return;
+    sessionStorage.removeItem(LOADER_KEY);
+    // Aktifkan transisi baru lalu hide — smooth fade out
+    loader.classList.add('ready-to-hide');
+    // requestAnimationFrame memastikan transisi berjalan setelah class ditambah
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        loader.classList.add('hidden');
+      });
+    });
   }
+
+  // Jika ada flag dari aksi sebelumnya, loader sudah tampil solid (opacity:1).
+  // Jika tidak ada flag (akses biasa), langsung hide setelah halaman siap.
+  const isComingFromAction = sessionStorage.getItem(LOADER_KEY);
+
   if (document.readyState === 'complete') {
     hideLoader();
   } else {
     window.addEventListener('load', hideLoader);
   }
 
-  // showLoader hanya dipanggil secara eksplisit setelah konfirmasi SweetAlert
-  // agar tidak mengganggu form yang menggunakan e.preventDefault()
-  function showLoader() {
-    if (loader) loader.classList.remove('hidden');
+  function showLoader(statusText = '') {
+    if (!loader) return;
+    // Simpan flag agar halaman baru (setelah redirect) tahu untuk tetap tampilkan loader
+    sessionStorage.setItem(LOADER_KEY, '1');
+    loader.classList.remove('hidden', 'ready-to-hide');
+    if (loaderStatus && statusText) {
+      loaderStatus.textContent = statusText;
+      loaderStatus.classList.add('visible');
+    }
   }
 
   // Theme Toggle Logic
@@ -941,7 +982,7 @@ $isAuth = !empty($_SESSION['upload_auth']);
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          showLoader(); // tampilkan loader hanya setelah dikonfirmasi
+          showLoader('Menyimpan jadwal...'); // label kontekstual
           formPengaturan.submit();
         }
       });
@@ -965,7 +1006,7 @@ $isAuth = !empty($_SESSION['upload_auth']);
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          showLoader(); // tampilkan page loader
+          showLoader('Menyinkronkan data...'); // label kontekstual
           formUpload.submit();
         }
       });
