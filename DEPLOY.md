@@ -785,3 +785,80 @@ Setelah deployment awal, alur kerja admin setiap ada perubahan data:
 
 > Dibuat untuk kemudahan tim IT sekolah dalam melakukan deployment mandiri.  
 > Jika menemui kendala, cek log server dan pastikan semua permission file sudah benar.
+
+---
+
+## 🛠️ Script: `deploy-dashboard.ps1`
+
+Script PowerShell ini bertugas **mengemas seluruh komponen Dashboard Admin** menjadi satu file ZIP siap deploy ke VPS atau cPanel. Jalankan dari komputer lokal (Windows).
+
+### Cara Pakai
+
+```powershell
+.\deploy-dashboard.ps1              # Build ulang + bundle (default)
+.\deploy-dashboard.ps1 -SkipBuild  # Bundle tanpa rebuild (gunakan dist/ yang ada)
+.\deploy-dashboard.ps1 -SkipDb     # Bundle tanpa export skema SQL
+.\deploy-dashboard.ps1 -OutputDir .\release  # Tentukan folder output
+```
+
+### Prasyarat
+
+| Kebutuhan | Keterangan |
+|---|---|
+| Node.js | Untuk `npm run build:dashboard` |
+| mysqldump | Untuk export schema (auto-detect XAMPP/Laragon/WAMP) |
+| PowerShell 5.1+ | Sudah tersedia di Windows 10/11 |
+
+### Alur Eksekusi
+
+```
+[1] Baca .env              → Ambil koneksi DB otomatis
+[2] npm run build:dashboard → Compile UI ke dist/dashboard/
+[3] mysqldump --no-data    → Export struktur tabel ke schema.sql
+[4] Susun bundle temp/     → dashboard/, api/, js/, .env.example
+[5] Generate setup-vps.sh  → Script deploy siap pakai (5 langkah)
+[6] Generate nginx-vhost.conf → Konfigurasi virtual host Nginx
+[7] Generate .htaccess     → Konfigurasi routing Apache/cPanel
+[8] Generate SETUP.md      → Panduan deploy ringkas
+[9] Compress ke ZIP        → deploy/deploy-dashboard-YYYYMMDD-HHmmss.zip
+```
+
+### Isi File ZIP yang Dihasilkan
+
+| File/Folder | Isi |
+|---|---|
+| `dashboard/` | Build Astro UI dashboard (HTML/CSS/JS) |
+| `api/` | Semua file PHP di `public/api/` |
+| `js/` | Semua file `dash-*.js` dari `public/js/` |
+| `schema.sql` | Struktur tabel MySQL (tanpa data) |
+| `.env.example` | Template konfigurasi environment |
+| `.htaccess` | Routing SPA untuk Apache/cPanel |
+| `nginx-vhost.conf` | Konfigurasi virtual host Nginx VPS |
+| `setup-vps.sh` | Script bash deploy untuk Linux VPS |
+| `SETUP.md` | Panduan deploy ringkas |
+
+> **Catatan:** `data.json`, `users.json`, dan folder `bundles/` **tidak ikut dikemas** untuk alasan keamanan.
+
+### `setup-vps.sh` — Asumsi Server Sudah Siap
+
+Script bash yang dihasilkan **mengasumsikan server (cPanel/VPS managed) sudah memiliki**:
+- ✅ PHP 8.x (sudah terinstall)
+- ✅ MySQL/MariaDB (sudah terinstall)  
+- ✅ Nginx atau Apache (sudah terinstall)
+
+Yang dilakukan `setup-vps.sh`:
+1. Membuat struktur direktori web root
+2. Menyalin file dari bundle (`dashboard/`, `api/`, `js/`)
+3. Import `schema.sql` ke database yang sudah disiapkan
+4. Membuat file `.env` dengan kredensial DB
+5. Set permission file yang tepat
+
+**Sebelum menjalankan**, edit bagian konfigurasi di atas:
+```bash
+DOMAIN="admin.namadomain.com"   # GANTI domain Anda
+WEBROOT="/var/www/kelulusan"    # Path web root di server
+DB_NAME="db_kelulusan"          # Nama database (sudah dibuat)
+DB_USER="kelulusan_user"        # User database (sudah dibuat)
+DB_PASS="GANTI_PASSWORD_DB"     # Password user database
+```
+

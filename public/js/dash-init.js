@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
       localStorage.setItem('sb-collapsed', collapsed ? '1' : '0');
     }
     sb.classList.toggle('sb-collapsed', collapsed);
+    sb.classList.toggle('collapsed', collapsed);
   };
   applySidebarCollapse(false); // init state dari localStorage
 
@@ -238,10 +239,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     if(currentView==='overview') renderOverview();
   }).catch(e=>console.error('[data.php]',e));
 
-  // --- Sidebar Toggle ---
-  $('btn-toggle-sidebar')?.addEventListener('click', () => {
-    $('dash-sidebar')?.classList.toggle('collapsed');
-  });
+  // --- Sidebar Toggle handled in applySidebarCollapse ---
 
   // Tentukan & switch view LANGSUNG
   const parts=window.location.pathname.split('/').filter(Boolean);

@@ -339,6 +339,10 @@ const { view } = Astro.params;
       #dash-sidebar.collapsed .sb-profile-card { padding: 0.5rem; justify-content: center; }
       #dash-sidebar.collapsed .sb-profile-card .min-w-0 { display: none; }
       #dash-sidebar.collapsed #btn-logout { display: none; }
+      #dash-sidebar.collapsed #sb-lembaga-wrap { padding-left: 1rem; padding-right: 1rem; }
+      #dash-sidebar.collapsed #sb-lembaga-wrap .relative.flex { justify-content: center; padding-left: 0; padding-right: 0; }
+      #dash-sidebar.collapsed #sb-lembaga-wrap .min-w-0 { display: none; }
+      #dash-sidebar.collapsed #sb-lembaga-wrap .group-hover\:opacity-100 { display: none; }
   
     /* ===== OVERVIEW ENTRANCE ANIMATION ===== */
     @keyframes ovFadeUp {
@@ -379,18 +383,23 @@ const { view } = Astro.params;
       </div>
 
       <!-- Lembaga Aktif Card -->
-      <div id="sb-lembaga-wrap" class="px-4 py-3 border-b border-slate-800/50">
-        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-          <div class="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
+      <div id="sb-lembaga-wrap" class="px-5 py-4 border-b border-slate-800/40">
+        <div class="relative group cursor-pointer" onclick="switchView('lembaga')">
+          <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+          <div class="relative flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-[#0F1523] border border-slate-700/50 group-hover:border-indigo-500/40 transition-all duration-300 shadow-xl shadow-black/20">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center flex-shrink-0 border border-indigo-500/20 group-hover:scale-110 transition-transform">
+              <svg class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 mb-1">
+                 <span class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-indigo-400 transition-colors">Institusi</span>
+                 <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <p class="text-[13px] font-black text-white truncate group-hover:text-indigo-200 transition-colors" id="sb-lembaga-nama">Memuat...</p>
+            </div>
           </div>
-          <div class="min-w-0 flex-1">
-            <p class="text-[9px] font-bold uppercase tracking-widest text-indigo-500/70 leading-none mb-0.5">Lembaga Aktif</p>
-            <p class="text-xs font-black text-indigo-300 truncate leading-snug" id="sb-lembaga-nama">Memuat...</p>
-          </div>
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
         </div>
       </div>
 
@@ -449,6 +458,49 @@ const { view } = Astro.params;
         
         <!-- ── VIEW: OVERVIEW ── -->
         <section id="view-overview" class="space-y-8">
+          
+          <!-- Header Lembaga Aktif: Hero Banner -->
+          <div class="relative overflow-hidden bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-10 mb-10 shadow-xl dark:shadow-2xl transition-all duration-500">
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-violet-500/10 dark:bg-violet-500/5 rounded-full blur-[60px] pointer-events-none"></div>
+            
+            <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-8">
+              <div class="flex-1">
+                <div class="flex items-center gap-2.5 mb-4">
+                  <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">Sistem Siap</span>
+                  </div>
+                  <div class="h-px w-8 bg-slate-200 dark:bg-slate-800"></div>
+                  <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em]">Dashboard Overview</span>
+                </div>
+                
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white font-outfit tracking-tight mb-3">
+                  <span id="ov-lembaga-nama" class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Memuat...</span>
+                </h2>
+                
+                <div class="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
+                  <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/30">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Terverifikasi</span>
+                  </div>
+                  <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/30">
+                    <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span id="ov-time" class="text-[10px] font-bold uppercase tracking-widest">Real-time Data</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex flex-shrink-0">
+                <div class="p-4 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl shadow-xl shadow-indigo-500/20 rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
            <!-- Stats Row -->
            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <!-- Stat Card 1 -->
@@ -816,41 +868,41 @@ const { view } = Astro.params;
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Email</label>
                                 <input type="email" id="input-email" placeholder="contoh@sekolah.sch.id" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
-                            <div class="md:col-span-2">
+                            <div>
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kepala Sekolah <span class="text-rose-500">*</span></label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-                                    <input type="text" id="input-kepsek" required placeholder="Nama Lengkap & Gelar" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                    <div>
-                                        <input type="text" id="input-jabatan" placeholder="Jabatan (Opsional, mis: Plt. Kepala Sekolah)" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                        <p class="text-[10px] text-slate-500 mt-1.5">Jika diisi, jabatan ditampilkan di bawah nama pada SKL (mis: <span class="font-mono">Plt. Kepala Sekolah</span>).</p>
-                                    </div>
-                                </div>
-                                <!-- NIP / NUPTK Mode Toggle -->
+                                <input type="text" id="input-kepsek" required placeholder="Nama Lengkap & Gelar" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Jabatan Kepala Sekolah</label>
+                                <input type="text" id="input-jabatan" placeholder="Opsional, mis: Plt. Kepala Sekolah" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                <p class="text-[10px] text-slate-500 mt-1.5 italic">Kosongkan jika bukan Plt/Plh.</p>
+                            </div>
+                            <div class="md:col-span-2">
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 mt-1">Nomor Identitas yang Tampil di SKL <span class="text-rose-500">*</span></label>
-                                <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="grid grid-cols-2 gap-3">
                                     <label class="relative flex items-start gap-3 p-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer transition-all hover:border-indigo-400 dark:hover:border-indigo-500 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-500/10 has-[:checked]:shadow-md has-[:checked]:shadow-indigo-500/10" id="label-mode-nip">
                                         <input type="radio" name="id_kepsek_mode" id="mode-id-nip" value="nip" class="mt-0.5 accent-indigo-600" required>
                                         <div>
                                             <p class="text-sm font-bold text-slate-800 dark:text-white">🏛️ NIP</p>
-                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Untuk Kepala Sekolah Negeri (PNS)</p>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">PNS (Negeri)</p>
                                         </div>
                                     </label>
                                     <label class="relative flex items-start gap-3 p-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer transition-all hover:border-violet-400 dark:hover:border-violet-500 has-[:checked]:border-violet-500 has-[:checked]:bg-violet-50 dark:has-[:checked]:bg-violet-500/10 has-[:checked]:shadow-md has-[:checked]:shadow-violet-500/10" id="label-mode-nuptk">
                                         <input type="radio" name="id_kepsek_mode" id="mode-id-nuptk" value="nuptk" class="mt-0.5 accent-violet-600" required>
                                         <div>
                                             <p class="text-sm font-bold text-slate-800 dark:text-white">🏫 NUPTK</p>
-                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Untuk Kepala Sekolah Swasta</p>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Non-PNS (Swasta)</p>
                                         </div>
                                     </label>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div id="section-nip">
-                                        <input type="text" id="input-nip" placeholder="Nomor NIP" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                    </div>
-                                    <div id="section-nuptk">
-                                        <input type="text" id="input-nuptk" placeholder="Nomor NUPTK" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-violet-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-violet-500/10 outline-none transition-all">
-                                    </div>
-                                </div>
+                            </div>
+                            <div id="section-nip" class="hidden">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nomor NIP</label>
+                                <input type="text" id="input-nip" placeholder="1980..." class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                            </div>
+                            <div id="section-nuptk" class="hidden">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nomor NUPTK</label>
+                                <input type="text" id="input-nuptk" placeholder="Nomor NUPTK" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-violet-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-violet-500/10 outline-none transition-all">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Alamat Lengkap <span class="text-rose-500">*</span></label>
@@ -947,16 +999,21 @@ const { view } = Astro.params;
               </button>
             </div>
           </div>
-          <div class="relative w-full lg:w-96 group">
+          
+          <!-- Widget Info Jenjang -->
+          <div id="widget-jenjang" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"></div>
+
+          <div class="relative w-full lg:w-96 group mb-6">
             <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="search" id="search-lembaga" placeholder="Cari nama lembaga atau slug..." autocomplete="new-password" spellcheck="false" class="w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white focus:border-indigo-500 outline-none transition-all shadow-sm">
           </div>
           <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-xl dark:shadow-2xl/50 transition-colors duration-300">
-            <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left">
-                <thead>
+            <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 460px;">
+              <table class="w-full text-left relative">
+                <thead class="sticky top-0 z-10">
                   <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0F1523]">
                     <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembaga</th>
+                    <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jenjang</th>
                     <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
                     <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Siswa</th>
                     <th class="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dibuat</th>
@@ -971,7 +1028,51 @@ const { view } = Astro.params;
 
         <!-- ── VIEW: SISWA-DATA ── -->
         <section id="view-siswa-data" class="hidden space-y-6 animate-fade-in">
-        <div class="flex flex-col lg:flex-row justify-between items-center gap-4 bg-[#111827] border border-slate-800 p-4 rounded-2xl">
+          
+          <!-- Header Lembaga Aktif: Hero Banner -->
+          <div class="relative overflow-hidden bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-10 mb-10 shadow-xl dark:shadow-2xl transition-all duration-500">
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-violet-500/10 dark:bg-violet-500/5 rounded-full blur-[60px] pointer-events-none"></div>
+            
+            <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-8">
+              <div class="flex-1">
+                <div class="flex items-center gap-2.5 mb-4">
+                  <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">Sistem Siap</span>
+                  </div>
+                  <div class="h-px w-8 bg-slate-200 dark:bg-slate-800"></div>
+                  <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em]">Data Kelulusan</span>
+                </div>
+                
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white font-outfit tracking-tight mb-3">
+                  <span id="sd-lembaga-nama" class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Memuat...</span>
+                </h2>
+                
+                <div class="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
+                  <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/30">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Terverifikasi</span>
+                  </div>
+                  <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/30">
+                    <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Database Aktif</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex flex-shrink-0">
+                <div class="p-4 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl shadow-xl shadow-indigo-500/20 rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col lg:flex-row justify-between items-center gap-4 bg-[#111827] border border-slate-800 p-4 rounded-2xl">
         <div class="relative w-full lg:max-w-md">
         <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input type="search" id="search-siswa" placeholder="Cari nama atau NISN..." autocomplete="new-password" spellcheck="false" class="w-full bg-[#0F1523] border border-slate-700 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white focus:border-indigo-500 outline-none transition-all">
@@ -1211,7 +1312,7 @@ const { view } = Astro.params;
         <div class="flex items-center gap-2 mb-2">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase tracking-widest border border-amber-500/20">Data Archival</span>
           <div class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest" id="history-count"></span>
+          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest" id="history-count"></span>
         </div>
         <h2 class="text-4xl font-black font-outfit text-slate-900 dark:text-white tracking-tight">Riwayat <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400">JSON</span></h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md">Kelola seluruh arsip data kelulusan yang pernah dibuat. Anda dapat mengunduh, menghapus, atau memulihkan data lama ke database aktif.</p>
@@ -1301,26 +1402,23 @@ const { view } = Astro.params;
     </div>
 
     <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden shadow-xl dark:shadow-2xl/50 transition-colors duration-300">
-      <div class="overflow-x-auto custom-scrollbar">
-        <table class="w-full text-left">
-          <thead class="sticky top-0 z-10"><tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0F1523]">
-            <!-- Select All -->
-            <th class="px-6 py-5 w-14">
-              <input type="checkbox" id="history-select-all"
-                class="w-5 h-5 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 cursor-pointer accent-rose-500 transition-all"
-                onchange="toggleSelectAllHistory(this)" title="Pilih semua">
-            </th>
-            <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Lembaga</th>
-            <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Identitas File</th>
-            <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Total</th>
-            <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Lulus</th>
-            <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Waktu Generate</th>
-            <th class="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Navigasi Aksi</th>
-          </tr></thead>
-        </table>
-      </div>
-      <div class="overflow-y-auto custom-scrollbar" style="max-height: calc(7 * 72px)">
-        <table class="w-full text-left">
+      <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 600px;">
+        <table class="w-full text-left border-separate border-spacing-0">
+          <thead class="sticky top-0 z-20">
+            <tr class="bg-slate-50 dark:bg-[#0F1523] border-b border-slate-100 dark:border-slate-800 shadow-sm">
+              <th class="px-6 py-5 w-16 bg-inherit">
+                <input type="checkbox" id="history-select-all"
+                  class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-rose-500 cursor-pointer accent-rose-500 transition-all"
+                  onchange="toggleSelectAllHistory(this)" title="Pilih semua">
+              </th>
+              <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-inherit">Lembaga</th>
+              <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center bg-inherit">Identitas File</th>
+              <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center bg-inherit">Total</th>
+              <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center bg-inherit">Lulus</th>
+              <th class="px-4 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-inherit">Waktu Generate</th>
+              <th class="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-right bg-inherit">Navigasi Aksi</th>
+            </tr>
+          </thead>
           <tbody id="history-table" class="divide-y divide-slate-100 dark:divide-slate-800/50"></tbody>
         </table>
       </div>

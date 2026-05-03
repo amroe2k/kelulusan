@@ -214,35 +214,28 @@ $setupSh = @'
 #  Kelulusan Dashboard - VPS Deploy Script
 #  Generated : %%TS%%
 #
-#  Asumsi: Nginx + PHP + MySQL sudah terinstall.
+#  ASUMSI: Server sudah siap pakai (cPanel / VPS managed).
+#  Nginx/Apache + PHP 8.x + MySQL SUDAH terinstall.
+#
 #  Jalankan: sudo bash setup-vps.sh
 # ============================================================
 set -e
 
 # ---- Konfigurasi: SESUAIKAN sebelum dijalankan -----------
 DOMAIN="admin.namadomain.com"   # GANTI domain Anda
-WEBROOT="/var/www/kelulusan"
-PHP_VER="8.2"
-DB_NAME="db_kelulusan"
-DB_USER="kelulusan_user"
-DB_ROOT_USER="root"
-# DB_ROOT_PASS=""               # Uncomment jika root MySQL pakai password
+WEBROOT="/var/www/kelulusan"    # Path web root di server
+DB_NAME="db_kelulusan"          # Nama database (sudah dibuat di cPanel/phpMyAdmin)
+DB_USER="kelulusan_user"        # User database (sudah dibuat)
+DB_PASS="GANTI_PASSWORD_DB"     # Password user database
 # ----------------------------------------------------------
-
-DB_PASS=$(openssl rand -hex 16 2>/dev/null || cat /dev/urandom | tr -dc 'a-f0-9' | head -c 16)
 
 echo ""
 echo "=================================================="
-echo "  Kelulusan Dashboard - VPS Deploy"
+echo "  Kelulusan Dashboard — Deploy ke Server Siap Pakai"
 echo "=================================================="
 
-echo "[check] Verifikasi dependency..."
-command -v nginx >/dev/null || { echo "ERR: nginx tidak ada. apt install nginx"; exit 1; }
-command -v php   >/dev/null || { echo "ERR: php tidak ada. apt install php${PHP_VER}-fpm"; exit 1; }
-command -v mysql >/dev/null || { echo "ERR: mysql tidak ada. apt install mysql-server"; exit 1; }
-echo "  OK  Nginx, PHP, MySQL tersedia"
-
-echo "[1/6] Membuat direktori..."
+# [1] Buat struktur direktori
+echo "[1/5] Membuat direktori..."
 mkdir -p "$WEBROOT/dist/dashboard"
 mkdir -p "$WEBROOT/public/api"
 mkdir -p "$WEBROOT/public/exports"
@@ -250,35 +243,27 @@ mkdir -p "$WEBROOT/public/uploads"
 mkdir -p "$WEBROOT/public/js"
 echo "  OK  Direktori: $WEBROOT"
 
-echo "[2/6] Menyalin file bundle..."
+# [2] Salin file dari bundle
+echo "[2/5] Menyalin file bundle..."
 cp -r dashboard/. "$WEBROOT/dist/dashboard/"
 cp -r api/.       "$WEBROOT/public/api/"
 cp -r js/.        "$WEBROOT/public/js/"
-[ -f .env.example ] && cp .env.example "$WEBROOT/.env.example"
-echo "  OK  dashboard/, api/, js/ disalin"
+echo "  OK  File berhasil disalin"
 
-echo "[3/6] Setup database MySQL..."
-MYSQL_CMD="mysql -u $DB_ROOT_USER"
-# [ -n "$DB_ROOT_PASS" ] && MYSQL_CMD="mysql -u $DB_ROOT_USER -p$DB_ROOT_PASS"
-
-$MYSQL_CMD <<SQL
-CREATE DATABASE IF NOT EXISTS $DB_NAME
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
-FLUSH PRIVILEGES;
-SQL
-echo "  OK  Database '$DB_NAME' siap"
-
+# [3] Import schema database (jika ada)
+echo "[3/5] Import schema database..."
 if [ -f schema.sql ]; then
-  echo "  ->  Importing schema.sql..."
+  echo "  ->  Importing schema.sql ke database '$DB_NAME'..."
   mysql -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < schema.sql
-  echo "  OK  Schema diimport"
+  echo "  OK  Schema berhasil diimport"
   rm -f schema.sql
   echo "  OK  schema.sql dihapus dari disk"
+else
+  echo "  --  schema.sql tidak ada, dilewati (sudah diimport sebelumnya?)"
 fi
 
-echo "[4/6] Membuat .env..."
+# [4] Buat file .env
+echo "[4/5] Membuat .env..."
 cat > "$WEBROOT/.env" <<ENV
 # Kelulusan Dashboard - Environment
 # Generated: $(date)
@@ -294,60 +279,10 @@ SESSION_NAME=kls_session
 JSON_RETENTION_LIMIT=5
 ENV
 chmod 640 "$WEBROOT/.env"
-chown www-data:www-data "$WEBROOT/.env"
-echo "  OK  .env dibuat dan diproteksi"
+echo "  OK  .env dibuat"
 
-echo "[5/6] Konfigurasi Nginx..."
-PHP_SOCK=$(find /var/run/php/ -name "php*.sock" 2>/dev/null | sort -r | head -1)
-[ -z "$PHP_SOCK" ] && PHP_SOCK="/var/run/php/php${PHP_VER}-fpm.sock"
-echo "  ->  PHP-FPM socket: $PHP_SOCK"
-
-cat > /etc/nginx/sites-available/kelulusan-admin <<NGINX
-server {
-    listen 80;
-    server_name $DOMAIN;
-    root $WEBROOT/dist/dashboard;
-    index index.html;
-    charset utf-8;
-    access_log /var/log/nginx/kelulusan-access.log;
-    error_log  /var/log/nginx/kelulusan-error.log;
-
-    location ~ /\.env  { deny all; return 404; }
-    location ~ /\.git  { deny all; return 404; }
-
-    location ^~ /api/ {
-        alias $WEBROOT/public/api/;
-        try_files \$uri \$uri/ =404;
-        location ~ \.php$ {
-            fastcgi_pass unix:$PHP_SOCK;
-            fastcgi_param SCRIPT_FILENAME \$request_filename;
-            include fastcgi_params;
-            fastcgi_read_timeout 120;
-        }
-    }
-    location ^~ /js/ {
-        alias $WEBROOT/public/js/;
-        expires 1d;
-    }
-    location ~* \.(js|css|webp|png|svg|woff2|ico)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files \$uri =404;
-    }
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript;
-}
-NGINX
-
-ln -sf /etc/nginx/sites-available/kelulusan-admin /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-echo "  OK  Nginx dikonfigurasi"
-
-echo "[6/6] Set permission..."
-chown -R www-data:www-data "$WEBROOT"
+# [5] Set permission
+echo "[5/5] Set permission..."
 find "$WEBROOT" -type d -exec chmod 755 {} \;
 find "$WEBROOT" -type f -exec chmod 644 {} \;
 chmod 640 "$WEBROOT/.env"
@@ -360,19 +295,18 @@ echo "=================================================="
 echo "  SELESAI!"
 echo "  Web root : $WEBROOT"
 echo "  Domain   : $DOMAIN"
-echo "  DB Name  : $DB_NAME"
-echo "  DB User  : $DB_USER"
-echo "  DB Pass  : $DB_PASS   <-- CATAT INI!"
 echo ""
-echo "  Langkah berikutnya:"
-echo "  1. Buat akun admin (lihat SETUP.md)"
-echo "  2. HTTPS: certbot --nginx -d $DOMAIN"
-echo "  3. Akses: http://$DOMAIN/dashboard/overview"
+echo "  Langkah selanjutnya:"
+echo "  1. Pastikan virtual host / document root sudah mengarah ke:"
+echo "     $WEBROOT/dist/dashboard"
+echo "  2. Buat akun admin pertama (lihat SETUP.md)"
+echo "  3. Aktifkan SSL via cPanel AutoSSL atau: certbot --nginx -d $DOMAIN"
+echo "  4. Akses dashboard: https://$DOMAIN/dashboard/overview"
 echo "=================================================="
 '@
 $setupSh = $setupSh -replace '%%TS%%', $tsReadable
 $setupSh | Set-Content -Path "$tempDir\setup-vps.sh" -Encoding UTF8 -NoNewline
-Write-OK "setup-vps.sh dibuat"
+Write-OK "setup-vps.sh dibuat (lean — asumsi server sudah siap)"
 
 # --- LANGKAH 5: .htaccess (Apache / cPanel) -----------------------------------
 Write-Step "Membuat .htaccess (Apache / cPanel)"

@@ -12,6 +12,7 @@ async function renderLembaga() {
     const d = await r.json();
     allLembaga = d.data || [];
     renderLembagaTable();
+    renderJenjangWidget();
     renderActiveBadge();
   } catch (e) {
     if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-rose-400 text-sm">Gagal memuat data lembaga.</td></tr>';
@@ -25,11 +26,134 @@ function renderActiveBadge() {
   if (aktif) {
     el.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm shadow-sm">
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      Aktif: <span class="text-slate-900 dark:text-white">${aktif.nama}</span> <span class="text-emerald-700/60 dark:text-emerald-500/60 font-mono text-[10px] tracking-widest">[${aktif.slug}]</span>
+      Aktif: <span class="text-slate-900 dark:text-white">${aktif.nama}</span>
     </span>`;
   } else {
     el.innerHTML = `<span class="text-amber-400 text-sm font-bold">⚠ Tidak ada lembaga aktif</span>`;
   }
+}
+
+function renderJenjangWidget() {
+  const container = $('widget-jenjang');
+  if (!container) return;
+  
+  const rawStats = {};
+  allLembaga.forEach(l => {
+    const j = (l.jenjang || 'Lainnya').toUpperCase();
+    if (!rawStats[j]) rawStats[j] = { count: 0, students: 0 };
+    rawStats[j].count++;
+    rawStats[j].students += parseInt(l.jumlah_siswa || 0);
+  });
+
+  const mainCategories = [
+    // Row 1
+    { id: 'SMA', label: 'SMA', keys: ['SMA'], color: 'blue', icon: 'building' },
+    { id: 'SMK', label: 'SMK', keys: ['SMK'], color: 'cyan', icon: 'building-alt' },
+    { id: 'MA', label: 'MA', keys: ['MA'], color: 'indigo', icon: 'mosque' },
+    // Row 2
+    { id: 'SMP', label: 'SMP', keys: ['SMP'], color: 'violet', icon: 'book' },
+    { id: 'MTS', label: 'MTs', keys: ['MTS', 'MTTS'], color: 'purple', icon: 'mosque-alt' },
+    { id: 'SD-MI', label: 'SD / MI', keys: ['SD', 'MI'], color: 'rose', icon: 'pencil' }
+  ];
+
+  const displayStats = [];
+  const processedKeys = new Set();
+
+  mainCategories.forEach(cat => {
+    let count = 0;
+    let students = 0;
+    cat.keys.forEach(k => {
+      if (rawStats[k]) {
+        count += rawStats[k].count;
+        students += rawStats[k].students;
+        processedKeys.add(k);
+      }
+    });
+    displayStats.push({
+      label: cat.label,
+      count,
+      students,
+      color: cat.color,
+      icon: cat.icon
+    });
+  });
+
+  // Tambahkan sisanya jika ada (biasanya jarang)
+  Object.keys(rawStats).forEach(k => {
+    if (!processedKeys.has(k)) {
+      displayStats.push({
+        label: k,
+        count: rawStats[k].count,
+        students: rawStats[k].students,
+        color: 'slate',
+        icon: 'other'
+      });
+    }
+  });
+  
+  let html = '';
+  
+  displayStats.forEach(s => {
+    const colors = {
+      blue: { icon: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', ring: 'from-blue-500 to-blue-600' },
+      cyan: { icon: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', ring: 'from-cyan-500 to-cyan-600' },
+      indigo: { icon: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', ring: 'from-indigo-500 to-indigo-600' },
+      violet: { icon: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', ring: 'from-violet-500 to-violet-600' },
+      purple: { icon: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', ring: 'from-purple-500 to-purple-600' },
+      rose: { icon: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', ring: 'from-rose-500 to-rose-600' },
+      slate: { icon: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20', ring: 'from-slate-500 to-slate-600' }
+    };
+
+    const c = colors[s.color] || colors.slate;
+    
+    let iconSvg = '';
+    if (s.icon === 'building' || s.icon === 'building-alt') {
+      iconSvg = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>`;
+    } else if (s.icon === 'book') {
+      iconSvg = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`;
+    } else if (s.icon === 'pencil') {
+      iconSvg = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`;
+    } else {
+      iconSvg = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+    }
+
+    html += `
+      <div class="relative group">
+        <div class="absolute -inset-0.5 bg-gradient-to-r ${c.ring} rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
+        <div class="relative bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col gap-5 transition-all duration-300 shadow-sm group-hover:shadow-xl dark:group-hover:bg-[#131b2c]">
+          <div class="flex items-start justify-between">
+            <div class="w-12 h-12 rounded-2xl ${c.bg} ${c.icon} flex items-center justify-center border ${c.border} shadow-inner transition-transform duration-500 group-hover:rotate-12">
+              ${iconSvg}
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1 block">Jenjang</span>
+              <h4 class="text-xl font-black text-slate-900 dark:text-white font-outfit leading-none tracking-tight">${escHtml(s.label)}</h4>
+            </div>
+          </div>
+          
+          <div class="flex items-end justify-between">
+            <div>
+              <p class="text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">${s.count}</p>
+              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">Lembaga</p>
+            </div>
+            <div class="text-right pb-1">
+              <div class="flex items-center justify-end gap-1.5 mb-1">
+                <span class="w-1.5 h-1.5 rounded-full ${c.icon.split(' ')[0].replace('text-', 'bg-')} ${s.count > 0 ? 'animate-pulse' : 'opacity-20'}"></span>
+                <p class="text-sm font-black ${s.count > 0 ? c.icon : 'text-slate-400'}">${s.students.toLocaleString('id-ID')}</p>
+              </div>
+              <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Siswa Aktif</p>
+            </div>
+          </div>
+          
+          <div class="w-full bg-slate-100 dark:bg-slate-800/50 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/30">
+            <div class="bg-gradient-to-r ${c.ring} h-full rounded-full transition-all duration-1000 ${s.count > 0 ? 'w-full opacity-40 group-hover:opacity-100' : 'w-0'}"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
 }
 
 function renderLembagaTable() {
@@ -44,9 +168,9 @@ function renderLembagaTable() {
 
   if (!filtered.length) {
     if (allLembaga.length) {
-       tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 text-sm italic">Pencarian tidak ditemukan.</td></tr>';
+       tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 text-sm italic">Pencarian tidak ditemukan.</td></tr>';
     } else {
-       tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 text-sm italic">Belum ada lembaga. Tambahkan lembaga pertama Anda.</td></tr>';
+       tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 text-sm italic">Belum ada lembaga. Tambahkan lembaga pertama Anda.</td></tr>';
     }
     return;
   }
@@ -62,6 +186,11 @@ function renderLembagaTable() {
             <p class="text-slate-500 font-mono text-[10px] mt-0.5 tracking-wider uppercase">${escHtml(l.slug)}</p>
           </div>
         </div>
+      </td>
+      <td class="px-4 py-5">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 tracking-wider">
+          ${escHtml(l.jenjang || 'Belum Diatur')}
+        </span>
       </td>
       <td class="px-4 py-5 text-center">
         <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest ${l.aktif==1

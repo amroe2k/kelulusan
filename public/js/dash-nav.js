@@ -80,6 +80,20 @@ function switchView(id){
 }
 
 function renderOverview(){
+  if(typeof allData !== 'undefined' && allData?._meta) {
+    const nama = allData._meta.lembaga_nama || allData._meta.sekolah || '';
+    // Update header di Overview dan Siswa Data
+    ['ov-lembaga-nama', 'sd-lembaga-nama'].forEach(id => {
+      const el = $(id);
+      if(el && nama) {
+        el.textContent = nama;
+      }
+    });
+    // Toggle badge jika ada
+    $('ov-lembaga-badge')?.classList.remove('hidden');
+    $('sd-lembaga-badge')?.classList.remove('hidden');
+  }
+
   if(!allSiswa.length){
     ['ov-total','ov-lulus','ov-tidak','ov-rata'].forEach(id=>{
       const el=$(id); if(el)el.textContent='...';

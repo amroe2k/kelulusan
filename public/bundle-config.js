@@ -1,3 +1,3 @@
 /* AUTO-GENERATED — DO NOT EDIT */
-/* Bundle: smk-negeri-1-binjai */
+/* Bundle: smas-kartika-i-4-pematangsiantar */
 window.BUNDLE_SECRET = 'kls-portal-integrity-2026';

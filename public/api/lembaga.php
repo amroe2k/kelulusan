@@ -9,10 +9,12 @@ $body   = $method === 'POST' ? getJsonBody() : [];
 if ($method === 'GET' && !$action) {
         $rows = $pdo->query(
             "SELECT l.id, l.nama, l.slug, l.aktif, l.created_at,
-                    COUNT(DISTINCT s.id) as jumlah_siswa
+                    COUNT(DISTINCT s.id) as jumlah_siswa,
+                    p.jenjang
              FROM lembaga l
              LEFT JOIN siswa s ON s.lembaga_id COLLATE utf8mb4_unicode_ci = l.id COLLATE utf8mb4_unicode_ci
-             GROUP BY l.id ORDER BY l.aktif DESC, l.nama ASC"
+             LEFT JOIN pengaturan p ON p.lembaga_id COLLATE utf8mb4_unicode_ci = l.id COLLATE utf8mb4_unicode_ci
+             GROUP BY l.id, p.jenjang ORDER BY l.aktif DESC, l.nama ASC"
         )->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['success' => true, 'data' => $rows]);
     exit;

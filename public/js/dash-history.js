@@ -130,7 +130,8 @@ function renderHistoryTable(rows) {
 
   tbody.innerHTML = rows.map(row => {
     const dt    = new Date(row.generated_at);
-    const dtStr = `${dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})} ${dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}`;
+    const datePart = dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+    const timePart = dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
     const size  = row.file_size ? `${(row.file_size/1024).toFixed(1)} KB` : '-';
     const lulus    = parseInt(row.lulus) || 0;
     const total    = parseInt(row.jumlah_siswa) || 0;
@@ -139,7 +140,7 @@ function renderHistoryTable(rows) {
 
     return `<tr class="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors group/row" data-id="${row.id}">
       <!-- Checkbox -->
-      <td class="px-3 py-4 w-10">
+      <td class="px-6 py-4 w-16">
         <input type="checkbox" data-history-id="${row.id}"
           class="history-checkbox w-4 h-4 rounded border-slate-600 bg-slate-800 text-rose-500 cursor-pointer accent-rose-500"
           onchange="onHistoryCheckbox(this)">
@@ -147,22 +148,21 @@ function renderHistoryTable(rows) {
       <td class="px-4 py-4">
         <div>
           <p class="text-white font-bold text-sm">${escHtml(row.lembaga_nama||'-')}</p>
-          <p class="text-slate-600 font-mono text-[10px] mt-0.5">${escHtml(row.lembaga_slug||'-')}</p>
+          <p class="text-slate-400 font-mono text-[10px] mt-0.5">${escHtml(row.lembaga_slug||'-')}</p>
         </div>
       </td>
       <td class="px-4 py-4">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col items-center gap-1.5">
           ${fileOk
-            ? `<a href="/exports/${encodeURIComponent(row.file_name)}" download
-                 class="text-indigo-400 hover:text-indigo-300 font-mono text-xs truncate max-w-[180px] hover:underline" title="${escHtml(row.file_name)}">
-                 📄 ${escHtml(row.file_name)}
-               </a>`
-            : `<span class="text-rose-500/60 font-mono text-xs line-through truncate max-w-[180px]" title="File tidak ditemukan">
-                 ${escHtml(row.file_name)}
-               </span>`
+            ? `<div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-sm" title="File Tersedia: ${escHtml(row.file_name)}">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+               </div>`
+            : `<div class="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-sm" title="File Hilang / Dihapus">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+               </div>`
           }
+          <p class="text-slate-400 font-mono text-[9px] font-bold tracking-tight">${size}</p>
         </div>
-        <p class="text-slate-600 text-[10px] mt-0.5">${size}</p>
       </td>
       <td class="px-4 py-4 text-center">
         <span class="text-white font-bold">${total}</span>
@@ -170,15 +170,18 @@ function renderHistoryTable(rows) {
       <td class="px-4 py-4 text-center">
         <div>
           <span class="text-emerald-400 font-bold">${lulus}</span>
-          <span class="text-slate-600 text-xs"> / ${total-lulus} TL</span>
+          <span class="text-slate-400 text-xs"> / ${total-lulus} TL</span>
         </div>
         <div class="h-1 bg-slate-800 rounded-full mt-1.5 w-16 mx-auto overflow-hidden">
           <div class="h-full bg-emerald-500 rounded-full" style="width:${pct}%"></div>
         </div>
       </td>
-      <td class="px-4 py-4 text-slate-400 text-xs whitespace-nowrap">${dtStr}</td>
-      <td class="px-4 py-4">
-        <div class="flex items-center gap-1.5 flex-wrap">
+      <td class="px-4 py-4 whitespace-nowrap">
+        <p class="text-white font-bold text-[11px] leading-none">${datePart}</p>
+        <p class="text-slate-400 text-[10px] font-mono mt-1.5 leading-none">${timePart}</p>
+      </td>
+      <td class="px-8 py-4">
+        <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
           ${fileOk ? `
           <button onclick="setActiveJson('${escHtml(row.file_name)}')"
             class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 text-[11px] font-bold transition-all" title="Jadikan data.json aktif">

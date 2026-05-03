@@ -6,6 +6,57 @@ import '../styles/global.css';
 <BaseLayout title="Pengumuman Kelulusan Siswa">
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50" style="display:none;"></canvas>
   
+  <!-- Page Loader (identik dengan admin-upload.php) -->
+  <div id="app-loader" style="
+    position:fixed; inset:0; z-index:100;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2rem;
+    background:var(--loader-bg, #f1f5f9);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  ">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+      <div style="
+        width:68px; height:68px;
+        background:linear-gradient(135deg,#6366f1,#a855f7);
+        border-radius:22px;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 12px 40px rgba(99,102,241,0.4);
+        animation:ldr-pulse 2s ease-in-out infinite;
+      ">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M22 10L12 5L2 10L12 15L22 10Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 12V17C6 17 9 19 12 19C15 19 18 17 18 17V12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p style="
+        font-family:'Outfit',sans-serif; font-size:0.75rem; font-weight:700;
+        text-transform:uppercase; letter-spacing:0.2em;
+        color:#94a3b8;
+      ">Portal Kelulusan</p>
+    </div>
+    <div style="width:200px; height:3px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden;">
+      <div style="
+        height:100%;
+        background:linear-gradient(to right,#6366f1,#a855f7);
+        border-radius:999px;
+        animation:ldr-slide 1.2s ease-in-out infinite;
+      "></div>
+    </div>
+  </div>
+  <style>
+    :root { --loader-bg: #f1f5f9; }
+    :root.dark, [data-theme="dark"] { --loader-bg: #060910; }
+    #app-loader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+    @keyframes ldr-pulse {
+      0%,100% { transform:scale(1);   box-shadow:0 12px 40px rgba(99,102,241,0.4); }
+      50%      { transform:scale(1.07); box-shadow:0 18px 55px rgba(99,102,241,0.55); }
+    }
+    @keyframes ldr-slide {
+      0%   { transform:translateX(-100%); }
+      50%  { transform:translateX(0%); }
+      100% { transform:translateX(100%); }
+    }
+  </style>
+  
   <!-- Modern Background Blobs -->
   <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-slate-50 dark:bg-[#0a0a12] transition-colors duration-500">
     <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-indigo-600/10 dark:bg-indigo-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-pulse-slow"></div>
@@ -323,6 +374,17 @@ import '../styles/global.css';
     // Load data.json
     let isAnnouncementTime = false;
 
+    // Helper: Sembunyikan Loading Layar Penuh
+    const hideAppLoader = () => {
+      const loader = $('app-loader');
+      if (!loader) return;
+      // Fade out via opacity transition, lalu sembunyikan sepenuhnya
+      loader.style.opacity = '0';
+      loader.style.visibility = 'hidden';
+      loader.style.pointerEvents = 'none';
+      setTimeout(() => { loader.style.display = 'none'; }, 520);
+    };
+
     // ── Integrity Verification ──────────────────────────────────────────
     async function verifyIntegrity(meta) {
       if (!meta || !meta._integrity) return false;
@@ -362,6 +424,7 @@ import '../styles/global.css';
                 <span><strong>PERINGATAN INTEGRITAS:</strong> File data.json telah dimodifikasi secara tidak sah. Portal tidak dapat menampilkan data kelulusan. Hubungi administrator.</span>
               </div>`;
             document.body.prepend(banner);
+            hideAppLoader(); // pastikan loader hilang sebelum error ditampilkan
             btnSubmit.disabled = true;
             showToast('Integritas data tidak valid. Data mungkin telah dimanipulasi.', 'error');
             return;
@@ -399,6 +462,16 @@ import '../styles/global.css';
           const wrapperEl  = $('logo-wrapper');
           if (logoEl && fallbackEl) {
             logoEl.src = data._meta.logo;
+            
+            // Wait for logo to fully load before revealing page
+            await new Promise((resolve) => {
+              if (logoEl.complete) resolve();
+              else {
+                logoEl.onload = resolve;
+                logoEl.onerror = resolve;
+              }
+            });
+
             logoEl.classList.remove('hidden');
             fallbackEl.classList.add('hidden');
             // Hapus gradient bg — tampilkan bg putih bersih agar logo terbaca
@@ -438,6 +511,9 @@ import '../styles/global.css';
     } catch {
       showToast('Gagal memuat data. Sistem sedang dalam perbaikan.', 'error');
       btnSubmit.disabled = true;
+    } finally {
+      // Pastikan loader selalu hilang baik saat sukses maupun error
+      hideAppLoader();
     }
 
     // ─── Helper: parse berbagai format tanggal ───

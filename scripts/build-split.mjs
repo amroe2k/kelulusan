@@ -50,10 +50,46 @@ function banner(title, color = c.cyan) {
   console.log(`${line}${c.reset}\n`);
 }
 
-// ─── Helper: jalankan command dengan output live ──────────────────────────────
-function run(cmd, label = '') {
+// ─── Helper: jalankan command dengan env khusus ──────────────────────────────
+function run(cmd, label = '', env = {}) {
   if (label) log(c.dim, `  ▸ ${label}`);
-  execSync(cmd, { cwd: ROOT, stdio: 'inherit' });
+  execSync(cmd, { cwd: ROOT, stdio: 'inherit', env: { ...process.env, ...env } });
+}
+
+// ─── Helper: Buat folder public sementara tanpa bundles/ ─────────────────────
+/**
+ * Membuat folder .tmp-public-build/ yang berisi hard links ke semua file
+ * di public/, KECUALI folder bundles/ (berisi file ZIP besar yang bisa terkunci).
+ * Hard links tidak menyalin data — hanya referensi ke inode yang sama.
+ * Proses ini sangat cepat bahkan untuk file kecil seperti JS/PHP.
+ */
+const TMP_PUBLIC = path.join(ROOT, '.tmp-public-build');
+const REAL_PUBLIC = path.join(ROOT, 'public');
+const SKIP_IN_PUBLIC = new Set(['bundles']);
+
+function createFilteredPublicDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src)) {
+    if (SKIP_IN_PUBLIC.has(entry)) continue;
+    const srcPath  = path.join(src, entry);
+    const destPath = path.join(dest, entry);
+    const stat = fs.statSync(srcPath);
+    if (stat.isDirectory()) {
+      createFilteredPublicDir(srcPath, destPath);
+    } else {
+      try {
+        fs.linkSync(srcPath, destPath); // Hard link — instan, tanpa copy data
+      } catch {
+        fs.copyFileSync(srcPath, destPath); // Fallback ke copy jika hard link gagal
+      }
+    }
+  }
+}
+
+function cleanFilteredPublicDir() {
+  if (fs.existsSync(TMP_PUBLIC)) {
+    fs.rmSync(TMP_PUBLIC, { recursive: true, force: true });
+  }
 }
 
 // ─── Helper: rename sementara file/folder pages ──────────────────────────────
@@ -61,6 +97,8 @@ function run(cmd, label = '') {
  * Menyembunyikan file/folder dengan prefix _ sehingga Astro tidak meng-crawl-nya.
  * Astro secara konvensi mengabaikan file yang diawali dengan _ (underscore).
  */
+const globalHiddenRegistry = new Set();
+
 function hidePages(targets) {
   const hidden = [];
   for (const rel of targets) {
@@ -68,7 +106,9 @@ function hidePages(targets) {
     const hidden_path = path.join(SRC_PAGES, '_' + rel.replace(/\//g, '_hidden_'));
     if (fs.existsSync(original)) {
       fs.renameSync(original, hidden_path);
-      hidden.push({ original, hidden: hidden_path });
+      const entry = { original, hidden: hidden_path };
+      hidden.push(entry);
+      globalHiddenRegistry.add(entry);
       log(c.dim, `  → Hidden: ${rel}`);
     }
   }
@@ -76,12 +116,40 @@ function hidePages(targets) {
 }
 
 function restorePages(hiddenList) {
-  for (const { original, hidden } of hiddenList) {
-    if (fs.existsSync(hidden)) {
-      fs.renameSync(hidden, original);
+  for (const entry of hiddenList) {
+    if (fs.existsSync(entry.hidden)) {
+      try {
+        fs.renameSync(entry.hidden, entry.original);
+        globalHiddenRegistry.delete(entry);
+      } catch (e) {
+        // Abaikan error jika file tidak bisa di-rename
+      }
     }
   }
 }
+
+// ─── Safety Net: Pastikan restore saat process exit paksa (Ctrl+C) ────────────
+function emergencyRestore() {
+  if (globalHiddenRegistry.size > 0) {
+    console.log(`\n${c.yellow}Memulihkan file yang disembunyikan sebelum keluar...${c.reset}`);
+    restorePages(Array.from(globalHiddenRegistry));
+  }
+}
+
+process.on('SIGINT', () => {
+  emergencyRestore();
+  process.exit(1);
+});
+process.on('SIGTERM', () => {
+  emergencyRestore();
+  process.exit(1);
+});
+process.on('uncaughtException', (err) => {
+  console.error(`\n${c.red}Error tidak terduga: ${err.message}${c.reset}`);
+  emergencyRestore();
+  process.exit(1);
+});
+process.on('exit', emergencyRestore);
 
 // ─── Definisi halaman per target ─────────────────────────────────────────────
 const PAGE_GROUPS = {
@@ -109,23 +177,37 @@ async function buildTarget(name) {
   const group = PAGE_GROUPS[name];
   banner(`Building: ${group.label}  →  ${group.outDir}`, c.blue);
 
+  // Bersihkan tmp dari run sebelumnya jika ada
+  cleanFilteredPublicDir();
+
+  // Buat folder public sementara tanpa bundles/ (menggunakan hard links)
+  log(c.dim, `  → Mempersiapkan public/ sementara (melewati bundles/)...`);
+  createFilteredPublicDir(REAL_PUBLIC, TMP_PUBLIC);
+
   let hiddenList = [];
   try {
     // 1. Sembunyikan halaman yang tidak relevan
     log(c.yellow, `Menyembunyikan halaman yang tidak termasuk...`);
     hiddenList = hidePages(group.hideOnBuild);
 
-    // 2. Jalankan astro build dengan config khusus
-    // Gunakan npx untuk kompatibilitas Windows/Linux
+    // 2. Jalankan astro build — BUILD_PUBLIC_DIR mengarahkan ke folder sementara
     log(c.green, `\nMemulai Astro build...`);
-    run(`npx astro build --config ${group.config}`, `astro build --config ${group.config}`);
+    run(
+      `npx astro build --config ${group.config}`,
+      `astro build --config ${group.config}`,
+      { BUILD_PUBLIC_DIR: TMP_PUBLIC }
+    );
 
     log(c.green, `\n✓ Build ${group.label} selesai → ${group.outDir}`);
   } catch (err) {
     log(c.red, `\n✗ Build gagal: ${err.message}`);
     process.exitCode = 1;
   } finally {
-    // 3. Hapus folder yang tidak boleh ada di output (safety net)
+    // 3. Hapus folder public sementara (selalu, bahkan jika build gagal)
+    cleanFilteredPublicDir();
+    log(c.dim, `  ✓ Folder public sementara dihapus.`);
+
+    // 4. Hapus folder yang tidak boleh ada di output (safety net)
     const outPath = path.join(ROOT, group.outDir);
     if (group.cleanAfterBuild?.length) {
       for (const dir of group.cleanAfterBuild) {
@@ -137,7 +219,7 @@ async function buildTarget(name) {
       }
     }
 
-    // 4. Kembalikan file yang disembunyikan
+    // 5. Kembalikan file halaman yang disembunyikan
     if (hiddenList.length) {
       log(c.yellow, `\nMengembalikan file halaman...`);
       restorePages(hiddenList);

@@ -7,15 +7,29 @@
  */
 
 // ─── KONFIGURASI ─────────────────────────────────────────────
-define('UPLOAD_PASSWORD', 'admin123');   // Ganti dengan password Anda
+define('UPLOAD_PASSWORD', 'demo1234');   // Ganti dengan password Anda
 define('DATA_JSON_PATH',  __DIR__ . '/data.json');
 define('MAX_FILE_SIZE',   5 * 1024 * 1024); // 5 MB
+// Jika diisi, HANYA file JSON dengan nama sekolah ini yang diterima.
+// Dibiarkan kosong ('') = deteksi otomatis dari data.json yang sudah ada.
+define('ALLOWED_SEKOLAH', '');
 // ─────────────────────────────────────────────────────────────
+
+// Gunakan nama session terpisah agar tidak bentrok dengan session portal siswa
+session_name('kls_upload_admin');
+
+// Paksa no-cache agar halaman tidak pernah disajikan dari cache browser/proxy
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 session_start();
 
-$message = '';
-$messageType = '';
+// ── Flash message (dari redirect sebelumnya) ──────────────────
+$message     = $_SESSION['_flash_msg']  ?? '';
+$messageType = $_SESSION['_flash_type'] ?? '';
+unset($_SESSION['_flash_msg'], $_SESSION['_flash_type']);
+
 $jsonInfo = null;
 
 // Cek file data.json yang ada
@@ -65,40 +79,46 @@ if ($currentTgl2) {
     if ($skl2Date && new DateTime() >= $skl2Date) $effectiveSkl = 'skl2';
 }
 
-// Handle login
+// ── Helper: redirect dengan flash message (PRG pattern) ────────
+function redirectWith(string $type, string $msg): void {
+    $_SESSION['_flash_msg']  = $msg;
+    $_SESSION['_flash_type'] = $type;
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// ── Handle POST ───────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+
+    // Login
     if ($_POST['action'] === 'login') {
         if ($_POST['password'] === UPLOAD_PASSWORD) {
             $_SESSION['upload_auth'] = true;
-            $message = 'Selamat Datang di Panel Admin!';
-            $messageType = 'success';
+            redirectWith('success', 'Selamat Datang di Panel Admin!');
         } else {
-            $message = 'Password salah. Coba lagi.';
-            $messageType = 'error';
+            redirectWith('error', 'Password salah. Coba lagi.');
         }
     }
 
+    // Logout
     if ($_POST['action'] === 'logout') {
         session_destroy();
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 
-    // Handle update tanggal pengumuman
+    // Update tanggal pengumuman
     if ($_POST['action'] === 'update_tgl' && !empty($_SESSION['upload_auth'])) {
         $newTgl  = trim($_POST['tanggal_pengumuman'] ?? '');
         $newTgl2 = trim($_POST['tanggal_skl2'] ?? '');
         if (!$newTgl) {
-            $message = 'Tanggal SKL1 (Pengumuman) tidak boleh kosong.';
-            $messageType = 'error';
+            redirectWith('error', 'Tanggal SKL1 (Pengumuman) tidak boleh kosong.');
         } elseif (!file_exists(DATA_JSON_PATH)) {
-            $message = 'data.json belum ada. Upload file JSON terlebih dahulu.';
-            $messageType = 'error';
+            redirectWith('error', 'data.json belum ada. Upload file JSON terlebih dahulu.');
         } else {
             $json = json_decode(file_get_contents(DATA_JSON_PATH), true);
             if (!$json) {
-                $message = 'Gagal membaca data.json.';
-                $messageType = 'error';
+                redirectWith('error', 'Gagal membaca data.json.');
             } else {
                 $bulanId = ['Januari','Februari','Maret','April','Mei','Juni',
                             'Juli','Agustus','September','Oktober','November','Desember'];
@@ -107,58 +127,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $dt2 = $newTgl2 ? DateTime::createFromFormat('Y-m-d', $newTgl2) : null;
                 $tglDisplay2 = $dt2 ? $dt2->format('j') . ' ' . $bulanId[(int)$dt2->format('n') - 1] . ' ' . $dt2->format('Y') : $newTgl2;
 
-                $json['_meta']['tanggal_pengumuman'] = $newTgl;
+                $json['_meta']['tanggal_pengumuman']         = $newTgl;
                 $json['_meta']['tanggal_pengumuman_display'] = $tglDisplay1;
-                $json['_meta']['tanggal_skl2'] = $newTgl2;
-                $json['_meta']['tanggal_skl2_display'] = $tglDisplay2;
+                $json['_meta']['tanggal_skl2']               = $newTgl2;
+                $json['_meta']['tanggal_skl2_display']       = $tglDisplay2;
                 file_put_contents(DATA_JSON_PATH, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-                $currentTgl  = $newTgl;
-                $currentTgl2 = $newTgl2;
-                // Refresh effective SKL
-                $effectiveSkl = ($newTgl2 && new DateTime() >= (DateTime::createFromFormat('Y-m-d',$newTgl2) ?: new DateTime('2099-12-31'))) ? 'skl2' : 'skl1';
-                $jsonInfo['tgl']  = $tglDisplay1;
-                $jsonInfo['tgl2'] = $tglDisplay2;
-                $message = 'Pengaturan tanggal berhasil diperbarui!';
-                $messageType = 'success';
+                redirectWith('success', 'Pengaturan tanggal berhasil diperbarui!');
             }
         }
     }
 
-    // Handle upload
+    // Upload data.json
     if ($_POST['action'] === 'upload' && !empty($_SESSION['upload_auth'])) {
         if (!isset($_FILES['json_file']) || $_FILES['json_file']['error'] !== UPLOAD_ERR_OK) {
-            $message = 'File tidak valid atau upload gagal.';
-            $messageType = 'error';
+            redirectWith('error', 'File tidak valid atau upload gagal.');
         } elseif ($_FILES['json_file']['size'] > MAX_FILE_SIZE) {
-            $message = 'File terlalu besar. Maksimum 5MB.';
-            $messageType = 'error';
+            redirectWith('error', 'File terlalu besar. Maksimum 5MB.');
         } else {
             $content = file_get_contents($_FILES['json_file']['tmp_name']);
-            $parsed = json_decode($content, true);
+            $parsed  = json_decode($content, true);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
-                $message = 'File bukan JSON valid: ' . json_last_error_msg();
-                $messageType = 'error';
+                redirectWith('error', 'File bukan JSON valid: ' . json_last_error_msg());
             } elseif (!isset($parsed['siswa']) || !isset($parsed['_meta'])) {
-                $message = 'Struktur JSON tidak valid. Pastikan file berasal dari sistem Generate JSON.';
-                $messageType = 'error';
+                redirectWith('error', 'Struktur JSON tidak valid. Pastikan file berasal dari sistem Generate JSON.');
             } else {
-                // Backup file lama
+                $newSekolah = trim($parsed['_meta']['sekolah'] ?? '');
+
+                // Proteksi Lapisan 1: ALLOWED_SEKOLAH (hardcoded per-bundle)
+                if (ALLOWED_SEKOLAH !== '' && strtolower($newSekolah) !== strtolower(ALLOWED_SEKOLAH)) {
+                    redirectWith('error', "Pembaruan Ditolak! File ini milik \"{$newSekolah}\", bukan \"" . ALLOWED_SEKOLAH . "\".");
+                }
+
+                // Proteksi Lapisan 2: Cocokkan dengan data.json aktif di server
+                if (file_exists(DATA_JSON_PATH)) {
+                    $existingJson    = json_decode(file_get_contents(DATA_JSON_PATH), true);
+                    $existingSekolah = trim($existingJson['_meta']['sekolah'] ?? '');
+                    if ($existingSekolah !== '' && strtolower($existingSekolah) !== strtolower($newSekolah)) {
+                        redirectWith('error', "Pembaruan Ditolak! File ini milik \"{$newSekolah}\", hosting ini untuk \"{$existingSekolah}\".");
+                    }
+                }
+
+                // Simpan
                 if (file_exists(DATA_JSON_PATH)) {
                     copy(DATA_JSON_PATH, DATA_JSON_PATH . '.bak');
                 }
                 file_put_contents(DATA_JSON_PATH, $content);
                 $total = count($parsed['siswa']);
-                $sekolah = $parsed['_meta']['sekolah'] ?? '-';
-                $message = "data.json berhasil diperbarui! Memuat {$total} siswa dari {$sekolah}.";
-                $messageType = 'success';
-                // Refresh info
-                $jsonInfo = [
-                    'sekolah'   => $parsed['_meta']['sekolah'] ?? '-',
-                    'tapel'     => $parsed['_meta']['tahun_ajaran'] ?? '-',
-                    'total'     => $total,
-                    'modified'  => date('d M Y, H:i'),
-                ];
+                redirectWith('success', "data.json berhasil diperbarui! Memuat {$total} siswa dari {$newSekolah}.");
             }
         }
     }
@@ -494,6 +510,72 @@ $isAuth = !empty($_SESSION['upload_auth']);
     font-weight: 600 !important;
     margin: 0 0.5rem !important;
   }
+
+  /* ── Page Loader ─────────────────────────────────────── */
+  #page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    background: var(--bg);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+  #page-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .loader-icon {
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 40px var(--primary-glow);
+    animation: loader-pulse 2s ease-in-out infinite;
+  }
+  @keyframes loader-pulse {
+    0%, 100% { transform: scale(1);   box-shadow: 0 12px 40px var(--primary-glow); }
+    50%       { transform: scale(1.07); box-shadow: 0 18px 55px var(--primary-glow); }
+  }
+  .loader-brand p {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+  }
+  .loader-track {
+    width: 200px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .loader-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    border-radius: 999px;
+    animation: loader-slide 1.2s ease-in-out infinite;
+  }
+  @keyframes loader-slide {
+    0%   { transform: translateX(-100%); }
+    50%  { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
 </style>
 <script>
   // Pre-apply theme to prevent flash
@@ -507,6 +589,22 @@ $isAuth = !empty($_SESSION['upload_auth']);
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+
+<!-- ── Page Loader ───────────────────────────────────────── -->
+<div id="page-loader">
+  <div class="loader-brand">
+    <div class="loader-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <path d="M22 10L12 5L2 10L12 15L22 10Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 12V17C6 17 9 19 12 19C15 19 18 17 18 17V12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p>Portal Kelulusan</p>
+  </div>
+  <div class="loader-track">
+    <div class="loader-bar"></div>
+  </div>
+</div>
 <div class="top-actions">
   <button class="action-btn" id="theme-toggle" title="Ganti Tema">
     <svg class="sun-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -748,6 +846,25 @@ $isAuth = !empty($_SESSION['upload_auth']);
 
 <script>
 (function() {
+  // ── Page Loader ──────────────────────────────────────────
+  const loader = document.getElementById('page-loader');
+  function hideLoader() {
+    if (loader) {
+      setTimeout(() => loader.classList.add('hidden'), 300);
+    }
+  }
+  if (document.readyState === 'complete') {
+    hideLoader();
+  } else {
+    window.addEventListener('load', hideLoader);
+  }
+
+  // showLoader hanya dipanggil secara eksplisit setelah konfirmasi SweetAlert
+  // agar tidak mengganggu form yang menggunakan e.preventDefault()
+  function showLoader() {
+    if (loader) loader.classList.remove('hidden');
+  }
+
   // Theme Toggle Logic
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
@@ -823,7 +940,10 @@ $isAuth = !empty($_SESSION['upload_auth']);
         confirmButtonText: 'Simpan',
         cancelButtonText: 'Batal'
       }).then((result) => {
-        if (result.isConfirmed) formPengaturan.submit();
+        if (result.isConfirmed) {
+          showLoader(); // tampilkan loader hanya setelah dikonfirmasi
+          formPengaturan.submit();
+        }
       });
     });
   }
@@ -845,12 +965,7 @@ $isAuth = !empty($_SESSION['upload_auth']);
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          ModernSwal.fire({
-            title: 'Memproses Data...',
-            html: 'Mohon tunggu sejenak.',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-          });
+          showLoader(); // tampilkan page loader
           formUpload.submit();
         }
       });
