@@ -15,9 +15,11 @@
 
 ### 🛡️ Dashboard Admin
 - **Login aman** dengan session PHP + proteksi CSRF
-- **Manajemen Data Siswa**: tambah, edit, hapus, import/export Excel (.xlsx)
+- **Manajemen Data Siswa**: tambah, edit, hapus (single & **bulk/massal**), import/export Excel (.xlsx)
 - **Manajemen Nilai**: input nilai per siswa untuk SKL dengan nilai
 - **Identitas Sekolah**: konfigurasi lengkap data lembaga (nama, NPSN, NSS, alamat, kepala sekolah, dll.)
+  - 🗺️ **Cascading Wilayah**: dropdown Provinsi → Kabupaten/Kota otomatis berisi dari data kemendagri
+  - 🏙️ **Deteksi Kota/Kabupaten Otomatis**: label "Kabupaten X" atau "Kota X" tampil sesuai pilihan tanpa field tambahan
 - **Aset Visual SKL** (drag & drop, auto-convert WebP, maks 3MB):
   - 🖼️ **Logo Sekolah**
   - 🔖 **Stempel / Cap Sekolah**
@@ -28,6 +30,47 @@
 - **Multi-Lembaga**: satu aplikasi untuk banyak sekolah
 - **Sinkronisasi JSON**: export data ke `public/data.json` untuk static hosting
 - **Deploy ke Hosting**: generate zip siap upload langsung dari dashboard
+
+---
+
+## 📋 Format Tabel Nilai SKL (Kemdikbud)
+
+SKL dengan Nilai (SKL2) menggunakan format tabel **sesuai standar Kemdikbud** dengan sub-kategori mata pelajaran. Tabel dirender menggunakan font **Arial** untuk keterbacaan optimal pada media cetak.
+
+### 🏫 SMA / MA
+
+| Sub-Kategori | Contoh Mata Pelajaran |
+|---|---|
+| **Mata Pelajaran Wajib** | Pendidikan Agama & Budi Pekerti, Pancasila, B. Indonesia, Matematika, IPA, IPS, B. Inggris, PJOK, Informatika, Sejarah, Seni Budaya & Prakarya |
+| **Mata Pelajaran Pilihan** | 4–5 mapel pilihan sesuai peminatan (diisi otomatis dari sisa data nilai) |
+| **Muatan Lokal** | Mata pelajaran lokal khas daerah |
+| *(Rata-rata)* | Dihitung otomatis dari semua nilai yang diinput |
+
+### 🏭 SMK
+
+| Sub-Kategori | Contoh Mata Pelajaran |
+|---|---|
+| **Mata Pelajaran Umum** | Pendidikan Agama, Pancasila, B. Indonesia, PJOK, Sejarah, Seni & Budaya |
+| **Mata Pelajaran Kejuruan** | Matematika, B. Inggris, Informatika, IPAS, Dasar-dasar Program Keahlian, Konsentrasi Keahlian, Projek Kreativitas, PKL |
+| **Mata Pelajaran Pilihan** | Mapel pilihan di luar kategori utama (diisi otomatis dari sisa data nilai) |
+| **Muatan Lokal** | Mata pelajaran lokal khas daerah |
+| *(Rata-rata)* | Dihitung otomatis dari semua nilai yang diinput |
+
+> 💡 **Cara Kerja Pencocokan Otomatis:**  
+> Sistem mencocokkan nama mata pelajaran yang diinput dengan kata kunci bawaan (contoh: `"agama"`, `"matematika"`, `"pkl"`).  
+> Mata pelajaran yang tidak cocok dengan kategori manapun otomatis masuk ke **Mata Pelajaran Pilihan**.
+
+### 🏙️ Deteksi Kota/Kabupaten Otomatis pada SKL
+
+Sistem otomatis menampilkan label yang tepat pada paragraf SKL berdasarkan pilihan Identitas Lembaga:
+
+| Pilihan di Identitas Lembaga | Tampilan di SKL |
+|---|---|
+| `Kab. Langkat` | **Kabupaten Langkat** |
+| `Binjai` | **Kota Binjai** |
+| *(kosong)* | `Kota/Kabupaten*) ........` |
+
+Deteksi dilakukan berdasarkan prefix `"Kab. "` dari data wilayah Kemendagri — **tidak perlu field tambahan** di database.
 
 ---
 
@@ -295,6 +338,28 @@ npm run deploy           # Full deploy: export + build + zip
 - Session admin diproteksi dengan PHP session + role check
 - API endpoint memerlukan autentikasi session yang valid
 - Upload gambar dikonversi ke **WebP** client-side sebelum disimpan (tidak ada upload file server-side)
+
+---
+
+## 📅 Changelog
+
+### v2.1 — Mei 2026
+- ✅ **Tabel Nilai Format Kemdikbud**: SKL2 kini menggunakan tabel nilai bersub-kategori (Wajib / Kejuruan / Pilihan / Muatan Lokal) sesuai standar SMA dan SMK
+- ✅ **Font Tabel Nilai**: Diubah ke **Arial** untuk keterbacaan optimal pada cetak
+- ✅ **Deteksi Kota/Kabupaten Otomatis**: Label "Kabupaten X" / "Kota X" tampil otomatis sesuai pilihan identitas lembaga
+- ✅ **Cascading Wilayah**: Dropdown Provinsi → Kabupaten/Kota pada form Identitas Lembaga menggunakan data Kemendagri
+- ✅ **Bulk Delete Siswa**: Tombol "Hapus Terpilih" untuk menghapus banyak data siswa sekaligus
+- ✅ **Template Import Excel Mapel Lengkap**: Template download kini memuat kolom mapel sesuai SKL Kemdikbud (SMA: 11 wajib + 5 pilihan + mulok; SMK: 6 umum + 8 kejuruan + 3 pilihan + mulok) beserta sheet **"Panduan Mapel"**
+- ✅ **SKL2 Layout 2 Halaman**: Tanda tangan + kop surat otomatis pindah ke halaman 2 saat konten terlalu panjang
+- ✅ **Foto 3×4 Placeholder**: Area foto siswa pada halaman 2 SKL2
+- ✅ **Print CSS A4 Optimal**: Margin minimal `5mm 6mm` untuk memaksimalkan area cetak
+- ✅ **Perbaikan Print Dialog**: Event listener print tidak lagi terpicu dua kali
+
+### v2.0 — April 2026
+- ✅ Template SKL SMA/SMK dipisah dengan identitas data berbeda
+- ✅ Multi-lembaga dengan manajemen pengaturan per lembaga
+- ✅ Preview SKL real-time di dashboard
+- ✅ Stempel lulus terintegrasi di preview dan PDF
 
 ---
 

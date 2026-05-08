@@ -34,7 +34,7 @@ if ($method === 'GET') {
         $totalNilai = 0;
         if (!empty($s['nilai_mapel'])) {
             foreach (explode('|', $s['nilai_mapel']) as $p) {
-                if (!str_contains($p, ':')) continue;
+                if (strpos($p, ':') === false) continue;
                 list($mapel, $nilai) = explode(':', $p, 2);
                 $val = floatval($nilai);
                 $nilaiArr[] = ['mapel' => $mapel, 'nilai' => $val];
@@ -76,7 +76,7 @@ if ($method === 'POST') {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
     // ── Import CSV ────────────────────────────────────────────────────────
-    if (str_contains($contentType, 'multipart/form-data')) {
+    if (strpos($contentType, 'multipart/form-data') !== false) {
         if (!isset($_FILES['csv_file'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Tidak ada file yang diunggah.']);
@@ -198,8 +198,8 @@ if ($method === 'POST') {
             if (!in_array($status, ['LULUS','TIDAK LULUS'])) $status = 'LULUS';
             // Normalise jenis_kelamin: accept L/P or full words (Laki-laki/Perempuan)
             $rawJk = strtoupper(trim($col['jenis_kelamin'] ?? 'L'));
-            if (str_starts_with($rawJk, 'L')) $jk = 'L';
-            elseif (str_starts_with($rawJk, 'P')) $jk = 'P';
+            if (strpos($rawJk, 'L') === 0) $jk = 'L';
+            elseif (strpos($rawJk, 'P') === 0) $jk = 'P';
             else $jk = 'L';
 
             try {
@@ -320,6 +320,33 @@ if ($method === 'POST') {
         $pdo->prepare("DELETE n FROM nilai n INNER JOIN siswa s ON n.siswa_id = s.id WHERE s.lembaga_id = ?")->execute([$lid]);
         $pdo->prepare("DELETE FROM siswa WHERE lembaga_id = ?")->execute([$lid]);
         echo json_encode(['success' => true, 'deleted' => $total]);
+        exit;
+    }
+
+    if ($action === 'delete_bulk') {
+        if ($_SESSION['role'] !== 'admin') {
+            echo json_encode(['error' => 'Hanya Admin yang dapat menghapus data.']);
+            exit;
+        }
+        $ids = $data['ids'] ?? [];
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['error' => 'Tidak ada ID yang dipilih.']);
+            exit;
+        }
+        // Sanitize: only allow UUIDs
+        $ids = array_filter($ids, fn($id) => preg_match('/^[0-9a-f\-]{36}$/i', $id));
+        if (empty($ids)) {
+            echo json_encode(['error' => 'ID tidak valid.']);
+            exit;
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $pdo->beginTransaction();
+        $pdo->prepare("DELETE FROM nilai WHERE siswa_id IN ($placeholders)")->execute(array_values($ids));
+        $stmt = $pdo->prepare("DELETE FROM siswa WHERE id IN ($placeholders) AND lembaga_id = ?");
+        $stmt->execute([...array_values($ids), $lembagaId]);
+        $deleted = $stmt->rowCount();
+        $pdo->commit();
+        echo json_encode(['success' => true, 'deleted' => $deleted]);
         exit;
     }
 

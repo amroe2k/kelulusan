@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Build dynamic SET clause untuk hanya update kolom yang dikirim
-    $fields = ['sekolah','npsn','nss','jenjang','kompetensi_keahlian','tahun_ajaran','alamat','kota','kepala_sekolah','jabatan_kepsek','nip_kepsek','nuptk_kepsek','id_kepsek_mode','tanggal_pengumuman','nomor_surat_suffix','nomor_surat_mode','nomor_surat_statis','tanggal_skl2','telepon','email','domain','pengumuman'];
+    $fields = ['sekolah','npsn','nss','jenjang','kompetensi_keahlian','kurikulum','tahun_ajaran','alamat','kota','provinsi','kepala_sekolah','jabatan_kepsek','nip_kepsek','nuptk_kepsek','id_kepsek_mode','tanggal_pengumuman','nomor_surat_suffix','nomor_surat_mode','nomor_surat_statis','tanggal_skl2','telepon','email','domain','pengumuman'];
     $sets = []; $vals = [];
     foreach($fields as $f){
         if(isset($data[$f])){ $sets[]="$f=?"; $vals[]=$data[$f]; }

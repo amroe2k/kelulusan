@@ -751,7 +751,7 @@ $isAuth = !empty($_SESSION['upload_auth']);
               <div class="value" style="color:var(--primary); font-size:1.1rem;"><?= htmlspecialchars($jsonInfo['sekolah']) ?></div>
             </div>
             <div class="info-item">
-              <div class="label">Tahun Pelajaran</div>
+              <div class="label">Tahun Ajaran</div>
               <div class="value"><?= htmlspecialchars($jsonInfo['tapel']) ?></div>
             </div>
             <div class="info-item">

@@ -396,7 +396,27 @@ const { view } = Astro.params;
         display: block;
       }
     }
+    /* ===== SEARCHABLE SELECT ===== */
+    .searchable-select { position: relative; display: block; width: 100%; }
+    .searchable-select .ss-dropdown { min-width: 0; }
+
+    .searchable-select .ss-list li {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      color: #334155;
+      transition: background 0.1s;
+    }
+    .dark .searchable-select .ss-list li { color: #cbd5e1; }
+    .searchable-select .ss-list li:hover { background: #eef2ff; }
+    .dark .searchable-select .ss-list li:hover { background: rgba(99,102,241,0.15); }
+    .searchable-select .ss-list li.ss-selected { background: #e0e7ff; color: #4338ca; font-weight: 700; }
+    .dark .searchable-select .ss-list li.ss-selected { background: rgba(99,102,241,0.2); color: #818cf8; }
+    .searchable-select .ss-list li.ss-empty { color: #94a3b8; font-style: italic; cursor: default; }
+    .searchable-select .ss-trigger[data-selected="true"] { color: #1e293b; }
+    .dark .searchable-select .ss-trigger[data-selected="true"] { color: #f1f5f9; }
+    .searchable-select .ss-chevron.open { transform: rotate(180deg); }
   </style>
+
 
   <!-- xlsx-js-style for styled Excel import/export -->
   <script is:inline src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -617,7 +637,7 @@ const { view } = Astro.params;
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola data resmi sekolah untuk kop surat dan pengumuman kelulusan.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="btn-preview-skl" class="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#111827] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/50 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
+                    <button id="btn-preview-skl" onclick="if(typeof window._openSklModal==='function'){window._openSklModal(null,null,'skl1')}else{var m=document.getElementById('modal-skl-preview');if(m)m.style.display='flex';}" class="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#111827] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/50 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         Preview SKL
                     </button>
@@ -642,7 +662,7 @@ const { view } = Astro.params;
                             <p id="id-sekolah" class="font-black text-2xl text-slate-800 dark:text-white font-outfit">-</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Tahun Pelajaran</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Tahun Ajaran</p>
                             <p id="id-tapel" class="font-bold text-lg text-slate-700 dark:text-slate-200 font-outfit">-</p>
                         </div>
                         <div>
@@ -653,12 +673,24 @@ const { view } = Astro.params;
                             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Jenjang Sekolah</p>
                             <span id="id-jenjang" class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">-</span>
                         </div>
-                        <div class="lg:col-span-2">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Kurikulum</p>
+                            <p id="id-kurikulum" class="text-slate-600 dark:text-slate-300 font-medium">-</p>
+                        </div>
+                        <div id="view-konsentrasi-wrap" class="hidden">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Konsentrasi Keahlian</p>
+                            <p id="id-konsentrasi" class="text-slate-600 dark:text-slate-300 font-medium">-</p>
+                        </div>
+                        <div class="lg:col-span-3">
                             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Alamat Lengkap</p>
                             <p id="id-alamat" class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-3xl">-</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Kota Penerbitan</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Provinsi</p>
+                            <p id="id-provinsi" class="text-slate-600 dark:text-slate-300 font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Kabupaten / Kota</p>
                             <p id="id-kota" class="text-slate-600 dark:text-slate-300 font-medium">-</p>
                         </div>
                     </div>
@@ -833,7 +865,7 @@ const { view } = Astro.params;
                                 <input type="text" id="input-sekolah" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tahun Pelajaran <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tahun Ajaran <span class="text-rose-500">*</span></label>
                                 <input type="text" id="input-tapel" required placeholder="2025/2026" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
                             <div>
@@ -850,6 +882,16 @@ const { view } = Astro.params;
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">NSS <span class="text-rose-500">*</span></label>
                                 <input type="text" id="input-nss" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kurikulum</label>
+                                <select id="input-kurikulum" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all cursor-pointer appearance-none">
+                                    <option value="Kurikulum Merdeka">Kurikulum Merdeka</option>
+                                    <option value="Kurikulum 2013">Kurikulum 2013</option>
+                                    <option value="Kurikulum 2013 Revisi">Kurikulum 2013 Revisi</option>
+                                    <option value="KTSP">KTSP</option>
+                                </select>
+                            </div>
+
                         </div>
 
                         <hr class="border-slate-100 dark:border-slate-800">
@@ -971,10 +1013,40 @@ const { view } = Astro.params;
                                 <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Alamat Lengkap <span class="text-rose-500">*</span></label>
                                 <textarea id="input-alamat" rows="2" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none"></textarea>
                             </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kota Penerbitan <span class="text-rose-500">*</span></label>
-                                <input type="text" id="input-kota" required placeholder="Contoh: Binjai" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                <p class="text-[10px] text-slate-500 mt-1.5">Digunakan untuk lokasi pada tanggal penandatanganan SKL (misal: Binjai, 26 April 2026).</p>
+                            <!-- Searchable Provinsi -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Provinsi <span class="text-rose-500">*</span></label>
+                                <div class="searchable-select" id="wrap-provinsi" style="position:relative">
+                                    <input type="hidden" id="input-provinsi" required />
+                                    <button type="button" class="ss-trigger w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-left text-slate-400 dark:text-slate-500 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all flex items-center justify-between" id="trig-provinsi">
+                                        <span class="ss-label truncate">— Pilih Provinsi —</span>
+                                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ss-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <div class="ss-dropdown hidden absolute z-50 mt-1 left-0 right-0 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                        <div class="p-2 border-b border-slate-100 dark:border-slate-800">
+                                            <input type="text" class="ss-search w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-xs text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all" placeholder="Cari provinsi..." autocomplete="off">
+                                        </div>
+                                        <ul class="ss-list max-h-48 overflow-y-auto py-1 text-sm"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Searchable Kabupaten/Kota -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Kabupaten / Kota <span class="text-rose-500">*</span></label>
+                                <div class="searchable-select" id="wrap-kota" style="position:relative">
+                                    <input type="hidden" id="input-kota" required />
+                                    <button type="button" class="ss-trigger w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-left text-slate-400 dark:text-slate-500 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all flex items-center justify-between" id="trig-kota">
+                                        <span class="ss-label truncate">— Pilih Kabupaten/Kota —</span>
+                                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ss-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <div class="ss-dropdown hidden absolute z-50 mt-1 left-0 right-0 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                        <div class="p-2 border-b border-slate-100 dark:border-slate-800">
+                                            <input type="text" class="ss-search w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-xs text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all" placeholder="Cari kabupaten/kota..." autocomplete="off">
+                                        </div>
+                                        <ul class="ss-list max-h-48 overflow-y-auto py-1 text-sm"></ul>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1.5">Digunakan untuk lokasi pada SKL (misal: Binjai, 26 April 2026). Hanya nama kota yang tampil.</p>
                             </div>
                         </div>
 
@@ -1302,52 +1374,44 @@ const { view } = Astro.params;
     </div>
   </div>
 
-  <!-- ── MODAL PREVIEW SKL ── -->
-  <div id="modal-skl-preview" class="fixed inset-0 z-[990] items-center justify-center p-4 bg-black/85 backdrop-blur-sm hidden">
-    <div class="bg-[#111827] rounded-2xl border border-slate-700 shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col animate-fade-in">
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 flex-shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
-            <svg class="w-4.5 h-4.5 text-indigo-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+  <!-- Modal SKL Preview — selalu ada di DOM sebagai direct child body -->
+  <div id="modal-skl-preview" onclick="if(event.target===this){this.style.display='none';}" style="position:fixed;inset:0;z-index:990;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);">
+    <div style="background:#111827;border-radius:1rem;border:1px solid #334155;box-shadow:0 25px 60px rgba(0,0,0,.8);width:100%;max-width:64rem;max-height:95vh;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid #1e293b;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:1.25rem;height:1.25rem;color:#818cf8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
           <div>
-            <h3 class="font-bold text-white text-sm font-outfit">Preview Surat Keterangan Lulus</h3>
-            <p class="text-[10px] text-slate-500 mt-0.5">Menggunakan data identitas saat ini + siswa contoh (bukan data asli)</p>
+            <h3 style="font-weight:700;color:#fff;font-size:.875rem;">Preview Surat Keterangan Lulus</h3>
+            <p style="font-size:.625rem;color:#64748b;margin-top:1px;">Tampilan SKL sesuai data lembaga aktif</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="modal-skl-print" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-emerald-500/20" title="Cetak / Download PDF">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            Cetak PDF
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <button id="skl-tab-1" onclick="if(typeof window._renderSklIframe==='function')window._renderSklIframe('skl1');" style="padding:.375rem .875rem;border-radius:.5rem;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:rgba(99,102,241,.2);color:#818cf8;border:1px solid rgba(99,102,241,.4);cursor:pointer;">Tanpa Nilai</button>
+          <button id="skl-tab-2" onclick="if(typeof window._renderSklIframe==='function')window._renderSklIframe('skl2');" style="padding:.375rem .875rem;border-radius:.5rem;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:transparent;color:#64748b;border:1px solid #1e293b;cursor:pointer;">Dengan Nilai</button>
+          <span style="color:#334155;margin:0 .25rem;">|</span>
+          <span style="font-size:.625rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;">Skala</span>
+          <input id="skl-scale" type="range" min="40" max="100" value="65" step="5" oninput="var v=parseInt(this.value);var sv=document.getElementById('skl-scale-val');if(sv)sv.textContent=v+'%';var w=document.getElementById('skl-preview-wrap');if(w)w.style.transform='scale('+v/100+')';" style="width:7rem;accent-color:#6366f1;cursor:pointer;">
+          <span id="skl-scale-val" style="font-size:.75rem;font-weight:700;color:#818cf8;width:2.25rem;">65%</span>
+          <span style="color:#334155;margin:0 .25rem;">|</span>
+          <button id="modal-skl-print" style="display:flex;align-items:center;gap:.5rem;padding:.375rem .875rem;background:#059669;color:#fff;border:none;border-radius:.5rem;font-size:.625rem;font-weight:700;cursor:pointer;">
+            <svg style="width:.875rem;height:.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Cetak / PDF
           </button>
-          <button id="modal-skl-close" class="p-2 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl transition-colors" title="Tutup">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <button id="modal-skl-close" onclick="var m=document.getElementById('modal-skl-preview');if(m)m.style.display='none';" style="padding:.5rem;color:#64748b;background:transparent;border:none;border-radius:.75rem;cursor:pointer;transition:all .2s;" onmouseenter="this.style.color='#fff';this.style.background='rgba(100,116,139,.4)'" onmouseleave="this.style.color='#64748b';this.style.background='transparent'">
+            <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
-      <!-- Scale toolbar + SKL type tabs -->
-      <div class="flex items-center gap-4 px-6 py-2.5 border-b border-slate-800 bg-[#0F1523]/80 flex-shrink-0 flex-wrap">
-        <!-- SKL Type Tabs -->
-        <div class="flex items-center gap-1 bg-slate-800/60 rounded-lg p-0.5">
-          <button id="skl-tab-1" class="px-3 py-1 rounded-md text-xs font-bold transition-colors bg-emerald-600 text-white" title="SKL Tanpa Nilai — Pengumuman Kelulusan">📋 SKL 1 (Tanpa Nilai)</button>
-          <button id="skl-tab-2" class="px-3 py-1 rounded-md text-xs font-bold transition-colors text-slate-400 hover:text-white" title="SKL Dengan Nilai — Penerimaan SKL">📄 SKL 2 (Dengan Nilai)</button>
-        </div>
-        <span class="text-slate-700 text-xs">|</span>
-        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Skala</span>
-        <input id="skl-scale" type="range" min="40" max="100" value="65" step="5" class="w-28 h-1 accent-indigo-500 cursor-pointer">
-        <span id="skl-scale-val" class="text-xs font-bold text-indigo-400 w-9">65%</span>
-        <span class="text-slate-700 text-xs">|</span>
-        <span class="text-[10px] text-slate-600">Format A4 · 794×1123px</span>
-      </div>
-      <!-- Preview area -->
-      <div class="flex-1 overflow-auto p-6 bg-[#0a0d1a]" style="min-height:0">
-        <div id="skl-preview-wrap" class="mx-auto" style="transform-origin:top center;transition:transform .2s ease;width:794px;">
-          <iframe id="skl-iframe" style="width:794px;height:1123px;border:none;border-radius:6px;box-shadow:0 25px 60px rgba(0,0,0,0.6);display:block;" title="Preview SKL"></iframe>
+      <div style="flex:1;overflow:auto;padding:1.5rem;background:#070c18;min-height:0;">
+        <div id="skl-preview-wrap" style="margin:0 auto;transform-origin:top center;transition:transform .2s ease;width:794px;">
+          <iframe id="skl-iframe" style="width:794px;height:1247px;border:none;border-radius:6px;box-shadow:0 25px 60px rgba(0,0,0,0.6);display:block;" title="Preview SKL"></iframe>
         </div>
       </div>
     </div>
   </div>
+
   <style is:global>
     .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#334155;border-radius:10px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#475569}
     .nav-item{position:relative;display:flex;flex-direction:row;align-items:center;gap:1rem;padding:.75rem 1.25rem;margin-bottom:.375rem;border-radius:.75rem;font-size:.8125rem;font-weight:700;color:#94a3b8;transition:all .3s;cursor:pointer;overflow:hidden}
@@ -2252,6 +2316,8 @@ const { view } = Astro.params;
   <script is:inline src={`/js/dash-history.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-sync.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-profile.js?v=${_v}`}></script>
+  <script is:inline src={`/js/dash-skl.js?v=${_v}`}></script>
+  <script is:inline src={`/js/wilayah-data.js?v=${_v}`}></script>
   <script is:inline src={`/js/dash-init.js?v=${_v}`}></script>
 
 </BaseLayout>

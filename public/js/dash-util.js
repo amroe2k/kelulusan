@@ -1,6 +1,140 @@
 const $ = id => document.getElementById(id);
 let auth=null,allSiswa=[],allData=null,currentView='overview',importedRows=[];
 
+// ─── Searchable Select ────────────────────────────────────────────────────────
+// ssSetOptions(wrapId, itemsArray, selectedValue)  — use from JS to populate/select
+
+// Helper: hapus prefix "Kab. " untuk tampilan bersih
+function stripKab(str) {
+  return (str || '').replace(/^Kab\.\s*/i, '').trim();
+}
+
+function ssSetOptions(wrapId, items, selected) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const hiddenInput = wrap.querySelector('input[type="hidden"]');
+  const trigger = wrap.querySelector('.ss-trigger');
+  const label = wrap.querySelector('.ss-label');
+  const list = wrap.querySelector('.ss-list');
+  if (!list) return;
+
+  // Tentukan apakah ini dropdown kota (bukan provinsi)
+  const isKota = wrapId.toLowerCase().includes('kota') || wrapId.toLowerCase().includes('kabupaten');
+
+  // Normalisasi selected value (strip Kab. jika perlu)
+  const selectedClean = isKota ? stripKab(selected) : (selected || '');
+
+  // Build list items
+  list.innerHTML = '';
+  items.forEach(item => {
+    const displayText = isKota ? stripKab(item) : item;
+    const li = document.createElement('li');
+    li.textContent = displayText;
+    li.dataset.value = displayText;  // simpan nilai bersih
+    if (displayText === selectedClean) li.classList.add('ss-selected');
+    li.addEventListener('mousedown', e => {
+      e.preventDefault(); // prevent blur before click
+      ssSelectItem(wrap, displayText);
+    });
+    list.appendChild(li);
+  });
+
+  // Apply selected
+  if (selectedClean && items.some(i => (isKota ? stripKab(i) : i) === selectedClean)) {
+    if (hiddenInput) hiddenInput.value = selectedClean;
+    if (label) label.textContent = selectedClean;
+    if (trigger) trigger.dataset.selected = 'true';
+  } else {
+    const placeholder = wrapId.includes('provinsi') ? '— Pilih Provinsi —' : '— Pilih Kabupaten/Kota —';
+    if (hiddenInput) hiddenInput.value = '';
+    if (label) label.textContent = placeholder;
+    if (trigger) trigger.dataset.selected = 'false';
+  }
+}
+
+function ssSelectItem(wrap, value) {
+  const hiddenInput = wrap.querySelector('input[type="hidden"]');
+  const trigger = wrap.querySelector('.ss-trigger');
+  const label = wrap.querySelector('.ss-label');
+  const dropdown = wrap.querySelector('.ss-dropdown');
+  const chevron = wrap.querySelector('.ss-chevron');
+  if (hiddenInput) hiddenInput.value = value;
+  if (label) label.textContent = value;
+  if (trigger) trigger.dataset.selected = 'true';
+  // Highlight selected
+  wrap.querySelectorAll('.ss-list li').forEach(li => {
+    li.classList.toggle('ss-selected', li.dataset.value === value);
+  });
+  // Close
+  if (dropdown) dropdown.classList.add('hidden');
+  if (chevron) chevron.classList.remove('open');
+  // Trigger onChange callback
+  if (typeof wrap._ssOnChange === 'function') wrap._ssOnChange(value);
+}
+
+function ssFilterList(wrap, query) {
+  const items = wrap.querySelectorAll('.ss-list li');
+  const q = query.toLowerCase().trim();
+  let visible = 0;
+  items.forEach(li => {
+    const match = !q || li.textContent.toLowerCase().includes(q);
+    li.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  // Show empty message
+  let emptyLi = wrap.querySelector('.ss-list .ss-empty');
+  if (visible === 0) {
+    if (!emptyLi) {
+      emptyLi = document.createElement('li');
+      emptyLi.className = 'ss-empty';
+      emptyLi.textContent = 'Tidak ditemukan';
+      wrap.querySelector('.ss-list').appendChild(emptyLi);
+    }
+    emptyLi.style.display = '';
+  } else if (emptyLi) {
+    emptyLi.style.display = 'none';
+  }
+}
+
+function ssInitAll() {
+  document.querySelectorAll('.searchable-select').forEach(wrap => {
+    const trigger = wrap.querySelector('.ss-trigger');
+    const dropdown = wrap.querySelector('.ss-dropdown');
+    const searchInput = wrap.querySelector('.ss-search');
+    const chevron = wrap.querySelector('.ss-chevron');
+    if (!trigger || !dropdown) return;
+
+    trigger.addEventListener('click', () => {
+      const isOpen = !dropdown.classList.contains('hidden');
+      // Close all other dropdowns first
+      document.querySelectorAll('.searchable-select .ss-dropdown').forEach(d => {
+        d.classList.add('hidden');
+        d.closest('.searchable-select')?.querySelector('.ss-chevron')?.classList.remove('open');
+      });
+      if (!isOpen) {
+        dropdown.classList.remove('hidden');
+        if (chevron) chevron.classList.add('open');
+        if (searchInput) { searchInput.value = ''; ssFilterList(wrap, ''); searchInput.focus(); }
+      }
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => ssFilterList(wrap, searchInput.value));
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.searchable-select')) {
+      document.querySelectorAll('.searchable-select .ss-dropdown').forEach(d => {
+        d.classList.add('hidden');
+        d.closest('.searchable-select')?.querySelector('.ss-chevron')?.classList.remove('open');
+      });
+    }
+  }, true);
+}
+
+
 // ─── HTML Escape Helper ───────────────────────────────────────────────────
 function escHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -49,8 +183,8 @@ function showConfirm(title,msg,onConfirm){
   o.querySelector('#cc').onclick=()=>o.remove();
   o.querySelector('#co').onclick=()=>{o.remove();onConfirm();};
 }
-function modalOpen(id){const m=$(id);m.classList.remove('hidden');m.classList.add('flex');}
-function modalClose(id){const m=$(id);m.classList.add('hidden');m.classList.remove('flex');}
+function modalOpen(id){const m=$(id);if(!m)return;m.classList.remove('hidden');m.style.display='flex';}
+function modalClose(id){const m=$(id);if(!m)return;m.classList.add('hidden');m.classList.remove('flex');m.style.display='none';}
 
 // Eye icons
 const EYE_OPEN=`<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
@@ -227,45 +361,44 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   const maskNISN = n => n.slice(0,3)+'****'+n.slice(-3);
 
   const siswa = siswaData || { nama:'AHMAD FAUZAN MAULANA', nisn:'1234567890',
-    tempat_lahir:'Bandung', tanggal_lahir:'2007-05-15', kelas:'XII IPA 1', status:'LULUS',
-    kompetensi_keahlian: '' };
-  const nilai = nilaiData && nilaiData.length ? nilaiData : [
-    {mapel:'Pendidikan Agama dan Budi Pekerti',nilai:88},{mapel:'Pendidikan Pancasila dan Kewarganegaraan',nilai:84},
-    {mapel:'Bahasa Indonesia',nilai:86},{mapel:'Matematika',nilai:78},
-    {mapel:'Sejarah Indonesia',nilai:85},{mapel:'Bahasa Inggris',nilai:80},
-    {mapel:'Seni Budaya',nilai:87},{mapel:'Pendidikan Jasmani, Olahraga, dan Kesehatan',nilai:82},
-  ];
-  const rataRata = (nilai.reduce((s,n)=>s+n.nilai,0)/nilai.length).toFixed(1);
+    tempat_lahir:'Bandung', tanggal_lahir:'2007-05-15', kelas:'XII RPL 1', status:'LULUS',
+    jenis_kelamin: 'L',
+    kompetensi_keahlian: (meta.jenjang||'').toUpperCase()==='SMK' ? 'Rekayasa Perangkat Lunak' : '' };
+  const nilai = nilaiData && nilaiData.length ? nilaiData : [];
+  const rataRata = nilai.length ? (nilai.reduce((s,n)=>s+n.nilai,0)/nilai.length).toFixed(1) : '-';
 
-  // Nomor surat: statis atau auto counter per siswa
+  // Nomor surat
   const sklNum = String(Math.floor(Math.random()*900+100)).padStart(3,'0');
   const nomorSurat = (meta.nomor_surat_mode === 'static' && meta.nomor_surat_statis)
     ? meta.nomor_surat_statis
     : (meta.nomor_surat_suffix
         ? `${sklNum}${meta.nomor_surat_suffix}`
-        : `${sklNum}/${meta.npsn||'SKL'}/${now.getFullYear()}`);
+        : `400.3.11.1/${sklNum}`);
 
-  // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
   const kompetensi = (siswa.kompetensi_keahlian || '').trim();
-  const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
-  const kompetensiLabel = isSmk ? 'Kompetensi Keahlian' : 'Peminatan';
-  const kompetensiHeaderLine = kompetensi
-    ? `<p style="margin-top:3px; font-weight:700; color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>`
-    : '';
+  const jenjang = (meta.jenjang||'').toUpperCase();
+  const isSmk = jenjang === 'SMK';
+  const isSmaOrMa = ['SMA','MA'].includes(jenjang);
+  // Kompetensi row for SKL1
+  let kompetensiRow = '';
+  if (isSmk) {
+    kompetensiRow = `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${escHtml(kompetensi) || '-'}</td></tr>`;
+  } else if (isSmaOrMa && kompetensi) {
+    kompetensiRow = `<tr><td>Peminatan</td><td>:</td><td>${escHtml(kompetensi)}</td></tr>`;
+  }
+  const jenisKelaminDisplay = (siswa.jenis_kelamin||'L') === 'P' ? 'Perempuan' : 'Laki-laki';
+  const isLulus = (siswa.status || 'LULUS').toUpperCase() === 'LULUS';
 
-  // SKL label: SKL1 tanpa nilai, SKL2 dengan nilai
-  const sklTitle = isSklNilai ? 'SURAT KETERANGAN LULUS' : 'SURAT KETERANGAN LULUS';
+  const sklTitle = 'SURAT KETERANGAN LULUS';
   const tglPengumuman = isSklNilai
     ? (meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : fmt(now))
     : (meta.tanggal_pengumuman ? fmt(meta.tanggal_pengumuman) : fmt(now));
 
-  // Kop Surat: gunakan sebagai full-width header jika tersedia
   const kopSuratEnabled = (meta.kop_surat && localStorage.getItem('asset_kop_surat_enabled') !== '0');
   const kopSuratHtml = kopSuratEnabled
     ? `<img src="${meta.kop_surat}" crossorigin="anonymous" style="width:100%;max-height:130px;object-fit:contain;display:block;" />`
     : null;
 
-  // Bug #4 fix: add crossorigin="anonymous" to all img assets for CORS compatibility
   const logoHtml = (meta.logo && localStorage.getItem('asset_logo_enabled') !== '0')
     ? `<img src="${meta.logo}" crossorigin="anonymous" style="height:90px;width:90px;object-fit:contain;" />`
     : `<div style="width:90px;height:90px;border:2px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;background:#fafafa;">LOGO</div>`;
@@ -278,6 +411,13 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     ? `<img src="${meta.ttd}" crossorigin="anonymous" style="height:70px;margin:0 auto 4px auto;display:block;" />`
     : `<div style="height:70px;"></div>`;
 
+  // ── Kop Surat untuk Halaman 2 (print SKL2) ──
+  const _p2img = (meta.kop_surat && localStorage.getItem('asset_kop_surat_enabled') !== '0')
+    ? `<img src="${meta.kop_surat}" crossorigin="anonymous" style="width:100%;max-height:120px;object-fit:contain;display:block;" />`
+    : `${logoHtml}<div class="header-text"><h2>${meta.sekolah||'NAMA SEKOLAH'}</h2><p style="margin-top:4px;font-weight:600;">NPSN: ${meta.npsn||'-'} | NSS: ${meta.nss||'-'}</p><p>${meta.alamat||'-'}</p>${(meta.kota||meta.provinsi)?`<p style="margin-top:2px;font-weight:500;">Kab./Kota ${meta.kota||'-'}, Prov. ${meta.provinsi||'-'}</p>`:''}</div><div style="width:90px;height:90px;flex-shrink:0;"></div>`;
+  const page2KopHtml = `<div class="skl2-p2-kop">${_p2img}</div>`;
+
+  // ── Build nilai rows (flat list for SKL1, categorized for SKL2) ──
   const nilaiRows = nilai.map((n,i)=>`
     <tr style="border-bottom:1px solid #eee;">
       <td style="padding:8px 10px;text-align:center;color:#666;font-size:11px;">${i+1}</td>
@@ -285,74 +425,165 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
       <td style="padding:8px 10px;text-align:center;font-weight:700;color:#111;">${Math.round(n.nilai)}</td>
     </tr>`).join('');
 
-  // SKL1 (tanpa nilai) — simplified body
+  // ── Build categorized nilai table for SKL2 (Format Kemdikbud) ──
+  function buildNilaiTableKemdikbud(nilaiArr) {
+    if (!nilaiArr || !nilaiArr.length) {
+      return `<p style="font-size:13px;color:#666;font-style:italic;margin:10px 0 10px 20px;">Belum ada data nilai. Silakan import nilai melalui menu Data Kelulusan.</p>`;
+    }
+    let counter = 0;
+    const row = (mapel, val) => {
+      counter++;
+      const v = (val !== undefined && val !== null && val !== '') ? Math.round(val) : '';
+      return `<tr><td class="n-no">${counter}.</td><td class="n-mapel">${mapel}</td><td class="n-val">${v}</td></tr>`;
+    };
+    const catHeader = (label) => `<tr><td class="n-no"></td><td class="n-cat" colspan="2"><strong>${label}</strong></td></tr>`;
+    // Lookup: cari mapel di data nilai (case-insensitive partial match)
+    const find = (keyword) => {
+      const kw = keyword.toLowerCase();
+      const found = nilaiArr.find(n => n.mapel.toLowerCase().includes(kw));
+      return found ? found.nilai : '';
+    };
+    const findExact = (keywords) => {
+      for (const kw of keywords) {
+        const k = kw.toLowerCase();
+        const found = nilaiArr.find(n => n.mapel.toLowerCase().includes(k));
+        if (found) return found.nilai;
+      }
+      return '';
+    };
+
+    let rows = '';
+    if (isSmk) {
+      // ── FORMAT SMK ──
+      rows += catHeader('Mata Pelajaran Umum');
+      rows += row('Pendidikan Agama dan Budi Pekerti', findExact(['agama','budi pekerti']));
+      rows += row('Pendidikan Pancasila', findExact(['pancasila','pkn','kewarganegaraan']));
+      rows += row('Bahasa Indonesia', find('bahasa indonesia'));
+      rows += row('Pendidikan Jasmani, Olahraga dan Kesehatan', findExact(['jasmani','olahraga','penjas','pjok']));
+      rows += row('Sejarah', find('sejarah'));
+      rows += row('Seni dan Budaya', findExact(['seni','budaya']));
+      rows += catHeader('Mata Pelajaran Kejuruan');
+      rows += row('Matematika', find('matematika'));
+      rows += row('Bahasa Inggris', find('bahasa inggris'));
+      rows += row('Informatika', find('informatika'));
+      rows += row('Projek Ilmu Pengetahuan Alam dan Sosial', findExact(['projek ilmu','ipas','p5']));
+      rows += row('Dasar-dasar Program Keahlian', findExact(['dasar-dasar','dasar program']));
+      rows += row('Konsentrasi Keahlian', findExact(['konsentrasi keahlian']));
+      rows += row('Projek Kreativitas, Inovasi dan Kewirausahaan', findExact(['kreativitas','kewirausahaan','projek kreativitas','pkwu']));
+      rows += row('Praktik Kerja Lapangan', findExact(['praktik kerja','pkl']));
+    } else {
+      rows += catHeader('Mata Pelajaran Wajib');
+      rows += row('Pendidikan Agama ... Dan Budi Pekerti', findExact(['agama','budi pekerti']));
+      rows += row('Pendidikan Pancasila', findExact(['pancasila','pkn','kewarganegaraan']));
+      rows += row('Bahasa Indonesia', find('bahasa indonesia'));
+      rows += row('Matematika', find('matematika'));
+      rows += row('Ilmu Pengetahuan Alam: Fisika, Kimia, Biologi', findExact(['ipa','fisika','kimia','biologi','ilmu pengetahuan alam']));
+      rows += row('Ilmu Pengetahuan Sosial: Sosiologi, Ekonomi, Sejarah, Geografi', findExact(['ips','sosiologi','ekonomi','geografi','ilmu pengetahuan sosial']));
+      rows += row('Bahasa Inggris', find('bahasa inggris'));
+      rows += row('Pendidikan Jasmani Olahraga dan Kesehatan', findExact(['jasmani','olahraga','penjas','pjok']));
+      rows += row('Informatika', find('informatika'));
+      rows += row('Sejarah', find('sejarah'));
+      rows += row('Seni, Budaya dan Prakarya', findExact(['seni','budaya','prakarya']));
+      // Mata Pelajaran Pilihan — ambil dari data yang belum terpakai
+      const smaUsed = ['agama','budi pekerti','pancasila','pkn','kewarganegaraan','bahasa indonesia','matematika','ipa','fisika','kimia','biologi','ilmu pengetahuan alam','ips','sosiologi','ekonomi','geografi','ilmu pengetahuan sosial','bahasa inggris','jasmani','olahraga','penjas','pjok','informatika','sejarah','seni','budaya','prakarya'];
+      const smaPilihan = nilaiArr.filter(n => !smaUsed.some(kw => n.mapel.toLowerCase().includes(kw)));
+      rows += catHeader('Mata Pelajaran Pilihan');
+      if (smaPilihan.length) {
+        smaPilihan.forEach(p => { rows += row(p.mapel, p.nilai); });
+        // pad remaining slots up to 5
+        const remaining = 5 - smaPilihan.length;
+        for (let i = 0; i < remaining; i++) rows += row('Ditulis 4 atau 5 mapel pilihan', '');
+      } else {
+        for (let i = 0; i < 5; i++) rows += row('Ditulis 4 atau 5 mapel pilihan', '');
+      }
+      rows += catHeader('Muatan Lokal');
+      rows += row('-', '');
+    }
+    // Hanya untuk SMK: ambil sisa mapel (SMA sudah handle Pilihan di blok atas)
+    if (isSmk) {
+      const usedKeywords = ['agama','budi pekerti','pancasila','pkn','kewarganegaraan','bahasa indonesia','jasmani','olahraga','penjas','pjok','sejarah','seni','budaya','matematika','bahasa inggris','informatika','projek ilmu','ipas','p5','dasar-dasar','dasar program','konsentrasi keahlian','kreativitas','kewirausahaan','projek kreativitas','pkwu','praktik kerja','pkl'];
+      const pilihan = nilaiArr.filter(n => {
+        const ml = n.mapel.toLowerCase();
+        return !usedKeywords.some(kw => ml.includes(kw));
+      });
+      rows += catHeader('Mata Pelajaran Pilihan');
+      if (pilihan.length) {
+        pilihan.forEach(p => { rows += row(p.mapel, p.nilai); });
+      } else {
+        rows += row('-', '');
+      }
+      rows += catHeader('Muatan Lokal');
+      rows += row('-', '');
+    }
+    // Rata-rata
+    rows += `<tr class="n-avg"><td class="n-no"></td><td class="n-mapel" style="text-align:center;"><strong><em>Rata-rata</em></strong></td><td class="n-val"><strong>${rataRata}</strong></td></tr>`;
+    return `<table class="nilai-kemdikbud"><thead><tr><th style="width:40px;">No.</th><th>Mata Pelajaran</th><th style="width:80px;">Nilai</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // Override catHeader untuk SMA agar beri class khusus
+  // (fungsi di atas sudah benar, tidak perlu override)
+
+  // ── SKL Body ──
+  const _kotaRaw = (meta.kota || '').trim();
+  const kotaLabel = _kotaRaw
+    ? (_kotaRaw.startsWith('Kab. ') ? 'Kabupaten ' + _kotaRaw.slice(5) : 'Kota ' + _kotaRaw)
+    : 'Kota/Kabupaten*) ........';
   const sklBody = isSklNilai ? `
-    <p class="intro-text">Kepala <strong>${meta.sekolah||'Sekolah'}</strong> menerangkan bahwa berdasarkan hasil Rapat Pleno Dewan Guru tentang Penetapan Kelulusan Peserta Didik, dinyatakan bahwa:</p>
+    <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
     <table class="student-data">
-      <tr><td>Nama Lengkap</td><td>:</td><td>${siswa.nama}</td></tr>
-      <tr><td>NISN</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+      <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
+      <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
+      <tr><td>Nama Lengkap</td><td>:</td><td><strong>${siswa.nama}</strong></td></tr>
       <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
-      <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-      ${kompetensi ? `<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>` : ''}
-      <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
+      <tr><td>Nomor Induk Siswa Nasional</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+      <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
+      <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
+      <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
+      ${isSmk ? `<tr><td>Program Keahlian</td><td>:</td><td>${escHtml(kompetensi)||'-'}</td></tr>
+      <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(siswa.konsentrasi_keahlian||kompetensi)||'-'}</td></tr>` : ''}
     </table>
-    <p class="intro-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari satuan pendidikan dengan rincian nilai sebagai berikut:</p>
+    <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
+    <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${jenjang||''} ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
     <div class="scores-container">
-      <table class="scores-table">
-        <thead><tr>
-          <th style="width:50px; text-align:center;">No</th>
-          <th>Mata Pelajaran</th>
-          <th style="width:100px; text-align:center;">Nilai</th>
-        </tr></thead>
-        <tbody>
-          ${nilaiRows}
-          <tr class="avg-row">
-            <td colspan="2" style="text-align:right; padding-right:20px;">RATA-RATA NILAI</td>
-            <td style="text-align:center; color:#0f172a;">${rataRata}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="result-status">
-      <span class="badge ${siswa.status==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span>
+      ${buildNilaiTableKemdikbud(nilai)}
     </div>
   ` : `
-    <p class="intro-text">Kepala <strong>${meta.sekolah||'Sekolah'}</strong> menerangkan bahwa berdasarkan hasil Rapat Pleno Dewan Guru tentang Penetapan Kelulusan Peserta Didik, dinyatakan bahwa:</p>
+    <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'Sumatera Utara'} menerangkan bahwa:</p>
     <table class="student-data">
-      <tr><td>Nama Lengkap</td><td>:</td><td>${siswa.nama}</td></tr>
-      <tr><td>NISN</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+      <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
+      <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
+      <tr><td>Nama Lengkap</td><td>:</td><td><strong>${siswa.nama}</strong></td></tr>
+      <tr><td>Jenis Kelamin</td><td>:</td><td>${(siswa.jenis_kelamin||'L')==='P'?'Perempuan':'Laki-laki'}</td></tr>
       <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
-      <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-      ${kompetensi ? `<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>` : ''}
-      <tr><td>Tahun Pelajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
+      <tr><td>Nomor Induk Siswa Nasional</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+      <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
+      <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
+      <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
+      ${isSmk ? `<tr><td>Program Keahlian</td><td>:</td><td>${escHtml(kompetensi)||'-'}</td></tr>
+      <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(siswa.konsentrasi_keahlian||kompetensi)||'-'}</td></tr>` : ''}
     </table>
-    <div class="result-status" style="margin:30px 0 20px;">
-      <span class="badge ${siswa.status==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span>
-    </div>
-    <p class="intro-text" style="text-align:center;">Yang bersangkutan dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari satuan pendidikan ${meta.sekolah||''}.<br><em style="font-size:10px;color:#64748b;">Rincian nilai akan tercantum dalam SKL resmi yang diterbitkan pada tanggal ${meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : '...'}</em></p>
-    <p class="intro-text" style="margin-top:20px;">Surat Keterangan ini dibuat untuk dipergunakan sebagaimana mestinya dan hanya berlaku sampai diterbitkan Ijazah Asli tahun ajaran ${meta.tahun_ajaran||'-'}</p>
+    <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
+    <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}.</p>
   `;
 
-  const kota = meta.kota || (meta.alamat ? (meta.alamat.split(',')[1] || meta.alamat.split(',')[0]).trim() : '........');
+  const kota = _kotaRaw || '........';
 
   return `<!DOCTYPE html>
 <html lang="id"><head><meta charset="UTF-8">
 <title>SKL-${siswa.nama.replace(/\s+/g,'_')}-${siswa.nisn || '0000000000'}</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;700&display=swap');
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body {
-    overflow: hidden; /* Mencegah scrollbar redundan di dalam iframe */
-  }
+  html { overflow-y: auto; }
   body { 
-    font-family:'Inter', sans-serif; 
+    font-family:'Inter', Arial, sans-serif; 
     background:#f1f5f9; 
     color:#1e293b; 
-    width: 794px; 
-    min-height: 1123px; 
+    min-height: 1247px; 
     padding:20px;
     display:flex;
     justify-content:center;
+    overflow-x: hidden;
   }
   .page {
     background:#fff;
@@ -365,14 +596,20 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size: A4; margin: 0 0 0 15mm; }
-    body { padding: 0; background: #fff; width: 210mm; min-height: 297mm; display:block; overflow:visible; }
-    .page { box-shadow: none; border: none; padding: ${isSklNilai ? '16px 36px 20px 56px' : '20px 40px 60px 60px'}; min-height: 297mm; display: block; position: static; overflow: visible; }
+    @page { size: 210mm 297mm; margin: 8mm 10mm 8mm 18mm; }
+    body { padding: 0; background: #fff; width: 210mm; min-height: auto; display:block; overflow:visible; }
+    .page { box-shadow: none; border: none; padding: 0; min-height: 0; display: block; position: static; overflow: visible; }
     .dummy-badge { display: none !important; }
-    ${!isSklNilai ? '.page-break-section { page-break-before: always; padding-top: 20px; }' : ''}
-    ${!isSklNilai ? '.page2-header { display: flex !important; }' : ''}
-    ${!isSklNilai ? '.page2-footer { display: block !important; position: static; margin-top: 20px; }' : ''}
-    .footer-note { position: fixed; bottom: 8px; left: 56px; right: 36px; margin: 0; padding: 6px 0 0; border-top: 1px solid #e2e8f0; background: transparent; font-size:10px; }
+    ${isSklNilai ? `
+    .skl2-sig-page { page-break-before: always; border: none !important; margin: 0 !important; padding: 0 !important; }
+    .skl2-p2-kop { display: flex !important; align-items: center; gap: 15px; border-bottom: 5px double #0f172a; padding-bottom: 8px; margin-bottom: 20px; }
+    .footer-note { display: none; }
+    ` : `
+    .page-break-section { page-break-before: always; padding-top: 20px; }
+    .page2-header { display: flex !important; }
+    .page2-footer { display: block !important; position: static; margin-top: 20px; }
+    .footer-note { position: fixed; bottom: 8px; left: 10mm; right: 10mm; margin: 0; padding: 6px 0 0; border-top: 1px solid #e2e8f0; background: transparent; font-size:10px; }
+    `}
   }
   /* Watermark background logo */
   .watermark {
@@ -412,15 +649,25 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   
   .student-data { border-collapse:collapse; width:${isSklNilai ? 'calc(100% - 40px)' : 'calc(100% - 40px)'}; margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.3' : '1.4'}; position: relative; z-index: 1; }
   .student-data td { padding:${isSklNilai ? '1px 0' : '3px 0'}; vertical-align:top; }
-  .student-data td:first-child { width:${isSklNilai ? '155px' : '165px'}; color:#64748b; font-weight:500; }
+  .student-data td:first-child { width:${isSklNilai ? '205px' : '165px'}; color:#64748b; font-weight:500; white-space:nowrap; }
   .student-data td:nth-child(2) { width:20px; text-align:center; color:#94a3b8; }
   .student-data td:last-child { font-weight:700; color:#0f172a; }
   
-  .scores-container { margin:${isSklNilai ? '6px 0 6px 40px' : '10px 0'}; width:${isSklNilai ? 'calc(100% - 40px)' : '100%'}; position: relative; z-index: 1; }
+  .scores-container { margin:${isSklNilai ? '6px 0' : '10px 0'}; width:100%; position: relative; z-index: 1; }
   .scores-table { border-collapse:collapse; width:100%; font-size:${isSklNilai ? '12px' : '13px'}; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
   .scores-table th { background:#f8fafc; color:#64748b; font-weight:700; text-transform:uppercase; font-size:${isSklNilai ? '10px' : '11px'}; letter-spacing:1px; padding:${isSklNilai ? '5px 8px' : '8px 10px'}; border-bottom:2px solid #e2e8f0; text-align:left; }
   .scores-table td { padding:${isSklNilai ? '3px 8px' : '5px 10px'}; border-bottom:1px solid #f1f5f9; }
   .scores-table .avg-row { background:#f8fafc; font-weight:800; font-size:${isSklNilai ? '13px' : '14px'}; }
+  
+  /* Tabel Nilai format Kemdikbud (SKL2) */
+  .nilai-kemdikbud { border-collapse:collapse; width:100%; font-size:12px; font-family:Arial,sans-serif; }
+  .nilai-kemdikbud th { border:1px solid #333; padding:5px 8px; background:#f0f0f0; font-weight:700; text-align:center; font-size:12px; }
+  .nilai-kemdikbud td { border:1px solid #333; padding:3px 6px; vertical-align:top; }
+  .nilai-kemdikbud .n-no { width:35px; text-align:center; font-size:11px; }
+  .nilai-kemdikbud .n-mapel { font-size:12px; }
+  .nilai-kemdikbud .n-val { width:70px; text-align:center; font-weight:700; font-size:12px; }
+  .nilai-kemdikbud .n-cat { border-left:none; font-size:12px; font-weight:700; padding:4px 6px; background:#fafafa; }
+  .nilai-kemdikbud .n-avg td { border-top:2px solid #333; font-size:13px; }
   
   .result-status { text-align:center; margin:${isSklNilai ? '8px 0' : '10px 0'}; position: relative; z-index: 1; }
   .badge { 
@@ -458,6 +705,9 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     font-style: italic;
     z-index: 1;
   }
+  /* SKL2: halaman kedua (TTD) */
+  .skl2-sig-page { margin-top:20px; border-top:2px dashed #cbd5e1; padding-top:16px; position:relative; z-index:1; }
+  .skl2-p2-kop { display:none; margin-bottom:20px; }
   .page2-footer { display: none; }
   /* Page 2: Kop Surat header & page-break */
   .page-break-section {
@@ -482,10 +732,10 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
         : `${logoHtml}
       <div class="header-text">
         <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
-        <p style="margin-top:4px; font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
+        <p style="margin-top:4px; font-weight:600;">NPSN: ${meta.npsn||'-'} | NSS: ${meta.nss||'-'}</p>
         <p>${meta.alamat||'-'}</p>
+        ${(meta.kota||meta.provinsi) ? `<p style="margin-top:2px;font-weight:500;">Kab./Kota ${meta.kota||'-'}, Prov. ${meta.provinsi||'-'}</p>` : ''}
         <p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>
-        ${kompetensiHeaderLine}
       </div>
       <div style="width:90px;height:90px;flex-shrink:0;"></div>`
       }
@@ -499,25 +749,30 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     
     ${sklBody}
     
-    <div class="signature-area" style="${isSklNilai ? 'display:block;' : ''}" id="signature-section">
-      ${isSklNilai ? `
-      <!-- Bug #3 fix: display:none is already in CSS class — inline override would block @media print -->
-      <div class="page2-header">
-        ${ kopSuratHtml
-          ? kopSuratHtml
-          : `${logoHtml}
-        <div class="header-text">
-          <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
-          <p style="margin-top:4px; font-weight:600;">NSS: ${meta.nss||'-'} | NPSN: ${meta.npsn||'-'}</p>
-          <p>${meta.alamat||'-'}</p>
-          ${(meta.telepon||meta.email)?`<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>`:''}
-          ${kompetensiHeaderLine}
+    ${isSklNilai ? `
+    <div class="skl2-sig-page" id="signature-section">
+      ${page2KopHtml}
+      <p class="intro-text" style="margin:14px 0 10px;font-size:12px;">Surat Keterangan Lulus ini berlaku sementara sampai dengan diterbitkannya Ijazah Tahun Ajaran ${meta.tahun_ajaran||'-'}, untuk menjadikan maklum bagi yang berkepentingan.</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;">
+        <div style="display:flex;align-items:flex-end;gap:12px;margin-top:30px;">
+          <div style="width:90px;height:120px;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;font-family:'Times New Roman',serif;">Foto 3x4</div>
         </div>
-        <div style="width:90px;height:90px;flex-shrink:0;"></div>`
-        }
+        <div class="signature-box">
+          ${stempelHtml}
+          <p class="date" style="font-size:13px;">${kota}, ${tglPengumuman}</p>
+          <p class="role" style="font-size:13px;">Kepala ${jenjang||'Sekolah'} ${meta.sekolah ? meta.sekolah.replace(/^(SMK|SMA|MA|SMP|MTS)\s*/i,'').trim().substring(0,25) : '...'}</p>
+          <div style="margin:10px 0;">${ttdHtml}</div>
+          <p class="name">${meta.kepala_sekolah||'Kepala Sekolah'}</p>
+          ${meta.jabatan_kepsek ? `<p class="nip" style="margin-top:2px;font-weight:600;color:#475569;">${meta.jabatan_kepsek}</p>` : ''}
+          ${meta.id_kepsek_mode === 'nuptk'
+            ? (meta.nuptk_kepsek ? `<p class="nip">NUPTK. ${meta.nuptk_kepsek}</p>` : '')
+            : (meta.nip_kepsek   ? `<p class="nip">NIP. ${meta.nip_kepsek}</p>`      : '')}
+        </div>
       </div>
-      <p class="intro-text" style="margin:20px 0;">Surat Keterangan ini dibuat untuk dipergunakan sebagaimana mestinya dan hanya berlaku sampai diterbitkan Ijazah Asli tahun ajaran ${meta.tahun_ajaran||'-'}</p>
-      ` : ''}
+      <p style="font-size:10px;color:#666;margin-top:14px;font-family:'Times New Roman',serif;">Keterangan:<br>*) Pilih Salah Satu</p>
+    </div>
+    ` : `
+    <div class="signature-area" id="signature-section">
       <div style="display:flex;justify-content:flex-end;width:100%;">
         <div class="signature-box">
           ${stempelHtml}
@@ -532,8 +787,9 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
         </div>
       </div>
     </div>
+    `}
     
-    <p class="footer-note">Dokumen ini diterbitkan secara elektronik dan sah sebagai bukti kelulusan sementara sebelum ijazah asli diterbitkan. Keaslian dokumen dapat dikonfirmasi melalui portal resmi sekolah.</p>
+    ${!isSklNilai ? `<p class="footer-note">Dokumen ini diterbitkan secara elektronik dan sah sebagai bukti kelulusan sementara sebelum ijazah asli diterbitkan. Keaslian dokumen dapat dikonfirmasi melalui portal resmi sekolah.</p>` : ''}
   </div>
 </body></html>`;
 }

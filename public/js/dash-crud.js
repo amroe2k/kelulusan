@@ -82,8 +82,12 @@ async function exportXlsx(){
   const mapelCols=[...mapelSet].sort();
 
   const XLSXS=window.XLSX;
+  const jenjang=((allData?._meta?.jenjang)||'').toUpperCase();
+  const isSmkExport=jenjang==='SMK';
+  const isSmaExport=['SMA','MA'].includes(jenjang);
+  const kompetensiHeader=isSmkExport?'Kompetensi Keahlian':isSmaExport?'Peminatan':'Kompetensi Keahlian';
   // kompetensi_keahlian ditambahkan setelah kelas (opsional, bisa kosong)
-  const headers=['No','NISN','Nama','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Kelas','Kompetensi Keahlian','Status',...mapelCols,'Rata-Rata'];
+  const headers=['No','NISN','Nama','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Kelas',kompetensiHeader,'Status',...mapelCols,'Rata-Rata'];
   const rows=list.map((s,i)=>{
     const vals=mapelCols.map(m=>nilaiMap[s.id]?.[m]??'');
     return [i+1,s.nisn,s.nama,s.jenis_kelamin==='L'?'Laki-laki':'Perempuan',s.tempat_lahir,s.tanggal_lahir,s.kelas,s.kompetensi_keahlian||'',s.status,...vals,parseFloat(s.rata_rata||0).toFixed(2)];
@@ -134,7 +138,9 @@ async function exportXlsx(){
 
   const wb=XLSXS.utils.book_new();
   XLSXS.utils.book_append_sheet(wb,ws,'Data Siswa');
-  XLSXS.writeFile(wb,`data-siswa-${new Date().toISOString().slice(0,10)}.xlsx`);
+  const dateNow = new Date();
+  const dateStr = `${dateNow.getFullYear()}-${String(dateNow.getMonth() + 1).padStart(2, '0')}-${String(dateNow.getDate()).padStart(2, '0')}`;
+  XLSXS.writeFile(wb,`data-siswa-${dateStr}.xlsx`);
   showToast('Export XLSX berhasil!','success');
 }
 
@@ -142,7 +148,7 @@ async function exportXlsx(){
 function initImport(){
   // BASE_COLS: kolom yang bukan nilai mata pelajaran
   // kompetensi_keahlian ditambahkan agar tidak dianggap mapel
-  const BASE_COLS_SET=new Set(['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','kompetensi keahlian','status','no','rata-rata','rata_rata']);
+  const BASE_COLS_SET=new Set(['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','no','rata-rata','rata_rata']);
   importedRows=[];
 
   // ─── Drag & Drop Zone ───
@@ -252,8 +258,18 @@ function initImport(){
     }
     if(!importedRows.length) return;
     const rows = importedRows.map(row => {
-      // Baca jurusan atau kompetensi_keahlian dari file
-      let jurusanVal = String(row.jurusan || row.kompetensi_keahlian || row['kompetensi keahlian'] || '').trim();
+      // Baca kompetensi/peminatan dari berbagai nama kolom yang mungkin
+      let jurusanVal = String(
+        row.jurusan ||
+        row.kompetensi_keahlian ||
+        row['kompetensi keahlian'] ||
+        row['kompetensi_keahlian_(wajib-smk)'] ||
+        row.peminatan ||
+        row['peminatan_(opsional-sma)'] ||
+        row.jurusan_peminatan ||
+        row['jurusan_peminatan_(opsional)'] ||
+        ''
+      ).trim();
 
       const siswa = {
         nisn:String(row.nisn||'').trim(),
@@ -265,13 +281,18 @@ function initImport(){
         kompetensi_keahlian: jurusanVal || null,
       };
       const tgl = row.tanggal_lahir;
-      if(tgl instanceof Date) siswa.tanggal_lahir = tgl.toISOString().slice(0,10);
+      if(tgl instanceof Date) {
+        const y = tgl.getFullYear();
+        const m = String(tgl.getMonth() + 1).padStart(2, '0');
+        const d = String(tgl.getDate()).padStart(2, '0');
+        siswa.tanggal_lahir = `${y}-${m}-${d}`;
+      }
       else if(tgl) siswa.tanggal_lahir = String(tgl).slice(0,10);
       else siswa.tanggal_lahir = null;
       
       // Extract nilai: use __keyMap to recover original (proper-cased) column names
       const keyMap = row.__keyMap || {};
-      const BASE_SKIP = new Set(['no','nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','jurusan','kompetensi_keahlian','kompetensi keahlian','status','rata-rata','rata_rata','__keymap']);
+      const BASE_SKIP = new Set(['no','nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','jurusan','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','rata-rata','rata_rata','__keymap']);
       const nilai = [];
       Object.keys(row).forEach((nk, i) => {
         const lowerKey = nk.toLowerCase();
@@ -313,29 +334,160 @@ function initImport(){
 
 function downloadTemplate(){
   const XLSXS=window.XLSX;
-  // kompetensi_keahlian ditambahkan sebagai kolom opsional (kolom ke-8)
-  // Untuk SMK/SMA: isi dengan nama program keahlian masing-masing siswa
-  // Untuk SMP/MTs/MA: boleh dikosongkan
-  const headers=['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','status','Matematika','Bahasa Indonesia','Bahasa Inggris'];
-  const example=['0012345678','Ahmad Fauzi','L','Jakarta','2006-05-15','XII RPL 1','Rekayasa Perangkat Lunak','LULUS',85,78,82];
-  const ws=XLSXS.utils.aoa_to_sheet([headers,example]);
-  const hStyle={font:{bold:true,color:{rgb:'FFFFFF'},sz:11},fill:{fgColor:{rgb:'4F46E5'}},alignment:{horizontal:'center'}};
-  headers.forEach((_,i)=>{const c=XLSXS.utils.encode_cell({r:0,c:i});if(ws[c])ws[c].s=hStyle;});
-  // Style example row
-  headers.forEach((_,i)=>{
-    const c=XLSXS.utils.encode_cell({r:1,c:i});
-    if(ws[c])ws[c].s={fill:{fgColor:{rgb:'FFFFFF'}},font:{color:{rgb:'1E293B'},sz:10},alignment:{horizontal:i<8?'left':'center'},border:{top:{style:'thin',color:{rgb:'E2E8F0'}},bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}};
-  });
-  // Note row: kompetensi_keahlian adalah opsional
-  const note=[['⚠️ Catatan:','','','','','','Kompetensi Keahlian opsional (SMK/SMA). Kosongkan jika tidak digunakan.','','','','']];
-  XLSXS.utils.sheet_add_aoa(ws,note,{origin:'A3'});
-  const noteCell=XLSXS.utils.encode_cell({r:2,c:0});
-  if(ws[noteCell])ws[noteCell].s={font:{bold:true,color:{rgb:'DC2626'},sz:9}};
-  const noteCell2=XLSXS.utils.encode_cell({r:2,c:6});
-  if(ws[noteCell2])ws[noteCell2].s={font:{italic:true,color:{rgb:'6B7280'},sz:9}};
+  const jenjang=((allData?._meta?.jenjang)||'').toUpperCase();
+  const isSmk=jenjang==='SMK';
 
-  ws['!cols']=headers.map((_,i)=>({wch:i===1?22:i===6?28:i<8?16:14}));
-  const wb=XLSXS.utils.book_new(); XLSXS.utils.book_append_sheet(wb,ws,'Template');
-  XLSXS.writeFile(wb,'template-import-siswa.xlsx');
-  showToast('Template didownload!','success');
+  // ── Daftar mapel sesuai template SKL Kemdikbud ──────────────────────────────
+  const mapelSma=[
+    // Wajib
+    'Pendidikan Agama dan Budi Pekerti',
+    'Pendidikan Pancasila',
+    'Bahasa Indonesia',
+    'Matematika',
+    'Ilmu Pengetahuan Alam',
+    'Ilmu Pengetahuan Sosial',
+    'Bahasa Inggris',
+    'Pendidikan Jasmani Olahraga dan Kesehatan',
+    'Informatika',
+    'Sejarah',
+    'Seni Budaya dan Prakarya',
+    // Pilihan (5 slot)
+    'Mapel Pilihan 1',
+    'Mapel Pilihan 2',
+    'Mapel Pilihan 3',
+    'Mapel Pilihan 4',
+    'Mapel Pilihan 5',
+    // Muatan Lokal
+    'Muatan Lokal',
+  ];
+
+  const mapelSmk=[
+    // Umum
+    'Pendidikan Agama dan Budi Pekerti',
+    'Pendidikan Pancasila',
+    'Bahasa Indonesia',
+    'Pendidikan Jasmani Olahraga dan Kesehatan',
+    'Sejarah',
+    'Seni dan Budaya',
+    // Kejuruan
+    'Matematika',
+    'Bahasa Inggris',
+    'Informatika',
+    'Projek Ilmu Pengetahuan Alam dan Sosial',
+    'Dasar-dasar Program Keahlian',
+    'Konsentrasi Keahlian',
+    'Projek Kreativitas Inovasi dan Kewirausahaan',
+    'Praktik Kerja Lapangan',
+    // Pilihan (3 slot)
+    'Mapel Pilihan 1',
+    'Mapel Pilihan 2',
+    'Mapel Pilihan 3',
+    // Muatan Lokal
+    'Muatan Lokal',
+  ];
+
+  const mapelList = isSmk ? mapelSmk : mapelSma;
+  const kompetensiLabel = isSmk ? 'kompetensi_keahlian' : 'peminatan';
+  const kompetensiExample = isSmk ? 'Rekayasa Perangkat Lunak' : 'IPA';
+
+  // ── Header & contoh data ────────────────────────────────────────────────────
+  const headers = [
+    'nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir',
+    'kelas', kompetensiLabel, 'status',
+    ...mapelList
+  ];
+  const example = [
+    '0012345678','Ahmad Fauzi','L','Jakarta','2006-05-15',
+    isSmk ? 'XII RPL 1' : 'XII IPA 1', kompetensiExample, 'LULUS',
+    ...mapelList.map((_,i) => i < (isSmk ? 14 : 11) ? 80 : '')
+  ];
+
+  // ── Build worksheet ─────────────────────────────────────────────────────────
+  const ws = XLSXS.utils.aoa_to_sheet([headers, example]);
+  const hStyle = {
+    font:{bold:true,color:{rgb:'FFFFFF'},sz:10},
+    fill:{fgColor:{rgb:'4F46E5'}},
+    alignment:{horizontal:'center',vertical:'center',wrapText:true}
+  };
+  const exStyle = {
+    fill:{fgColor:{rgb:'F8FAFC'}},
+    font:{color:{rgb:'1E293B'},sz:10},
+    border:{top:{style:'thin',color:{rgb:'E2E8F0'}},bottom:{style:'thin',color:{rgb:'E2E8F0'}},left:{style:'thin',color:{rgb:'E2E8F0'}},right:{style:'thin',color:{rgb:'E2E8F0'}}}
+  };
+  headers.forEach((_,i)=>{
+    const ch=XLSXS.utils.encode_cell({r:0,c:i});
+    if(ws[ch])ws[ch].s=hStyle;
+    const ce=XLSXS.utils.encode_cell({r:1,c:i});
+    if(ws[ce])ws[ce].s={...exStyle,alignment:{horizontal:i<8?'left':'center'}};
+  });
+
+  // Catatan
+  const noteText = isSmk
+    ? '⚠️ Kolom kompetensi_keahlian WAJIB diisi untuk SMK. Isi nilai mapel yang relevan, kosongkan slot Mapel Pilihan jika tidak ada.'
+    : '⚠️ Kolom peminatan opsional untuk SMA/MA. Isi nilai mapel yang relevan, kosongkan slot Mapel Pilihan yang tidak digunakan.';
+  XLSXS.utils.sheet_add_aoa(ws,[[noteText]], {origin:'A3'});
+  const nc=XLSXS.utils.encode_cell({r:2,c:0});
+  if(ws[nc])ws[nc].s={font:{bold:true,italic:true,color:{rgb:'DC2626'},sz:9}};
+  ws['!merges']=[{s:{r:2,c:0},e:{r:2,c:headers.length-1}}];
+
+  // Lebar kolom
+  ws['!cols']=[
+    {wch:14},{wch:24},{wch:14},{wch:16},{wch:14},{wch:14},{wch:32},{wch:10},
+    ...mapelList.map(()=>({wch:30}))
+  ];
+  ws['!rows']=[{hpt:30},{hpt:18},{hpt:36}];
+
+  // ── Sheet Panduan Mapel ─────────────────────────────────────────────────────
+  const panduanData = [
+    ['Sub-Kategori','Nama Kolom (Mapel)','Keterangan'],
+    ...(isSmk ? [
+      ['Mapel Umum','Pendidikan Agama dan Budi Pekerti','Wajib diisi'],
+      ['Mapel Umum','Pendidikan Pancasila','Wajib diisi'],
+      ['Mapel Umum','Bahasa Indonesia','Wajib diisi'],
+      ['Mapel Umum','Pendidikan Jasmani Olahraga dan Kesehatan','Wajib diisi'],
+      ['Mapel Umum','Sejarah','Wajib diisi'],
+      ['Mapel Umum','Seni dan Budaya','Wajib diisi'],
+      ['Mapel Kejuruan','Matematika','Wajib diisi'],
+      ['Mapel Kejuruan','Bahasa Inggris','Wajib diisi'],
+      ['Mapel Kejuruan','Informatika','Wajib diisi'],
+      ['Mapel Kejuruan','Projek Ilmu Pengetahuan Alam dan Sosial','Wajib diisi'],
+      ['Mapel Kejuruan','Dasar-dasar Program Keahlian','Wajib diisi'],
+      ['Mapel Kejuruan','Konsentrasi Keahlian','Wajib diisi'],
+      ['Mapel Kejuruan','Projek Kreativitas Inovasi dan Kewirausahaan','Wajib diisi'],
+      ['Mapel Kejuruan','Praktik Kerja Lapangan','Wajib diisi'],
+      ['Mapel Pilihan','Mapel Pilihan 1','Opsional — ganti nama sesuai mapel'],
+      ['Mapel Pilihan','Mapel Pilihan 2','Opsional — kosongkan nilai jika tidak ada'],
+      ['Mapel Pilihan','Mapel Pilihan 3','Opsional — kosongkan nilai jika tidak ada'],
+      ['Muatan Lokal','Muatan Lokal','Opsional'],
+    ] : [
+      ['Mapel Wajib','Pendidikan Agama dan Budi Pekerti','Wajib diisi'],
+      ['Mapel Wajib','Pendidikan Pancasila','Wajib diisi'],
+      ['Mapel Wajib','Bahasa Indonesia','Wajib diisi'],
+      ['Mapel Wajib','Matematika','Wajib diisi'],
+      ['Mapel Wajib','Ilmu Pengetahuan Alam','Wajib diisi'],
+      ['Mapel Wajib','Ilmu Pengetahuan Sosial','Wajib diisi'],
+      ['Mapel Wajib','Bahasa Inggris','Wajib diisi'],
+      ['Mapel Wajib','Pendidikan Jasmani Olahraga dan Kesehatan','Wajib diisi'],
+      ['Mapel Wajib','Informatika','Wajib diisi'],
+      ['Mapel Wajib','Sejarah','Wajib diisi'],
+      ['Mapel Wajib','Seni Budaya dan Prakarya','Wajib diisi'],
+      ['Mapel Pilihan','Mapel Pilihan 1','Opsional — ganti nama sesuai peminatan'],
+      ['Mapel Pilihan','Mapel Pilihan 2','Opsional — kosongkan nilai jika tidak ada'],
+      ['Mapel Pilihan','Mapel Pilihan 3','Opsional — kosongkan nilai jika tidak ada'],
+      ['Mapel Pilihan','Mapel Pilihan 4','Opsional — kosongkan nilai jika tidak ada'],
+      ['Mapel Pilihan','Mapel Pilihan 5','Opsional — kosongkan nilai jika tidak ada'],
+      ['Muatan Lokal','Muatan Lokal','Opsional'],
+    ])
+  ];
+  const wsPanduan = XLSXS.utils.aoa_to_sheet(panduanData);
+  const pH = {font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'0F172A'}},alignment:{horizontal:'center'}};
+  ['A1','B1','C1'].forEach(ref=>{if(wsPanduan[ref])wsPanduan[ref].s=pH;});
+  wsPanduan['!cols']=[{wch:20},{wch:46},{wch:38}];
+
+  // ── Export ──────────────────────────────────────────────────────────────────
+  const wb = XLSXS.utils.book_new();
+  XLSXS.utils.book_append_sheet(wb, ws, 'Template Import');
+  XLSXS.utils.book_append_sheet(wb, wsPanduan, 'Panduan Mapel');
+  XLSXS.writeFile(wb, `template-import-siswa-${jenjang||'umum'}.xlsx`);
+  showToast('Template didownload! Lihat sheet "Panduan Mapel" untuk petunjuk kolom nilai.','success');
 }

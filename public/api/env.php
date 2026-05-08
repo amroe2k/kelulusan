@@ -10,7 +10,7 @@
  *   - Baris kosong
  */
 
-function loadEnv(string $envPath): void {
+function loadEnv($envPath) {
     if (!file_exists($envPath)) return;
 
     $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -18,7 +18,7 @@ function loadEnv(string $envPath): void {
         $line = trim($line);
 
         // Lewati komentar dan baris kosong
-        if ($line === '' || str_starts_with($line, '#')) continue;
+        if ($line === '' || strpos($line, '#') === 0) continue;
 
         // Pisahkan key=value (hanya pada = pertama)
         $eqPos = strpos($line, '=');
@@ -29,8 +29,8 @@ function loadEnv(string $envPath): void {
 
         // Hapus tanda kutip mengapit (single atau double)
         if (
-            (str_starts_with($value, '"') && str_ends_with($value, '"')) ||
-            (str_starts_with($value, "'") && str_ends_with($value, "'"))
+            (strpos($value, '"') === 0 && substr($value, -1) === '"') ||
+            (strpos($value, "'") === 0 && substr($value, -1) === "'")
         ) {
             $value = substr($value, 1, -1);
         }
@@ -47,13 +47,14 @@ function loadEnv(string $envPath): void {
  * env() — Helper untuk mengambil nilai .env dengan fallback
  * Contoh: env('DB_HOST', 'localhost')
  */
-function env(string $key, mixed $default = null): mixed {
-    $val = $_ENV[$key] ?? getenv($key);
+function env($key, $default = null) {
+    $val = isset($_ENV[$key]) ? $_ENV[$key] : getenv($key);
     if ($val === false || $val === '') return $default;
+    
     // Konversi string boolean
-    return match (strtolower((string) $val)) {
-        'true', '1', 'yes' => true,
-        'false', '0', 'no' => false,
-        default            => $val,
-    };
+    $lowerVal = strtolower((string) $val);
+    if (in_array($lowerVal, ['true', '1', 'yes'], true)) return true;
+    if (in_array($lowerVal, ['false', '0', 'no'], true)) return false;
+    
+    return $val;
 }

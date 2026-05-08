@@ -239,6 +239,7 @@ function updateBulkButtons(){
   // Sync footer variants (terpisah ID agar tidak duplikat di DOM)
   $('btn-bulk-lulus-footer')?.classList.toggle('hidden', !show);
   $('btn-bulk-tidak-footer')?.classList.toggle('hidden', !show);
+  $('btn-bulk-delete')?.classList.toggle('hidden', !show);
   $('selected-count')?.classList.toggle('hidden', !show);
   if($('selected-count')) $('selected-count').textContent = `${n} Dipilih`;
 }
@@ -277,6 +278,35 @@ async function deleteAllSiswa(){
         if(typeof renderOverview==='function') renderOverview();
         showToast(`${res.deleted} data siswa berhasil dihapus`,'success');
       } else showToast(res.error||'Gagal menghapus data','error');
+    }
+  );
+}
+
+async function deleteBulkSiswa(){
+  const ids = [...selectedIds];
+  if (!ids.length) return;
+  const n = ids.length;
+  showConfirm(
+    `Hapus ${n} data siswa terpilih?`,
+    'PERINGATAN: Data siswa dan seluruh nilai mereka akan dihapus permanen!',
+    async () => {
+      const r = await fetch('/api/siswa.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_bulk', ids })
+      });
+      const res = await r.json();
+      if (res.success) {
+        allSiswa = allSiswa.filter(s => !ids.includes(s.id));
+        selectedIds.clear();
+        if ($('check-all')) $('check-all').checked = false;
+        updateBulkButtons();
+        renderSiswaTable(allSiswa);
+        if (typeof renderOverview === 'function') renderOverview();
+        showToast(`${res.deleted} data siswa berhasil dihapus`, 'success');
+      } else {
+        showToast(res.error || 'Gagal menghapus data', 'error');
+      }
     }
   );
 }

@@ -67,6 +67,12 @@ function renderIdentitas(){
   if($('id-jenjang')) $('id-jenjang').textContent = m.jenjang||'SMA';
   if($('id-tgl-skl2')) $('id-tgl-skl2').textContent = m.tanggal_skl2 ? formatTglDisplay(m.tanggal_skl2) : '-';
   if($('id-kota')) $('id-kota').textContent = m.kota||'-';
+  if($('id-kurikulum')) $('id-kurikulum').textContent = m.kurikulum||'Kurikulum Merdeka';
+  if($('id-provinsi')) $('id-provinsi').textContent = m.provinsi||'-';
+  // Konsentrasi Keahlian — only show for SMK
+  const isSmkView = (m.jenjang||'').toUpperCase() === 'SMK';
+  if($('view-konsentrasi-wrap')) $('view-konsentrasi-wrap').classList.toggle('hidden', !isSmkView);
+  if($('id-konsentrasi')) $('id-konsentrasi').textContent = m.kompetensi_keahlian||'-';
   if($('id-nomor-surat')) {
     const mode = m.nomor_surat_mode || 'auto';
     if(mode === 'static') {
@@ -197,13 +203,18 @@ async function renderPengguna(){
   }catch(e){showToast('Gagal memuat pengguna','error');}
 }
 
+
+
 document.addEventListener('DOMContentLoaded',async()=>{
+  console.log('[DASH-INIT] DOMContentLoaded START');
   try{auth=JSON.parse(sessionStorage.getItem('auth')||'null');}catch(e){auth=null;}
   if(!auth||auth.role==='siswa'){window.location.href='/login';return;}
 
   if($('sb-nama'))$('sb-nama').textContent=auth.nama||'';
   if($('sb-role'))$('sb-role').textContent=(auth.role||'admin').toUpperCase();
-  $('sb-avatar').textContent=auth.nama.charAt(0).toUpperCase();
+  if($('sb-avatar'))$('sb-avatar').textContent=(auth.nama||'A').charAt(0).toUpperCase();
+
+  // SKL modal sekarang dikelola oleh dash-skl.js (self-contained)
 
   // Load saved avatar
   const _savedAvatar = localStorage.getItem(`avatar_${auth.id || auth.username}`);
@@ -254,21 +265,41 @@ document.addEventListener('DOMContentLoaded',async()=>{
       window.location.href = '/login';
     }
   );
+  console.log('[DASH-INIT] CP-1: after logout setup');
 
   // Load data.php (identitas) di background
   const t = Date.now();
-  fetch(`/api/data.php?t=${t}`).then(r=>r.json()).then(d=>{
-    allData=d;
-    // Tampilkan nama lembaga aktif di sidebar
-    const namaLembaga = d?._meta?.lembaga_nama || d?._meta?.sekolah || '';
-    const sbLembaga = $('sb-lembaga-nama');
-    if(sbLembaga && namaLembaga) sbLembaga.textContent = namaLembaga;
-    
-    // Selalu panggil renderIdentitas agar elemen global (seperti upload URL) ter-update
-    if(typeof renderIdentitas === 'function') renderIdentitas();
-    
-    if(currentView==='overview') renderOverview();
-  }).catch(e=>console.error('[data.php]',e));
+  fetch(`/api/data.php?t=${t}`)
+    .then(async r => {
+      const text = await r.text();
+      try { return JSON.parse(text); }
+      catch(parseErr) {
+        console.error('[data.php] Invalid JSON:', text.substring(0, 300));
+        throw new Error('PHP response bukan JSON: ' + text.substring(0, 100));
+      }
+    })
+    .then(d => {
+      if (d?.error) {
+        console.warn('[data.php] Error response:', d.error);
+        const sbLembaga = $('sb-lembaga-nama');
+        if(sbLembaga) sbLembaga.textContent = 'Tidak Ada Lembaga Aktif';
+        return;
+      }
+      allData = d;
+      // Tampilkan nama lembaga aktif di sidebar
+      const namaLembaga = d?._meta?.lembaga_nama || d?._meta?.sekolah || '';
+      const sbLembaga = $('sb-lembaga-nama');
+      if(sbLembaga) sbLembaga.textContent = namaLembaga || 'Lembaga';
+      
+      // Selalu panggil renderIdentitas agar elemen global (seperti upload URL) ter-update
+      if(typeof renderIdentitas === 'function') renderIdentitas();
+      
+      if(currentView==='overview') renderOverview();
+    })
+    .catch(e => {
+      console.error('[data.php] Fetch error:', e);
+      showToast('Gagal memuat data identitas: ' + e.message, 'error');
+    });
 
   // --- Sidebar Toggle handled in applySidebarCollapse ---
 
@@ -276,14 +307,17 @@ document.addEventListener('DOMContentLoaded',async()=>{
   const parts=window.location.pathname.split('/').filter(Boolean);
   const pv=parts[parts.length-1]||'overview';
   switchView(VALID_VIEWS.includes(pv)?pv:'overview');
+  console.log('[DASH-INIT] CP-2: after switchView [BUILD:20260508-v3]');
 
-  // Init lembaga modal events
-  initLembagaView();
+  // Init lembaga modal events — wrapped in try-catch for safety
+  try { if(typeof initLembagaView==='function') initLembagaView(); else console.warn('[DASH-INIT] initLembagaView not defined'); } catch(e){ console.error('[initLembagaView ERROR]',e); }
+  console.log('[DASH-INIT] CP-2b: after initLembagaView');
 
   // Preload allSiswa SELALU supaya overview stats terpopulasi
   fetch(`/api/siswa.php?t=${t}`).then(r=>r.json()).then(d=>{
     if(d.success){ allSiswa=d.data||[]; if(currentView==='overview')renderOverview(); }
   }).catch(()=>{});
+  console.log('[DASH-INIT] CP-2c: after siswa fetch');
 
   // --- Siswa events ---
   $('search-siswa')?.addEventListener('input',()=>{ currentSiswaPage=1; renderSiswaTable(allSiswa); });
@@ -297,12 +331,14 @@ document.addEventListener('DOMContentLoaded',async()=>{
   // Footer variants (ID unik, bukan duplikat)
   $('btn-bulk-lulus-footer')?.addEventListener('click',()=>applyBulk('LULUS'));
   $('btn-bulk-tidak-footer')?.addEventListener('click',()=>applyBulk('TIDAK LULUS'));
+  $('btn-bulk-delete')?.addEventListener('click',()=>deleteBulkSiswa());
   $('btn-hapus-semua')?.addEventListener('click',()=>deleteAllSiswa());
   $('btn-add-siswa')?.addEventListener('click',()=>openSiswaModal());
   $('btn-add-mapel')?.addEventListener('click',()=>addNilaiRow());
   $('form-siswa')?.addEventListener('submit',saveSiswa);
   $('modal-siswa-close')?.addEventListener('click',()=>modalClose('modal-siswa'));
   $('modal-siswa-cancel')?.addEventListener('click',()=>modalClose('modal-siswa'));
+  console.log('[DASH-INIT] CP-2d: after siswa events');
   $('btn-import-siswa')?.addEventListener('click',()=>{
     // Reset result & preview
     $('import-result')?.classList.add('hidden');
@@ -331,67 +367,82 @@ document.addEventListener('DOMContentLoaded',async()=>{
     modalOpen('modal-import');
   });
   $('btn-export-siswa')?.addEventListener('click',exportXlsx);
-  initImport();
+  try { if(typeof initImport==='function') initImport(); } catch(e){ console.error('[initImport]',e); }
+  console.log('[DASH-INIT] CP-3: after initImport, before Quill');
 
   // --- Initialize Quill Editor for Pengumuman ---
-  let quillPengumuman = null;
-  if ($('editor-pengumuman') && typeof Quill !== 'undefined') {
-    quillPengumuman = new Quill('#editor-pengumuman', {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          ['link', 'clean']
-        ]
-      },
-      placeholder: 'Tuliskan pengumuman tambahan seperti jadwal cap 3 jari, pengambilan SKHU, dll...'
-    });
-    quillPengumuman.on('text-change', function() {
-      if ($('input-pengumuman')) $('input-pengumuman').value = quillPengumuman.root.innerHTML;
-    });
+  // NOTE: quillPengumuman declared on window so the btn-edit-identitas click handler
+  // (which is a closure) can access it reliably.
+  window._quillPengumuman = null;
+  try {
+    if ($('editor-pengumuman') && typeof Quill !== 'undefined') {
+      window._quillPengumuman = new Quill('#editor-pengumuman', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'clean']
+          ]
+        },
+        placeholder: 'Tuliskan pengumuman tambahan seperti jadwal cap 3 jari, pengambilan SKHU, dll...'
+      });
+      window._quillPengumuman.on('text-change', function() {
+        if ($('input-pengumuman')) $('input-pengumuman').value = window._quillPengumuman.root.innerHTML;
+      });
 
-    // Add tooltips to buttons
-    const titles = {
-      'bold': 'Tebal (Ctrl+B)',
-      'italic': 'Miring (Ctrl+I)',
-      'underline': 'Garis Bawah (Ctrl+U)',
-      'strike': 'Coret',
-      'list': { 'ordered': 'Daftar Angka', 'bullet': 'Daftar Simbol' },
-      'link': 'Tambah Tautan',
-      'clean': 'Hapus Format'
-    };
-    quillPengumuman.getModule('toolbar').container.querySelectorAll('button, .ql-picker').forEach(el => {
-      let type = Array.from(el.classList).find(c => c.startsWith('ql-'))?.replace('ql-', '');
-      if (!type) return;
-      let title = titles[type];
-      if (typeof title === 'object') {
-        const val = el.value || el.getAttribute('value');
-        title = title[val] || type;
+      // Add tooltips to buttons — guard against null container on hidden elements
+      const titles = {
+        'bold': 'Tebal (Ctrl+B)',
+        'italic': 'Miring (Ctrl+I)',
+        'underline': 'Garis Bawah (Ctrl+U)',
+        'strike': 'Coret',
+        'list': { 'ordered': 'Daftar Angka', 'bullet': 'Daftar Simbol' },
+        'link': 'Tambah Tautan',
+        'clean': 'Hapus Format'
+      };
+      const toolbarModule = window._quillPengumuman.getModule('toolbar');
+      const toolbarContainer = toolbarModule?.container;
+      if (toolbarContainer) {
+        toolbarContainer.querySelectorAll('button, .ql-picker').forEach(el => {
+          let type = Array.from(el.classList).find(c => c.startsWith('ql-'))?.replace('ql-', '');
+          if (!type) return;
+          let title = titles[type];
+          if (typeof title === 'object') {
+            const val = el.value || el.getAttribute('value');
+            title = title[val] || type;
+          }
+          if (title) el.setAttribute('title', title);
+        });
       }
-      if (title) el.setAttribute('title', title);
-    });
+    }
+  } catch(quillErr) {
+    console.warn('[DASH-INIT] Quill init error (non-fatal):', quillErr);
   }
+  console.log('[DASH-INIT] CP-4: after Quill init');
 
   // --- Identitas events ---
-  $('btn-edit-identitas')?.addEventListener('click',()=>{
+  console.log('[DASH-INIT] Attaching btn-edit-identitas listener, btn exists:', !!$('btn-edit-identitas'));
+  $('btn-edit-identitas')?.addEventListener('click',()=>{ try {
+    if(!allData||!allData._meta){showToast('Data belum dimuat, coba lagi','warning');return;}
     const m=allData._meta;
-    ['sekolah','npsn','nss','tapel','alamat','kota','kepsek','jabatan','nip','nuptk','tgl','telepon','email','domain'].forEach(k=>{
-      const map={sekolah:'sekolah',npsn:'npsn',nss:'nss',tapel:'tahun_ajaran',alamat:'alamat',kota:'kota',kepsek:'kepala_sekolah',jabatan:'jabatan_kepsek',nip:'nip_kepsek',nuptk:'nuptk_kepsek',tgl:'tanggal_pengumuman',telepon:'telepon',email:'email',domain:'domain'};
+    ['sekolah','npsn','nss','tapel','alamat','kepsek','jabatan','nip','nuptk','tgl','telepon','email','domain'].forEach(k=>{
+      const map={sekolah:'sekolah',npsn:'npsn',nss:'nss',tapel:'tahun_ajaran',alamat:'alamat',kepsek:'kepala_sekolah',jabatan:'jabatan_kepsek',nip:'nip_kepsek',nuptk:'nuptk_kepsek',tgl:'tanggal_pengumuman',telepon:'telepon',email:'email',domain:'domain'};
       const el=$(`input-${k}`);
       if(el){
         let val=m[map[k]]||'';
-        if(k==='tgl'&&val){const d=parseTgl(val);if(d)val=d.toISOString().split('T')[0];}
+        if(k==='tgl'&&val){const d=parseTgl(val);if(d)val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
         el.value=val;
       }
     });
     // New fields prefill
     if($('input-jenjang')) $('input-jenjang').value = m.jenjang||'SMA';
+    if($('input-kurikulum')) $('input-kurikulum').value = m.kurikulum||'Kurikulum Merdeka';
     if($('input-nomor-surat')) $('input-nomor-surat').value = m.nomor_surat_suffix||'';
     if($('input-nomor-surat-statis')) $('input-nomor-surat-statis').value = m.nomor_surat_statis||'';
     if($('input-pengumuman')) {
       $('input-pengumuman').value = m.pengumuman||'';
-      if(quillPengumuman) quillPengumuman.root.innerHTML = m.pengumuman||'';
+      if(window._quillPengumuman) window._quillPengumuman.root.innerHTML = m.pengumuman||'';
     }
     // Set radio mode
     const mode = m.nomor_surat_mode || 'auto';
@@ -412,8 +463,22 @@ document.addEventListener('DOMContentLoaded',async()=>{
     // tanggal_skl2
     if($('input-tgl-skl2')){
       let v=m.tanggal_skl2||'';
-      if(v){const d=parseTgl(v);if(d)v=d.toISOString().split('T')[0];}
+      if(v){const d=parseTgl(v);if(d)v=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
       $('input-tgl-skl2').value=v;
+    }
+
+    // Populate Provinsi via searchable-select
+    if(typeof WILAYAH_DATA !== 'undefined'){
+      ssSetOptions('wrap-provinsi', Object.keys(WILAYAH_DATA), m.provinsi||'');
+      const selectedProv = m.provinsi||'';
+      const kotaList = (selectedProv && WILAYAH_DATA[selectedProv]) ? WILAYAH_DATA[selectedProv] : [];
+      ssSetOptions('wrap-kota', kotaList, m.kota||'');
+      // When provinsi changes → repopulate kota
+      const wrapProv = document.getElementById('wrap-provinsi');
+      if(wrapProv) wrapProv._ssOnChange = (prov) => {
+        const kl = (prov && WILAYAH_DATA[prov]) ? WILAYAH_DATA[prov] : [];
+        ssSetOptions('wrap-kota', kl, '');
+      };
     }
     // Reset semua zone (data-changed=false) lalu pre-fill gambar yg sudah ada
     document.querySelectorAll('.img-zone').forEach(z=>z.dataset.changed='false');
@@ -440,7 +505,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
         $('section-nuptk')?.classList.toggle('hidden', !isNuptk);
       };
     });
-  });
+  } catch(err) { console.error('[EditIdentitas]', err); showToast('Gagal membuka form: ' + err.message, 'error'); } });
   $('btn-cancel-identitas')?.addEventListener('click',()=>{
     $('identitas-edit')?.classList.add('hidden');
     $('identitas-view')?.classList.remove('hidden');
@@ -451,7 +516,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const rawDomain=($('input-domain')?.value||'').trim().replace(/^https?:\/\//,'');
     const nomorMode = $('mode-static')?.checked ? 'static' : 'auto';
     const idKepsekMode = $('mode-id-nuptk')?.checked ? 'nuptk' : 'nip';
-    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,jabatan_kepsek:$('input-jabatan')?.value||'',nip_kepsek:$('input-nip').value,nuptk_kepsek:$('input-nuptk')?.value||'',id_kepsek_mode:idKepsekMode,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_mode:nomorMode,nomor_surat_suffix:$('input-nomor-surat')?.value||'',nomor_surat_statis:$('input-nomor-surat-statis')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain,pengumuman:$('input-pengumuman')?.value||''};
+    const p={sekolah:$('input-sekolah').value,npsn:$('input-npsn').value,nss:$('input-nss').value,jenjang:$('input-jenjang')?.value||'SMA',kurikulum:$('input-kurikulum')?.value||'Kurikulum Merdeka',tahun_ajaran:$('input-tapel').value,alamat:$('input-alamat').value,provinsi:$('input-provinsi')?.value||'',kota:$('input-kota')?.value||'',kepala_sekolah:$('input-kepsek').value,jabatan_kepsek:$('input-jabatan')?.value||'',nip_kepsek:$('input-nip').value,nuptk_kepsek:$('input-nuptk')?.value||'',id_kepsek_mode:idKepsekMode,tanggal_pengumuman:$('input-tgl').value,tanggal_skl2:$('input-tgl-skl2')?.value||null,nomor_surat_mode:nomorMode,nomor_surat_suffix:$('input-nomor-surat')?.value||'',nomor_surat_statis:$('input-nomor-surat-statis')?.value||'',telepon:$('input-telepon')?.value||'',email:$('input-email')?.value||'',domain:rawDomain,pengumuman:$('input-pengumuman')?.value||''};
     // Hanya kirim gambar jika user benar-benar mengubahnya (data-changed='true')
     // Jika data-changed='clear', kirim null untuk hapus gambar dari DB
     document.querySelectorAll('.img-zone').forEach(zone=>{
@@ -560,6 +625,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
 
   // Init drag-drop zones SEKALI saat halaman siap
   initDragDrop();
+  // Init searchable selects (Provinsi & Kota)
+  if (typeof ssInitAll === 'function') ssInitAll();
+
 
 
   // --- Detail Siswa Modal closes ---
@@ -568,70 +636,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('modal-detail-siswa')?.addEventListener('click',e=>{
     if(e.target.id==='modal-detail-siswa') modalClose('modal-detail-siswa');
   });
-  // --- Preview SKL ---
-  let _sklCurrentType = 'skl1'; // default SKL1 (tanpa nilai)
-  let _sklCurrentSiswa = null;
-  let _sklCurrentNilai = null;
+  // SKL preview modal sekarang sepenuhnya dikelola oleh dash-skl.js
 
-  const renderSklIframe = (type) => {
-    _sklCurrentType = type;
-    const meta = allData?._meta || {};
-    const html = buildSklPreviewHtml(meta, _sklCurrentSiswa, _sklCurrentNilai, type);
-    const iframe = $('skl-iframe');
-    if(iframe) iframe.srcdoc = html;
-    // Update tab styles
-    const tab1 = $('skl-tab-1'), tab2 = $('skl-tab-2');
-    if(tab1 && tab2){
-      tab1.className = type==='skl1'
-        ? 'px-3 py-1 rounded-md text-xs font-bold transition-colors bg-emerald-600 text-white'
-        : 'px-3 py-1 rounded-md text-xs font-bold transition-colors text-slate-400 hover:text-white';
-      tab2.className = type==='skl2'
-        ? 'px-3 py-1 rounded-md text-xs font-bold transition-colors bg-indigo-600 text-white'
-        : 'px-3 py-1 rounded-md text-xs font-bold transition-colors text-slate-400 hover:text-white';
-    }
-  };
 
-  const openSklModal = (siswaData=null, nilaiData=null, initialType='skl1') => {
-    _sklCurrentSiswa = siswaData;
-    _sklCurrentNilai = nilaiData;
-    renderSklIframe(initialType);
-    const sv = parseInt($('skl-scale')?.value||65);
-    const wrap = $('skl-preview-wrap');
-    if(wrap) wrap.style.transform=`scale(${sv/100})`;
-    if($('skl-scale-val')) $('skl-scale-val').textContent=sv+'%';
-    modalOpen('modal-skl-preview');
-  };
-
-  $('btn-preview-skl')?.addEventListener('click', () => openSklModal(null, null, 'skl1'));
-  $('skl-tab-1')?.addEventListener('click', () => renderSklIframe('skl1'));
-  $('skl-tab-2')?.addEventListener('click', () => renderSklIframe('skl2'));
-  $('modal-skl-close')?.addEventListener('click',()=>modalClose('modal-skl-preview'));
-  $('modal-skl-print')?.addEventListener('click',()=> {
-    const iframe = $('skl-iframe');
-    if(iframe && iframe.contentWindow) {
-      const originalTitle = document.title;
-      if (_sklCurrentSiswa) {
-         document.title = `SKL - ${_sklCurrentSiswa.nama} - ${_sklCurrentSiswa.nisn || '0000000000'}`;
-      } else {
-         document.title = `SKL - Preview`;
-      }
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      // Restore title after print dialog opens
-      setTimeout(() => { document.title = originalTitle; }, 1000);
-    }
-  });
-  $('modal-skl-preview')?.addEventListener('click',e=>{
-    if(e.target.id==='modal-skl-preview') modalClose('modal-skl-preview');
-  });
-  $('skl-scale')?.addEventListener('input',e=>{
-    const v=parseInt(e.target.value);
-    if($('skl-scale-val')) $('skl-scale-val').textContent=v+'%';
-    const w=$('skl-preview-wrap'); if(w) w.style.transform=`scale(${v/100})`;
-  });
-
-  // Expose for detail modal usage
-  window._openSklModal = openSklModal;
 
   // ─── Set Upload Password ───
   // Toggle panel

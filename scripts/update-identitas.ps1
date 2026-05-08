@@ -40,7 +40,7 @@ $newSection = @"
                             <span id="id-jenjang" class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">-</span>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Tahun Pelajaran</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Tahun Ajaran</p>
                             <p id="id-tapel" class="font-bold text-lg text-slate-700 dark:text-slate-200 font-outfit">-</p>
                         </div>
                         <div>
@@ -179,7 +179,7 @@ $newSection = @"
                                 <input type="text" id="input-sekolah" required class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tahun Pelajaran <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tahun Ajaran <span class="text-rose-500">*</span></label>
                                 <input type="text" id="input-tapel" required placeholder="2025/2026" class="w-full bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-800 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-[#0B0F19] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
                             </div>
                             <div>

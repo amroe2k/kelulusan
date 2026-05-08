@@ -69,7 +69,18 @@ function switchView(id){
     }).catch(()=>renderOverview());
   }
   if(id==='lembaga')renderLembaga();
-  if(id==='identitas')renderIdentitas();
+  if(id==='identitas'){
+    if(allData && allData._meta) {
+      renderIdentitas();
+    } else {
+      // Data belum tersedia, fetch ulang
+      fetch(`/api/data.php?t=${Date.now()}`)
+        .then(async r => { const txt = await r.text(); try { return JSON.parse(txt); } catch(e) { throw new Error('JSON parse error: '+txt.substring(0,80)); } })
+        .then(d => {
+          if(!d?.error){ allData=d; const n=d?._meta?.sekolah||''; if($('sb-lembaga-nama')&&n)$('sb-lembaga-nama').textContent=n; renderIdentitas(); }
+        }).catch(e=>console.error('[identitas refetch]',e));
+    }
+  }
   if(id==='siswa-data')loadAndRenderSiswa();
   if(id==='pengguna')renderPengguna();
   if(id==='json-history')renderJsonHistory();

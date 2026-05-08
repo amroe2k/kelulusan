@@ -29,7 +29,7 @@ try {
     
     // 2. Data Siswa & Nilai
     $siswaStmt = $pdo->prepare("
-        SELECT s.id, s.nisn, s.nama, s.jenis_kelamin, s.tempat_lahir, s.tanggal_lahir, s.kelas, s.status,
+        SELECT s.id, s.nisn, s.nama, s.jenis_kelamin, s.tempat_lahir, s.tanggal_lahir, s.kelas, s.kompetensi_keahlian, s.status,
                (SELECT GROUP_CONCAT(CONCAT(mapel, ':', nilai) SEPARATOR '|') FROM nilai WHERE siswa_id = s.id ORDER BY urutan ASC, mapel ASC) as nilai_mapel
         FROM siswa s WHERE s.lembaga_id = ? ORDER BY s.nama ASC
     ");
@@ -69,14 +69,17 @@ try {
         
         $siswaObj[$key] = [
             'nisn_display' => $maskNISN,
-            'nama' => $s['nama'],
-            'kelas' => $s['kelas'],
+            'nisn'         => $s['nisn'],
+            'nama'         => $s['nama'],
+            'kelas'        => $s['kelas'],
             'jenis_kelamin' => $s['jenis_kelamin'],
             'tempat_lahir' => $s['tempat_lahir'],
             'tanggal_lahir' => $tanggal_lahir_formatted,
-            'status' => $s['status'],
-            'nilai' => $nilaiArr,
-            'rata_rata' => $rataRata
+            'tanggal_lahir_raw' => $s['tanggal_lahir'],
+            'status'       => $s['status'],
+            'kompetensi_keahlian' => $s['kompetensi_keahlian'] ?? '',
+            'nilai'        => $nilaiArr,
+            'rata_rata'    => $rataRata
         ];
     }
     
