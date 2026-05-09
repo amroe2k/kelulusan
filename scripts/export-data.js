@@ -147,6 +147,7 @@ async function exportData() {
     npsn:               m.npsn,
     alamat:             m.alamat,
     kota:               m.kota || '',
+    provinsi:           m.provinsi || '',
     jenjang:            m.jenjang || 'SMA',
     kompetensi_keahlian:m.kompetensi_keahlian || '',
     kepala_sekolah:     m.kepala_sekolah,
@@ -175,7 +176,7 @@ async function exportData() {
 
   // 3. Data Siswa milik lembaga aktif
   const [siswaRows] = await conn.execute(
-    `SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status
+    `SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, konsentrasi_keahlian, status
      FROM siswa WHERE lembaga_id = ? ORDER BY nama ASC`,
     [lembaga.id]
   );
@@ -201,6 +202,7 @@ async function exportData() {
       nama:         s.nama,
       kelas:        s.kelas,
       kompetensi_keahlian: s.kompetensi_keahlian || '',
+      konsentrasi_keahlian: s.konsentrasi_keahlian || '',
       jenis_kelamin:s.jenis_kelamin,
       tempat_lahir: s.tempat_lahir,
       tanggal_lahir:formatTanggal(s.tanggal_lahir),

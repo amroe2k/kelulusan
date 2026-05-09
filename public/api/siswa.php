@@ -21,7 +21,7 @@ if (!$lembagaId) {
 // ─── GET: List siswa (for dashboard table) ─────────────────────────────────
 if ($method === 'GET') {
     $stmt = $pdo->prepare("
-        SELECT s.id, s.nisn, s.nama, s.jenis_kelamin, s.tempat_lahir, s.tanggal_lahir, s.kelas, s.kompetensi_keahlian, s.status,
+        SELECT s.id, s.nisn, s.nama, s.jenis_kelamin, s.tempat_lahir, s.tanggal_lahir, s.kelas, s.kompetensi_keahlian, s.konsentrasi_keahlian, s.status,
                (SELECT GROUP_CONCAT(CONCAT(mapel, ':', nilai) SEPARATOR '|') FROM nilai WHERE siswa_id = s.id ORDER BY urutan ASC, mapel ASC) as nilai_mapel
         FROM siswa s WHERE s.lembaga_id = ? ORDER BY s.nama ASC
     ");
@@ -63,6 +63,7 @@ if ($method === 'GET') {
             'tanggal_lahir_display' => $tanggal_lahir_formatted,
             'status'               => $s['status'],
             'kompetensi_keahlian'  => $s['kompetensi_keahlian'] ?? null,
+            'konsentrasi_keahlian' => $s['konsentrasi_keahlian'] ?? null,
             'nilai'                => $nilaiArr,
             'rata_rata'            => $rataRata,
         ];
@@ -103,11 +104,11 @@ if ($method === 'POST') {
         }
 
         $insertSiswa = $pdo->prepare("
-            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status)
-            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, konsentrasi_keahlian, status)
+            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE nama=VALUES(nama), jenis_kelamin=VALUES(jenis_kelamin),
             tempat_lahir=VALUES(tempat_lahir), tanggal_lahir=VALUES(tanggal_lahir),
-            kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), status=VALUES(status)
+            kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), konsentrasi_keahlian=VALUES(konsentrasi_keahlian), status=VALUES(status)
         ");
 
         $imported = 0;
@@ -123,6 +124,7 @@ if ($method === 'POST') {
             $nama          = mb_convert_case(mb_strtolower(trim($col['nama'] ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
             $kelas         = $col['kelas'] ?? '';
             $kompetensi    = $col['kompetensi_keahlian'] ?? '';
+            $konsentrasi   = $col['konsentrasi_keahlian'] ?? '';
             $status        = strtoupper($col['status'] ?? 'LULUS');
             $jk            = strtoupper($col['jenis_kelamin'] ?? 'L');
             $tempat_lahir  = $col['tempat_lahir'] ?? '';
@@ -143,7 +145,7 @@ if ($method === 'POST') {
             }
 
             try {
-                $insertSiswa->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi ?: null, $status]);
+                $insertSiswa->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi ?: null, $konsentrasi ?: null, $status]);
                 $imported++;
             } catch (Exception $e) {
                 $errors[] = "Baris " . ($i + 2) . ": " . $e->getMessage();
@@ -172,12 +174,12 @@ if ($method === 'POST') {
         $imported = 0; $skipped = 0; $errors = [];
 
         $stmt = $pdo->prepare("
-            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status)
-            VALUES (UUID(), :lembaga, :nisn, :nama, :jk, :tempat, :tgl, :kelas, :kompetensi, :status)
+            INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, konsentrasi_keahlian, status)
+            VALUES (UUID(), :lembaga, :nisn, :nama, :jk, :tempat, :tgl, :kelas, :kompetensi, :konsentrasi, :status)
             ON DUPLICATE KEY UPDATE
               nama=VALUES(nama), jenis_kelamin=VALUES(jenis_kelamin),
               tempat_lahir=VALUES(tempat_lahir), tanggal_lahir=VALUES(tanggal_lahir),
-              kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), status=VALUES(status)
+              kelas=VALUES(kelas), kompetensi_keahlian=VALUES(kompetensi_keahlian), konsentrasi_keahlian=VALUES(konsentrasi_keahlian), status=VALUES(status)
         ");
 
         $delNilai = $pdo->prepare("DELETE FROM nilai WHERE siswa_id = ?");
@@ -190,6 +192,7 @@ if ($method === 'POST') {
             $nama   = mb_convert_case(mb_strtolower(trim($col['nama']   ?? ''), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
             $kelas  = trim($col['kelas']  ?? '');
             $kompetensi = trim($col['kompetensi_keahlian'] ?? '');
+            $konsentrasi = trim($col['konsentrasi_keahlian'] ?? '');
             $status = strtoupper($col['status'] ?? 'LULUS');
             $tempat = trim($col['tempat_lahir'] ?? '');
             $tgl    = !empty($col['tanggal_lahir']) ? $col['tanggal_lahir'] : null;
@@ -203,7 +206,7 @@ if ($method === 'POST') {
             else $jk = 'L';
 
             try {
-                $stmt->execute([':lembaga'=>$lembagaId, ':nisn'=>$nisn,':nama'=>$nama,':jk'=>$jk,':tempat'=>$tempat,':tgl'=>$tgl,':kelas'=>$kelas,':kompetensi'=>$kompetensi ?: null,':status'=>$status]);
+                $stmt->execute([':lembaga'=>$lembagaId, ':nisn'=>$nisn,':nama'=>$nama,':jk'=>$jk,':tempat'=>$tempat,':tgl'=>$tgl,':kelas'=>$kelas,':kompetensi'=>$kompetensi ?: null,':konsentrasi'=>$konsentrasi ?: null,':status'=>$status]);
                 
                 $getId->execute([$nisn, $lembagaId]);
                 $sId = $getId->fetchColumn();
@@ -266,8 +269,9 @@ if ($method === 'POST') {
             exit;
         }
         $kompetensi_keahlian = trim($data['kompetensi_keahlian'] ?? '');
-        $stmt = $pdo->prepare("INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi_keahlian ?: null, $status]);
+        $konsentrasi_keahlian = trim($data['konsentrasi_keahlian'] ?? '');
+        $stmt = $pdo->prepare("INSERT INTO siswa (id, lembaga_id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, konsentrasi_keahlian, status) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$lembagaId, $nisn, $nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi_keahlian ?: null, $konsentrasi_keahlian ?: null, $status]);
         $newId = $pdo->query("SELECT id FROM siswa WHERE nisn = '" . $nisn . "'")->fetchColumn();
         echo json_encode(['success' => true, 'id' => $newId]);
         exit;
@@ -288,8 +292,9 @@ if ($method === 'POST') {
             exit;
         }
         $kompetensi_keahlian = trim($data['kompetensi_keahlian'] ?? '');
-        $stmt = $pdo->prepare("UPDATE siswa SET nama=?, jenis_kelamin=?, tempat_lahir=?, tanggal_lahir=?, kelas=?, kompetensi_keahlian=?, status=? WHERE id=?");
-        $stmt->execute([$nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi_keahlian ?: null, $status, $id]);
+        $konsentrasi_keahlian = trim($data['konsentrasi_keahlian'] ?? '');
+        $stmt = $pdo->prepare("UPDATE siswa SET nama=?, jenis_kelamin=?, tempat_lahir=?, tanggal_lahir=?, kelas=?, kompetensi_keahlian=?, konsentrasi_keahlian=?, status=? WHERE id=?");
+        $stmt->execute([$nama, $jk, $tempat_lahir, $tanggal_lahir, $kelas, $kompetensi_keahlian ?: null, $konsentrasi_keahlian ?: null, $status, $id]);
         echo json_encode(['success' => true]);
         exit;
     }
@@ -313,7 +318,7 @@ if ($method === 'POST') {
             echo json_encode(['error' => 'Hanya Admin yang dapat menghapus semua data.']);
             exit;
         }
-        $lid = $_SESSION['lembaga_id'];
+        $lid = $lembagaId;
         $count = $pdo->prepare("SELECT COUNT(*) FROM siswa WHERE lembaga_id = ?");
         $count->execute([$lid]);
         $total = (int)$count->fetchColumn();

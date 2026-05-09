@@ -138,6 +138,7 @@ $meta = [
     'npsn'                       => $m['npsn'],
     'alamat'                     => $m['alamat'],
     'kota'                       => $m['kota'] ?? '',
+    'provinsi'                   => $m['provinsi'] ?? '',
     'jenjang'                    => $m['jenjang'] ?? 'SMA',
     'kompetensi_keahlian'        => $m['kompetensi_keahlian'] ?? '',
     // Kepala Sekolah
@@ -179,7 +180,7 @@ $log[] = "✓ Integrity: " . substr($meta['_integrity'], 0, 16) . "...";
 // ─────────────────────────────────────────────────────────────────────────────
 $stmt = $pdo->prepare(
     "SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir,
-            kelas, kompetensi_keahlian, status
+            kelas, kompetensi_keahlian, konsentrasi_keahlian, status
      FROM siswa WHERE lembaga_id = ? ORDER BY nama ASC"
 );
 $stmt->execute([$lembaga['id']]);
@@ -212,6 +213,7 @@ foreach ($siswaRows as $s) {
         'nama'               => $s['nama'],
         'kelas'              => $s['kelas'],
         'kompetensi_keahlian'=> $s['kompetensi_keahlian'] ?? '',
+        'konsentrasi_keahlian'=> $s['konsentrasi_keahlian'] ?? '',
         'jenis_kelamin'      => $s['jenis_kelamin'],
         'tempat_lahir'       => $s['tempat_lahir'],
         'tanggal_lahir'      => formatTanggal($s['tanggal_lahir']),

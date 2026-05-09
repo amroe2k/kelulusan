@@ -135,11 +135,16 @@ function buildSklHtml(siswa, meta, nilai) {
     ? (_kotaRaw.startsWith('Kab. ') ? 'Kabupaten ' + _kotaRaw.slice(5) : 'Kota ' + _kotaRaw)
     : 'Kota/Kabupaten*) ........';
   const kompetensiKeahlian = (siswa.kompetensi_keahlian||'').trim();
+  const konsentrasiKeahlian = (siswa.konsentrasi_keahlian||'').trim();
   let kompetensiRow = '';
   if (isSmk) {
     kompetensiRow = `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${kompetensiKeahlian||'-'}</td></tr>`;
+    if (konsentrasiKeahlian) kompetensiRow += `\n    <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
   } else if (isSmaOrMa && kompetensiKeahlian) {
     kompetensiRow = `<tr><td>Peminatan</td><td>:</td><td>${kompetensiKeahlian}</td></tr>`;
+    if (konsentrasiKeahlian) kompetensiRow += `\n    <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+  } else if (konsentrasiKeahlian) {
+    kompetensiRow = `<tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
   }
   const jenisKelaminDisplay = (siswa.jenis_kelamin||'L')==='P' ? 'Perempuan' : 'Laki-laki';
 
@@ -171,7 +176,7 @@ function buildSklHtml(siswa, meta, nilai) {
   .status-box { text-align:center; margin:10px 0; }
   .status-badge { display:inline-block; font-size:16px; font-weight:bold; border:2.5px solid #333; padding:5px 40px; letter-spacing:3px; ${isLulus ? 'color:#166534;border-color:#166534;' : 'color:#991b1b;border-color:#991b1b;'} }
   /* ── Tabel Nilai format Kemdikbud ── */
-  .nilai-kemdikbud { border-collapse:collapse; width:100%; font-size:11px; margin:8px 0; font-family:Arial,sans-serif; }
+  .nilai-kemdikbud { border-collapse:collapse; width:100%; font-size:12px; margin:15px 0; font-family:Arial,sans-serif; }
   .nilai-kemdikbud th { border:1px solid #555; padding:4px 6px; background:#e8e8e8; font-weight:bold; text-align:center; }
   .nilai-kemdikbud td { border:1px solid #555; padding:2px 5px; vertical-align:top; }
   .nilai-kemdikbud .n-no { width:30px; text-align:center; }
@@ -180,8 +185,8 @@ function buildSklHtml(siswa, meta, nilai) {
   /* ── Halaman 2 ── */
   .skl2-p2 { page-break-before:always; }
   .p2-kop { display:flex; align-items:center; gap:16px; border-bottom:4px double #333; padding-bottom:10px; margin-bottom:20px; }
-  .ttd-wrap { display:flex; justify-content:space-between; align-items:flex-start; margin-top:20px; }
-  .foto-box { width:90px; height:120px; border:1.5px solid #333; display:flex; align-items:center; justify-content:center; font-size:11px; color:#555; margin-top:30px; }
+  .ttd-wrap { display:flex; justify-content:flex-end; align-items:flex-end; margin-top:20px; gap: 50px; }
+  .foto-box { width:90px; height:120px; border:2px dashed #cbd5e1; background-color:#f8fafc; display:flex; align-items:center; justify-content:center; font-size:12px; font-family:'Times New Roman',serif; color:#94a3b8; }
   .ttd-box { text-align:center; position:relative; min-width:200px; }
 </style>
 </head>
@@ -214,13 +219,12 @@ function buildSklHtml(siswa, meta, nilai) {
     <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
     <tr><td>Tanggal Kelulusan</td><td>:</td><td>${formatTanggal(meta.tanggal_skl2||meta.tanggal_pengumuman||new Date())}</td></tr>
     <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
-    ${isSmk?`<tr><td>Program Keahlian</td><td>:</td><td>${kompetensiKeahlian||'-'}</td></tr>
-    <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${siswa.konsentrasi_keahlian||kompetensiKeahlian||'-'}</td></tr>`:''}
+    ${kompetensiRow}
   </table>
 
   <div class="status-box"><span class="status-badge">${siswa.status||'LULUS'}</span></div>
 
-  <p class="body-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${jenjang} ${meta.sekolah} Kota/Kabupaten*) ${meta.kota||'...'} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
+  <p class="body-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah} Kota/Kabupaten*) ${meta.kota||'...'} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
 
   ${buildNilaiTable(nilai, isSmk, rataRata)}
 
@@ -282,7 +286,7 @@ async function generateAllPdf() {
 
   // Ambil semua siswa
   const [siswaRows] = await conn.execute(
-    'SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, status FROM siswa ORDER BY nama ASC'
+    'SELECT id, nisn, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, kelas, kompetensi_keahlian, konsentrasi_keahlian, status FROM siswa ORDER BY nama ASC'
   );
   console.log(`✓ Total siswa: ${siswaRows.length}`);
 

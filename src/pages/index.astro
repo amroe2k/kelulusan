@@ -85,6 +85,14 @@ import '../styles/global.css';
         
         <div class="relative z-10">
           <div class="text-center mb-6">
+            <div class="flex flex-col items-center justify-center gap-2 mb-5">
+              <!-- Tahun Ajaran Badge -->
+              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span id="front-ta-display" class="text-[10px] font-black tracking-widest uppercase">TAHUN AJARAN -</span>
+              </div>
+            </div>
+
             <!-- Logo Lembaga: tampil jika ada, fallback ke icon mortarboard -->
             <div id="logo-wrapper" class="inline-flex items-center justify-center w-28 h-28 rounded-3xl mb-4 shadow-2xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-500 to-indigo-700 overflow-hidden">
               <!-- Logo lembaga (disembunyikan dulu, diisi via JS) -->
@@ -95,20 +103,12 @@ import '../styles/global.css';
             <h1 class="text-3xl md:text-4xl font-black mb-1 tracking-tight text-slate-900 dark:text-white uppercase">
               Cek <span class="gradient-text">Kelulusan</span>
             </h1>
-            <p class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight leading-tight mb-2" id="sekolah-name-display">Memuat nama sekolah...</p>
+            <p class="text-xl md:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight leading-tight mb-4" id="sekolah-name-display">Memuat nama sekolah...</p>
             
-            <div class="flex flex-col items-center justify-center gap-2 mb-6">
-              <!-- Tahun Ajaran Badge -->
-              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span id="front-ta-display" class="text-[10px] font-black tracking-widest uppercase">TAHUN AJARAN -</span>
-              </div>
-              
-              <!-- Relocated SKL Mode Badge -->
-              <div id="active-skl-badge" class="hidden justify-center items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto w-fit">
-                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                 <span id="active-skl-text" class="text-[10px] font-black uppercase tracking-widest"></span>
-              </div>
+            <!-- Relocated SKL Mode Badge -->
+            <div id="active-skl-badge" class="hidden justify-center items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto w-fit mb-2">
+               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+               <span id="active-skl-text" class="text-[10px] font-black uppercase tracking-widest"></span>
             </div>
           </div>
 
@@ -501,23 +501,29 @@ import '../styles/global.css';
           const fallbackEl = $('portal-logo-fallback');
           const wrapperEl  = $('logo-wrapper');
           if (logoEl && fallbackEl) {
-            logoEl.src = data._meta.logo;
-            
-            // Wait for logo to fully load before revealing page
-            await new Promise((resolve) => {
-              if (logoEl.complete) resolve();
-              else {
-                logoEl.onload = resolve;
-                logoEl.onerror = resolve;
-              }
-            });
+            if (data._meta && data._meta.logo) {
+              logoEl.src = data._meta.logo;
+              
+              // Wait for logo to fully load before revealing page
+              await new Promise((resolve) => {
+                if (logoEl.complete) resolve();
+                else {
+                  logoEl.onload = resolve;
+                  logoEl.onerror = resolve;
+                }
+              });
 
-            logoEl.classList.remove('hidden');
-            fallbackEl.classList.add('hidden');
-            // Hapus gradient bg — tampilkan bg putih bersih agar logo terbaca
-            if (wrapperEl) {
-              wrapperEl.classList.remove('bg-gradient-to-br','from-indigo-500','to-indigo-700');
-              wrapperEl.classList.add('bg-white','dark:bg-slate-800');
+              logoEl.classList.remove('hidden');
+              fallbackEl.classList.add('hidden');
+              // Hapus gradient bg — tampilkan bg putih bersih agar logo terbaca
+              if (wrapperEl) {
+                wrapperEl.classList.remove('bg-gradient-to-br','from-indigo-500','to-indigo-700');
+                wrapperEl.classList.add('bg-white','dark:bg-slate-800');
+              }
+            } else {
+              // Logo tidak ada di database, gunakan fallback
+              logoEl.classList.add('hidden');
+              fallbackEl.classList.remove('hidden');
             }
           }
         }
@@ -652,16 +658,28 @@ import '../styles/global.css';
       
       // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
       const resKompetensi = (s.kompetensi_keahlian || data._meta.kompetensi_keahlian || '').trim();
+      const resKonsentrasi = (s.konsentrasi_keahlian || data._meta.konsentrasi_keahlian || '').trim();
       const isSmkUi = (data._meta.jenjang || '').toUpperCase() === 'SMK';
       const kompContainer = $('kompetensi-container');
       if (kompContainer) {
-        if (resKompetensi) {
+        if (resKompetensi || resKonsentrasi) {
           kompContainer.classList.remove('hidden');
           kompContainer.classList.add('flex');
-          $('res-kompetensi').textContent = resKompetensi;
+          
+          let displayKomp = '';
+          if (resKompetensi) {
+              const lbl = isSmkUi ? 'Kompetensi Keahlian' : 'Peminatan';
+              displayKomp += `${lbl}: ${resKompetensi}`;
+          }
+          if (resKonsentrasi) {
+              if (displayKomp) displayKomp += ' | ';
+              displayKomp += `Konsentrasi Keahlian: ${resKonsentrasi}`;
+          }
+          $('res-kompetensi').textContent = displayKomp;
+          
           const lblKomp = $('lbl-kompetensi');
           if (lblKomp) {
-            lblKomp.textContent = isSmkUi ? 'Kompetensi Keahlian' : 'Peminatan';
+            lblKomp.classList.add('hidden'); // Hide the standalone label since we prefix it in textContent
           }
         } else {
           kompContainer.classList.add('hidden');
@@ -886,7 +904,7 @@ import '../styles/global.css';
       rows+=cat('Muatan Lokal');rows+=row('-','');
     }
     rows+=`<tr><td style="border:1px solid #333;padding:2px 5px;"></td><td style="border:1px solid #333;padding:2px 6px;text-align:center;"><strong><em>Rata-rata</em></strong></td><td style="border:1px solid #333;padding:2px 5px;text-align:center;font-weight:700;">${rataRata}</td></tr>`;
-    return `<table style="border-collapse:collapse;width:100%;font-size:12px;font-family:Arial,sans-serif;"><thead><tr><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:30px;">No.</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;">Mata Pelajaran</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:60px;">Nilai</th></tr></thead><tbody>${rows}</tbody></table>`;
+    return `<table style="border-collapse:collapse;width:100%;font-size:13px;margin:15px 0;font-family:Arial,sans-serif;"><thead><tr><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:30px;">No.</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;">Mata Pelajaran</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:60px;">Nilai</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function buildSklHtml(meta, siswaData, nilaiData, type) {
@@ -903,9 +921,13 @@ import '../styles/global.css';
       : (meta.nomor_surat_suffix ? `${sklNum}${meta.nomor_surat_suffix}` : `${sklNum}/${meta.npsn||'SKL'}/${now.getFullYear()}`);
     // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
     const kompetensi = (siswa.kompetensi_keahlian || meta.kompetensi_keahlian || '').trim();
+    const konsentrasi = (siswa.konsentrasi_keahlian || meta.konsentrasi_keahlian || '').trim();
     const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
     const kompetensiLabel = isSmk ? 'Kompetensi Keahlian' : 'Peminatan';
-    const kompetensiHeaderLine = kompetensi ? `<p style="margin-top:3px;font-weight:700;color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>` : '';
+    let kompetensiHeaderLine = kompetensi ? `<p style="margin-top:3px;font-weight:700;color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>` : '';
+    if (konsentrasi) {
+        kompetensiHeaderLine += `\n<p style="margin-top:3px;font-weight:700;color:#4f46e5;">Konsentrasi Keahlian: ${konsentrasi}</p>`;
+    }
     const tglPengumuman = isSklNilai
       ? (meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : fmt(meta.tanggal_pengumuman||`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`))
       : (meta.tanggal_pengumuman ? fmt(meta.tanggal_pengumuman) : fmt(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`));
@@ -922,6 +944,21 @@ import '../styles/global.css';
       ? (_kotaRaw.startsWith('Kab. ') ? 'Kabupaten ' + _kotaRaw.slice(5) : 'Kota ' + _kotaRaw)
       : 'Kota/Kabupaten*) ........';
     const isLulus = (siswa.status||'LULUS').toUpperCase() === 'LULUS';
+    const jenjang = (meta.jenjang||'').toUpperCase();
+    const isSmaOrMa = ['SMA','MA'].includes(jenjang);
+    const kompetensiKeahlian = (kompetensi||'').trim();
+    const konsentrasiKeahlian = (siswa.konsentrasi_keahlian||'').trim();
+    let kompetensiRow = '';
+    if (isSmk) {
+      kompetensiRow = `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${kompetensiKeahlian||'-'}</td></tr>`;
+      if (konsentrasiKeahlian) kompetensiRow += `\n        <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    } else if (isSmaOrMa && kompetensiKeahlian) {
+      kompetensiRow = `<tr><td>Peminatan</td><td>:</td><td>${kompetensiKeahlian}</td></tr>`;
+      if (konsentrasiKeahlian) kompetensiRow += `\n        <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    } else if (konsentrasiKeahlian) {
+      kompetensiRow = `<tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    }
+
     const sklBody = isSklNilai ? `
       <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'Sekolah'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
       <table class="student-data">
@@ -933,25 +970,27 @@ import '../styles/global.css';
         <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
         <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
         <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
-        ${isSmk&&kompetensi?`<tr><td>Kompetensi Keahlian</td><td>:</td><td>${kompetensi}</td></tr>`:''}
+        ${kompetensiRow}
       </table>
       <div class="result-status"><span class="badge ${(siswa.status||'LULUS')==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span></div>
-      <p class="intro-text">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${(meta.jenjang||'').toUpperCase()||'SMA'} ${meta.sekolah||''} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
+      <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
       <div class="scores-container">${buildNilaiKemdikbud(nilai, isSmk, rataRata)}</div>
     ` : `
-      <p class="intro-text">Kepala <strong>${meta.sekolah||'Sekolah'}</strong> menerangkan bahwa berdasarkan hasil Rapat Pleno Dewan Guru, dinyatakan bahwa:</p>
+      <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
       <table class="student-data">
-        <tr><td>Nama Lengkap</td><td>:</td><td>${siswa.nama}</td></tr>
-        <tr><td>NISN</td><td>:</td><td>${siswa.nisn||siswa.nisn_display||'-'}</td></tr>
+        <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
+        <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
+        <tr><td>Nama Lengkap</td><td>:</td><td><strong>${siswa.nama}</strong></td></tr>
         <tr><td>Jenis Kelamin</td><td>:</td><td>${(siswa.jenis_kelamin||'L')==='P'?'Perempuan':'Laki-laki'}</td></tr>
-        <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${fmt(siswa.tanggal_lahir)}</td></tr>
-        <tr><td>Kelas</td><td>:</td><td>${siswa.kelas}</td></tr>
-        ${kompetensi?`<tr><td>${kompetensiLabel}</td><td>:</td><td>${kompetensi}</td></tr>`:''}
-        <tr><td>Tahun Ajaran</td><td>:</td><td>${meta.tahun_ajaran||'-'}</td></tr>
+        <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
+        <tr><td>Nomor Induk Siswa Nasional</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+        <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
+        <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
+        <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
+        ${kompetensiRow}
       </table>
-      <div class="result-status" style="margin:30px 0 20px;"><span class="badge ${siswa.status==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span></div>
-      <p class="intro-text" style="text-align:center;">Yang bersangkutan dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari satuan pendidikan ${meta.sekolah||''}.<br><em style="font-size:10px;color:#64748b;">Rincian nilai akan tercantum dalam SKL resmi yang diterbitkan pada tanggal ${meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : (meta.tanggal_skl2_display||'...')}</em></p>
-      <p class="intro-text" style="margin-top:20px;">Surat Keterangan ini dibuat untuk dipergunakan sebagaimana mestinya dan hanya berlaku sampai diterbitkan Ijazah Asli Tahun Ajaran ${meta.tahun_ajaran||'-'}</p>
+      <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
+      <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}.</p>
     `;
 
     return `<!DOCTYPE html>
@@ -973,9 +1012,9 @@ import '../styles/global.css';
   .title-area .line { width:150px; height:0; border-bottom:3px solid #0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
   .title-area p { font-size:13px; font-weight:600; color:#64748b; margin-top:${isSklNilai ? '3px' : '5px'}; }
   .intro-text { font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position:relative; z-index:1; }
-  .student-data { border-collapse:collapse; width:${isSklNilai ? 'calc(100% - 40px)' : 'calc(100% - 40px)'}; margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.3' : '1.4'}; position:relative; z-index:1; }
+  .student-data { border-collapse:collapse; width:calc(100% - 40px); margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:14px; line-height:${isSklNilai ? '1.3' : '1.4'}; position:relative; z-index:1; }
   .student-data td { padding:${isSklNilai ? '1px 0' : '3px 0'}; vertical-align:top; }
-  .student-data td:first-child { width:${isSklNilai ? '155px' : '165px'}; color:#64748b; font-weight:500; }
+  .student-data td:first-child { width:${isSklNilai ? '205px' : '165px'}; color:#64748b; font-weight:500; white-space:nowrap; }
   .student-data td:nth-child(2) { width:20px; text-align:center; color:#94a3b8; }
   .student-data td:last-child { font-weight:700; color:#0f172a; }
   .scores-container { margin:${isSklNilai ? '6px 0' : '10px 0'}; width:100%; position:relative; z-index:1; }
@@ -1003,13 +1042,13 @@ import '../styles/global.css';
   .skl2-p2-kop { display:none; margin-bottom:20px; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size:210mm 297mm; margin:8mm 10mm 8mm 18mm; }
+    @page { size:210mm 330mm; margin:10mm; }
     html, body { width:210mm; min-height:auto; overflow:visible; }
     .page { padding:0; min-height:0; overflow:visible; position:static; }
     .dummy-badge { display:none !important; }
     ${isSklNilai ? `
-    .skl2-sig-page { page-break-before:always; border:none !important; margin:0 !important; padding:0 !important; }
-    .skl2-p2-kop { display:flex !important; align-items:center; gap:15px; border-bottom:5px double #0f172a; padding-bottom:8px; margin-bottom:20px; }
+    .skl2-sig-page { border:none !important; margin:0 !important; padding:0 !important; }
+    .skl2-p2-kop { display:none; }
     .footer-note { display:none; }
     ` : `
     .page-break-section { page-break-before:always; padding-top:20px; }
@@ -1046,11 +1085,9 @@ import '../styles/global.css';
         ${kopSuratHtml ? kopSuratHtml : `${logoHtml}<div class="header-text"><h2>${meta.sekolah||'NAMA SEKOLAH'}</h2><p style="font-weight:600;">NPSN: ${meta.npsn||'-'} | NSS: ${meta.nss||'-'}</p><p>${meta.alamat||'-'}</p>${(meta.kota||meta.provinsi)?`<p>Kab./Kota ${meta.kota||'-'}, Prov. ${meta.provinsi||'-'}</p>`:''}</div><div style="width:90px;height:90px;flex-shrink:0;"></div>`}
       </div>
       <p class="intro-text" style="margin:14px 0 10px;">Surat Keterangan Lulus ini berlaku sementara sampai dengan diterbitkannya Ijazah Tahun Ajaran ${meta.tahun_ajaran||'-'}, untuk menjadikan maklum bagi yang berkepentingan.</p>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;">
-        <div style="display:flex;align-items:flex-end;gap:12px;margin-top:30px;">
-          <div style="width:90px;height:120px;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;font-family:'Times New Roman',serif;">Foto 3x4</div>
-        </div>
-        <div class="signature-box">
+      <div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:14px;gap:50px;position:relative;z-index:1;">
+        <div style="width:90px;height:120px;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8;font-family:'Times New Roman',serif;background:#f8fafc;z-index:2;position:relative;">Foto 3x4</div>
+        <div class="signature-box" style="margin:0; text-align:center; min-width:250px; position:relative;">
           ${stempelHtml}
           <p class="date">${kota}, ${tglPengumuman}</p>
           <p class="role">Kepala ${(meta.jenjang||'Sekolah').toUpperCase()} ${meta.sekolah||''}</p>

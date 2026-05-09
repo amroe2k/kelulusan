@@ -363,6 +363,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   const siswa = siswaData || { nama:'AHMAD FAUZAN MAULANA', nisn:'1234567890',
     tempat_lahir:'Bandung', tanggal_lahir:'2007-05-15', kelas:'XII RPL 1', status:'LULUS',
     jenis_kelamin: 'L',
+    konsentrasi_keahlian: (meta.jenjang||'').toUpperCase()==='SMK' ? 'Pengembangan Perangkat Lunak' : '',
     kompetensi_keahlian: (meta.jenjang||'').toUpperCase()==='SMK' ? 'Rekayasa Perangkat Lunak' : '' };
   const nilai = nilaiData && nilaiData.length ? nilaiData : [];
   const rataRata = nilai.length ? (nilai.reduce((s,n)=>s+n.nilai,0)/nilai.length).toFixed(1) : '-';
@@ -376,6 +377,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
         : `400.3.11.1/${sklNum}`);
 
   const kompetensi = (siswa.kompetensi_keahlian || '').trim();
+  const konsentrasi = (siswa.konsentrasi_keahlian || '').trim();
   const jenjang = (meta.jenjang||'').toUpperCase();
   const isSmk = jenjang === 'SMK';
   const isSmaOrMa = ['SMA','MA'].includes(jenjang);
@@ -383,8 +385,16 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   let kompetensiRow = '';
   if (isSmk) {
     kompetensiRow = `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${escHtml(kompetensi) || '-'}</td></tr>`;
+    if (konsentrasi) {
+      kompetensiRow += `\n                <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(konsentrasi)}</td></tr>`;
+    }
   } else if (isSmaOrMa && kompetensi) {
     kompetensiRow = `<tr><td>Peminatan</td><td>:</td><td>${escHtml(kompetensi)}</td></tr>`;
+    if (konsentrasi) {
+      kompetensiRow += `\n                <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(konsentrasi)}</td></tr>`;
+    }
+  } else if (konsentrasi) {
+    kompetensiRow += `<tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(konsentrasi)}</td></tr>`;
   }
   const jenisKelaminDisplay = (siswa.jenis_kelamin||'L') === 'P' ? 'Perempuan' : 'Laki-laki';
   const isLulus = (siswa.status || 'LULUS').toUpperCase() === 'LULUS';
@@ -528,6 +538,9 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   const kotaLabel = _kotaRaw
     ? (_kotaRaw.startsWith('Kab. ') ? 'Kabupaten ' + _kotaRaw.slice(5) : 'Kota ' + _kotaRaw)
     : 'Kota/Kabupaten*) ........';
+
+
+
   const sklBody = isSklNilai ? `
     <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
     <table class="student-data">
@@ -539,16 +552,15 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
       <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
       <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
       <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
-      ${isSmk ? `<tr><td>Program Keahlian</td><td>:</td><td>${escHtml(kompetensi)||'-'}</td></tr>
-      <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(siswa.konsentrasi_keahlian||kompetensi)||'-'}</td></tr>` : ''}
+      ${kompetensiRow}
     </table>
     <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
-    <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${jenjang||''} ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
+    <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
     <div class="scores-container">
       ${buildNilaiTableKemdikbud(nilai)}
     </div>
   ` : `
-    <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'Sumatera Utara'} menerangkan bahwa:</p>
+    <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
     <table class="student-data">
       <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
       <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
@@ -559,8 +571,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
       <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
       <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
       <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
-      ${isSmk ? `<tr><td>Program Keahlian</td><td>:</td><td>${escHtml(kompetensi)||'-'}</td></tr>
-      <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${escHtml(siswa.konsentrasi_keahlian||kompetensi)||'-'}</td></tr>` : ''}
+      ${kompetensiRow}
     </table>
     <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
     <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}.</p>
@@ -596,13 +607,12 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size: 210mm 297mm; margin: 8mm 10mm 8mm 18mm; }
+    @page { size: 210mm 330mm; margin: 8mm 10mm 8mm 18mm; }
     body { padding: 0; background: #fff; width: 210mm; min-height: auto; display:block; overflow:visible; }
     .page { box-shadow: none; border: none; padding: 0; min-height: 0; display: block; position: static; overflow: visible; }
     .dummy-badge { display: none !important; }
     ${isSklNilai ? `
-    .skl2-sig-page { page-break-before: always; border: none !important; margin: 0 !important; padding: 0 !important; }
-    .skl2-p2-kop { display: flex !important; align-items: center; gap: 15px; border-bottom: 5px double #0f172a; padding-bottom: 8px; margin-bottom: 20px; }
+    .skl2-sig-page { border: none !important; margin: 10px 0 0 0 !important; padding: 0 !important; page-break-inside: avoid; }
     .footer-note { display: none; }
     ` : `
     .page-break-section { page-break-before: always; padding-top: 20px; }
@@ -645,29 +655,29 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
   .title-area .line { width:150px; height:0; border-bottom:3px solid #0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
   .title-area p  { font-size:13px; font-weight:600; color:#64748b; margin-top:${isSklNilai ? '3px' : '5px'}; }
   
-  .intro-text { font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position: relative; z-index: 1; }
+  .intro-text { font-size:14px; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position: relative; z-index: 1; }
   
-  .student-data { border-collapse:collapse; width:${isSklNilai ? 'calc(100% - 40px)' : 'calc(100% - 40px)'}; margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.3' : '1.4'}; position: relative; z-index: 1; }
+  .student-data { border-collapse:collapse; width:calc(100% - 40px); margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:14px; line-height:${isSklNilai ? '1.3' : '1.4'}; position: relative; z-index: 1; }
   .student-data td { padding:${isSklNilai ? '1px 0' : '3px 0'}; vertical-align:top; }
   .student-data td:first-child { width:${isSklNilai ? '205px' : '165px'}; color:#64748b; font-weight:500; white-space:nowrap; }
   .student-data td:nth-child(2) { width:20px; text-align:center; color:#94a3b8; }
   .student-data td:last-child { font-weight:700; color:#0f172a; }
   
-  .scores-container { margin:${isSklNilai ? '6px 0' : '10px 0'}; width:100%; position: relative; z-index: 1; }
+  .scores-container { margin:${isSklNilai ? '16px 0' : '10px 0'}; width:100%; position: relative; z-index: 1; }
   .scores-table { border-collapse:collapse; width:100%; font-size:${isSklNilai ? '12px' : '13px'}; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
   .scores-table th { background:#f8fafc; color:#64748b; font-weight:700; text-transform:uppercase; font-size:${isSklNilai ? '10px' : '11px'}; letter-spacing:1px; padding:${isSklNilai ? '5px 8px' : '8px 10px'}; border-bottom:2px solid #e2e8f0; text-align:left; }
   .scores-table td { padding:${isSklNilai ? '3px 8px' : '5px 10px'}; border-bottom:1px solid #f1f5f9; }
   .scores-table .avg-row { background:#f8fafc; font-weight:800; font-size:${isSklNilai ? '13px' : '14px'}; }
   
   /* Tabel Nilai format Kemdikbud (SKL2) */
-  .nilai-kemdikbud { border-collapse:collapse; width:100%; font-size:12px; font-family:Arial,sans-serif; }
-  .nilai-kemdikbud th { border:1px solid #333; padding:5px 8px; background:#f0f0f0; font-weight:700; text-align:center; font-size:12px; }
+  .nilai-kemdikbud { border-collapse:collapse; width:100%; font-size:13px; margin:15px 0; font-family:Arial,sans-serif; }
+  .nilai-kemdikbud th { border:1px solid #333; padding:5px 8px; background:#f0f0f0; font-weight:700; text-align:center; font-size:13px; }
   .nilai-kemdikbud td { border:1px solid #333; padding:3px 6px; vertical-align:top; }
-  .nilai-kemdikbud .n-no { width:35px; text-align:center; font-size:11px; }
-  .nilai-kemdikbud .n-mapel { font-size:12px; }
-  .nilai-kemdikbud .n-val { width:70px; text-align:center; font-weight:700; font-size:12px; }
-  .nilai-kemdikbud .n-cat { border-left:none; font-size:12px; font-weight:700; padding:4px 6px; background:#fafafa; }
-  .nilai-kemdikbud .n-avg td { border-top:2px solid #333; font-size:13px; }
+  .nilai-kemdikbud .n-no { width:35px; text-align:center; font-size:12px; }
+  .nilai-kemdikbud .n-mapel { font-size:13px; }
+  .nilai-kemdikbud .n-val { width:70px; text-align:center; font-weight:700; font-size:13px; }
+  .nilai-kemdikbud .n-cat { border-left:none; font-size:13px; font-weight:700; padding:4px 6px; background:#fafafa; }
+  .nilai-kemdikbud .n-avg td { border-top:2px solid #333; font-size:14px; }
   
   .result-status { text-align:center; margin:${isSklNilai ? '8px 0' : '10px 0'}; position: relative; z-index: 1; }
   .badge { 
@@ -751,16 +761,13 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
     
     ${isSklNilai ? `
     <div class="skl2-sig-page" id="signature-section">
-      ${page2KopHtml}
-      <p class="intro-text" style="margin:14px 0 10px;font-size:12px;">Surat Keterangan Lulus ini berlaku sementara sampai dengan diterbitkannya Ijazah Tahun Ajaran ${meta.tahun_ajaran||'-'}, untuk menjadikan maklum bagi yang berkepentingan.</p>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;">
-        <div style="display:flex;align-items:flex-end;gap:12px;margin-top:30px;">
-          <div style="width:90px;height:120px;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;font-family:'Times New Roman',serif;">Foto 3x4</div>
-        </div>
-        <div class="signature-box">
+      <p class="intro-text" style="margin:10px 0 5px;font-size:13px;">Surat Keterangan Lulus ini berlaku sementara sampai dengan diterbitkannya Ijazah Tahun Ajaran ${meta.tahun_ajaran||'-'}, untuk menjadikan maklum bagi yang berkepentingan.</p>
+      <div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:5px;gap:50px;">
+        <div style="width:90px;height:120px;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8;font-family:'Times New Roman',serif;background:#f8fafc;z-index:2;position:relative;">Foto 3x4</div>
+        <div class="signature-box" style="margin-bottom:0;">
           ${stempelHtml}
-          <p class="date" style="font-size:13px;">${kota}, ${tglPengumuman}</p>
-          <p class="role" style="font-size:13px;">Kepala ${jenjang||'Sekolah'} ${meta.sekolah ? meta.sekolah.replace(/^(SMK|SMA|MA|SMP|MTS)\s*/i,'').trim().substring(0,25) : '...'}</p>
+          <p class="date" style="font-size:14px;">${kota}, ${tglPengumuman}</p>
+          <p class="role" style="font-size:14px;">Kepala ${jenjang||'Sekolah'} ${meta.sekolah ? meta.sekolah.replace(/^(SMK|SMA|MA|SMP|MTS)\s*/i,'').trim().substring(0,25) : '...'}</p>
           <div style="margin:10px 0;">${ttdHtml}</div>
           <p class="name">${meta.kepala_sekolah||'Kepala Sekolah'}</p>
           ${meta.jabatan_kepsek ? `<p class="nip" style="margin-top:2px;font-weight:600;color:#475569;">${meta.jabatan_kepsek}</p>` : ''}
@@ -769,7 +776,7 @@ function buildSklPreviewHtml(meta, siswaData, nilaiData, type='skl2') {
             : (meta.nip_kepsek   ? `<p class="nip">NIP. ${meta.nip_kepsek}</p>`      : '')}
         </div>
       </div>
-      <p style="font-size:10px;color:#666;margin-top:14px;font-family:'Times New Roman',serif;">Keterangan:<br>*) Pilih Salah Satu</p>
+      <p style="font-size:10px;color:#666;margin-top:5px;font-family:'Times New Roman',serif;">Keterangan:<br>*) Pilih Salah Satu</p>
     </div>
     ` : `
     <div class="signature-area" id="signature-section">

@@ -1,0 +1,10 @@
+const XLSX = require('xlsx'); 
+const wb = XLSX.utils.book_new(); 
+const ws = XLSX.utils.aoa_to_sheet([['Tanggal'], [new Date(2020, 0, 1, 0, 0, 0)]]); 
+XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, 'test.xlsx');
+const wb2 = XLSX.readFile('test.xlsx', {cellDates: true});
+const dateVal = wb2.Sheets[wb2.SheetNames[0]]['A2'].v;
+console.log("Val:", dateVal);
+console.log("Local:", dateVal.getFullYear(), dateVal.getMonth(), dateVal.getDate());
+console.log("UTC:", dateVal.getUTCFullYear(), dateVal.getUTCMonth(), dateVal.getUTCDate());

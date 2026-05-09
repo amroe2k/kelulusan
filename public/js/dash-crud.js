@@ -23,6 +23,8 @@ async function openSiswaModal(s=null){
   // Kompetensi Keahlian (opsional, khusus SMK/SMA)
   const kkEl=$('siswa-kompetensi');
   if(kkEl) kkEl.value=s?.kompetensi_keahlian||'';
+  const konsEl=$('siswa-konsentrasi');
+  if(konsEl) konsEl.value=s?.konsentrasi_keahlian||'';
   $('nilai-list').innerHTML='';
 
   if(s?.id){
@@ -48,6 +50,7 @@ async function saveSiswa(e){
     tanggal_lahir:$('siswa-tanggal-lahir').value||null,
     status:$('siswa-status').value,
     kompetensi_keahlian:($('siswa-kompetensi')?.value||'').trim()||null,
+    konsentrasi_keahlian:($('siswa-konsentrasi')?.value||'').trim()||null,
   };
   const btn=$('btn-siswa-submit'); btn.textContent='Menyimpan...'; btn.disabled=true;
   const r=await fetch('/api/siswa.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -86,11 +89,12 @@ async function exportXlsx(){
   const isSmkExport=jenjang==='SMK';
   const isSmaExport=['SMA','MA'].includes(jenjang);
   const kompetensiHeader=isSmkExport?'Kompetensi Keahlian':isSmaExport?'Peminatan':'Kompetensi Keahlian';
+  const konsentrasiHeader='Konsentrasi Keahlian';
   // kompetensi_keahlian ditambahkan setelah kelas (opsional, bisa kosong)
-  const headers=['No','NISN','Nama','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Kelas',kompetensiHeader,'Status',...mapelCols,'Rata-Rata'];
+  const headers=['No','NISN','Nama','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Kelas',kompetensiHeader,konsentrasiHeader,'Status',...mapelCols,'Rata-Rata'];
   const rows=list.map((s,i)=>{
     const vals=mapelCols.map(m=>nilaiMap[s.id]?.[m]??'');
-    return [i+1,s.nisn,s.nama,s.jenis_kelamin==='L'?'Laki-laki':'Perempuan',s.tempat_lahir,s.tanggal_lahir,s.kelas,s.kompetensi_keahlian||'',s.status,...vals,parseFloat(s.rata_rata||0).toFixed(2)];
+    return [i+1,s.nisn,s.nama,s.jenis_kelamin==='L'?'Laki-laki':'Perempuan',s.tempat_lahir,s.tanggal_lahir,s.kelas,s.kompetensi_keahlian||'',s.konsentrasi_keahlian||'',s.status,...vals,parseFloat(s.rata_rata||0).toFixed(2)];
   });
 
   const ws=XLSXS.utils.aoa_to_sheet([headers,...rows]);
@@ -104,7 +108,7 @@ async function exportXlsx(){
   });
 
   // Data row styles
-  const STATUS_COL=8; // index of Status column
+  const STATUS_COL=9; // index of Status column
   rows.forEach((_,ri)=>{
     headers.forEach((_,ci)=>{
       const cell=XLSXS.utils.encode_cell({r:ri+1,c:ci});
@@ -148,7 +152,7 @@ async function exportXlsx(){
 function initImport(){
   // BASE_COLS: kolom yang bukan nilai mata pelajaran
   // kompetensi_keahlian ditambahkan agar tidak dianggap mapel
-  const BASE_COLS_SET=new Set(['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','no','rata-rata','rata_rata']);
+  const BASE_COLS_SET=new Set(['nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','no','rata-rata','rata_rata','konsentrasi_keahlian','konsentrasi keahlian']);
   importedRows=[];
 
   // ─── Drag & Drop Zone ───
@@ -175,7 +179,7 @@ function initImport(){
     }
     const reader = new FileReader();
     reader.onload = ev => {
-      const wb = window.XLSX.read(ev.target.result, {type:'array', cellDates:true});
+      const wb = window.XLSX.read(ev.target.result, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw = window.XLSX.utils.sheet_to_json(ws, {defval:''});
       importedRows = raw.map(row => {
@@ -270,6 +274,11 @@ function initImport(){
         row['jurusan_peminatan_(opsional)'] ||
         ''
       ).trim();
+      let konsentrasiVal = String(
+        row.konsentrasi_keahlian ||
+        row['konsentrasi keahlian'] ||
+        ''
+      ).trim();
 
       const siswa = {
         nisn:String(row.nisn||'').trim(),
@@ -279,9 +288,17 @@ function initImport(){
         kelas:row.kelas||'',
         status:(row.status||'LULUS').toString().toUpperCase(),
         kompetensi_keahlian: jurusanVal || null,
+        konsentrasi_keahlian: konsentrasiVal || null,
       };
       const tgl = row.tanggal_lahir;
-      if(tgl instanceof Date) {
+      if(typeof tgl === 'number') {
+        // Gunakan SSF.parse_date_code bawaan SheetJS untuk menghindari bug zona waktu browser secara absolut.
+        const parsed = window.XLSX.SSF.parse_date_code(tgl);
+        const y = parsed.y;
+        const m = String(parsed.m).padStart(2, '0');
+        const d = String(parsed.d).padStart(2, '0');
+        siswa.tanggal_lahir = `${y}-${m}-${d}`;
+      } else if(tgl instanceof Date) {
         const y = tgl.getFullYear();
         const m = String(tgl.getMonth() + 1).padStart(2, '0');
         const d = String(tgl.getDate()).padStart(2, '0');
@@ -292,7 +309,7 @@ function initImport(){
       
       // Extract nilai: use __keyMap to recover original (proper-cased) column names
       const keyMap = row.__keyMap || {};
-      const BASE_SKIP = new Set(['no','nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','jurusan','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','rata-rata','rata_rata','__keymap']);
+      const BASE_SKIP = new Set(['no','nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir','kelas','jurusan','kompetensi_keahlian','kompetensi keahlian','kompetensi_keahlian_(wajib-smk)','peminatan','peminatan_(opsional-sma)','jurusan_peminatan','jurusan_peminatan_(opsional)','status','rata-rata','rata_rata','__keymap','konsentrasi_keahlian','konsentrasi keahlian']);
       const nilai = [];
       Object.keys(row).forEach((nk, i) => {
         const lowerKey = nk.toLowerCase();
@@ -393,12 +410,12 @@ function downloadTemplate(){
   // ── Header & contoh data ────────────────────────────────────────────────────
   const headers = [
     'nisn','nama','jenis_kelamin','tempat_lahir','tanggal_lahir',
-    'kelas', kompetensiLabel, 'status',
+    'kelas', kompetensiLabel, 'konsentrasi_keahlian', 'status',
     ...mapelList
   ];
   const example = [
     '0012345678','Ahmad Fauzi','L','Jakarta','2006-05-15',
-    isSmk ? 'XII RPL 1' : 'XII IPA 1', kompetensiExample, 'LULUS',
+    isSmk ? 'XII RPL 1' : 'XII IPA 1', kompetensiExample, isSmk ? 'Pengembangan Perangkat Lunak' : '', 'LULUS',
     ...mapelList.map((_,i) => i < (isSmk ? 14 : 11) ? 80 : '')
   ];
 
