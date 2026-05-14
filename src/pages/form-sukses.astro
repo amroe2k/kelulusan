@@ -1,0 +1,82 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Berhasil Disimpan" description="Form identitas lembaga berhasil disimpan.">
+  <div class="min-h-screen bg-slate-50 dark:bg-[#0B0F19] flex flex-col font-poppins relative selection:bg-indigo-500/30">
+    <!-- Dekorasi Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[100px]"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-50 w-full bg-white/70 dark:bg-[#111827]/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black font-outfit text-slate-800 dark:text-white leading-tight">Berhasil</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1 w-full max-w-2xl mx-auto px-6 py-12 flex flex-col items-center justify-center min-h-[60vh]">
+        
+        <div class="flex-col items-center justify-center text-center w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-xl shadow-indigo-500/5 relative overflow-hidden">
+            <!-- Background Decoration for Card -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"></div>
+
+            <div class="w-24 h-24 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-500 mb-6 relative">
+                <div class="absolute inset-0 rounded-full animate-ping bg-emerald-400 opacity-20"></div>
+                <svg class="w-12 h-12 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            
+            <h2 class="text-3xl font-black font-outfit text-slate-800 dark:text-white mb-4">Data Tersimpan!</h2>
+            <p class="text-slate-600 dark:text-slate-400 mb-8 text-base">Profil dan Identitas Lembaga telah berhasil diperbarui ke dalam sistem. Demi keamanan, sesi form dan token sebelumnya telah dihancurkan.</p>
+
+            <div class="p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-left">
+                <div class="font-bold mb-4 flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    PROSES SELANJUTNYA:
+                </div>
+                
+                <p class="text-sm text-indigo-900/80 dark:text-indigo-200/80 mb-4 leading-relaxed">
+                    Silakan hubungi Administrator untuk melanjutkan ke tahap berikutnya:
+                </p>
+                
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <div class="mt-0.5 w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-700 dark:text-indigo-300">
+                            <span class="text-xs font-bold">1</span>
+                        </div>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Kirimkan file <b>Kop Surat</b>, <b>Logo Sekolah</b>, <b>Stempel</b>, dan <b>Tanda Tangan Kepsek</b> ke Admin.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="mt-0.5 w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-700 dark:text-indigo-300">
+                            <span class="text-xs font-bold">2</span>
+                        </div>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Isi data kelulusan Siswa beserta Nilai secara mandiri di template yang diberikan.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="mt-0.5 w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-700 dark:text-indigo-300">
+                            <span class="text-xs font-bold">3</span>
+                        </div>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Upload File Deploy ke Hosting (Akan dibantu oleh tim Administrator).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-xs text-slate-500 dark:text-slate-500">
+                    Sesi form publik ini telah berakhir. Anda dapat menutup tab browser ini.
+                </p>
+            </div>
+        </div>
+
+    </main>
+  </div>
+</BaseLayout>

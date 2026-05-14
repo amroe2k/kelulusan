@@ -223,10 +223,72 @@ function renderLembagaTable() {
             class="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-all" title="Hapus Permanen">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>` : ''}
+          <button onclick="manageToken('${l.id}','${escHtml(l.nama)}','${l.form_token||''}','${l.form_token_expires||''}')"
+            class="p-2.5 rounded-xl text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all" title="Link Form Publik">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          </button>
         </div>
       </td>
     </tr>`}).join('');
 }
+
+async function manageToken(id, nama, token, expires) {
+  const isDark = document.documentElement.classList.contains('dark');
+  let linkInfo = '<p class="text-slate-500 text-sm">Belum ada link form yang aktif.</p>';
+  if (token) {
+      const url = window.location.origin + '/form-lembaga?token=' + token;
+      let expText = new Date(expires).getTime() < Date.now() ? '<span class="text-rose-500 font-bold">Kadaluarsa</span>' : `Berlaku s/d: ${expires}`;
+      linkInfo = `
+        <div class="p-3 bg-white dark:bg-black/20 rounded-xl border border-slate-200 dark:border-slate-800">
+          <input type="text" readonly value="${url}" class="w-full text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-slate-700 dark:text-slate-300 mb-2 focus:outline-none" onclick="this.select(); document.execCommand('copy'); showToast('Link disalin!','success')">
+          <p class="text-[10px] text-slate-500 mt-1">${expText}</p>
+        </div>
+      `;
+  }
+
+  const { isConfirmed, value } = await Swal.fire({
+    title: `<span class="text-xl font-black font-outfit text-slate-900 dark:text-white">Link Form: ${nama}</span>`,
+    html: `
+      <div class="mt-4 text-left">
+        ${linkInfo}
+        <div class="mt-4">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Masa Berlaku (Hari)</label>
+          <input type="number" id="swal-token-days" value="7" min="1" max="30" class="w-full rounded-xl bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Generate Link Baru',
+    cancelButtonText: 'Tutup',
+    background: isDark ? '#111827' : '#ffffff',
+    color: isDark ? '#e2e8f0' : '#0f172a',
+    buttonsStyling: false,
+    customClass: {
+      popup: 'rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl',
+      confirmButton: 'px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-lg shadow-indigo-600/20 ml-3',
+      cancelButton: 'px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all'
+    },
+    preConfirm: () => {
+      return document.getElementById('swal-token-days').value;
+    }
+  });
+
+  if (isConfirmed && value) {
+    const r = await fetch('/api/lembaga.php', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'generate_token', id, days: value })
+    });
+    const res = await r.json();
+    if (res.success) {
+      showToast('Link baru berhasil digenerate!','success');
+      await renderLembaga();
+      manageToken(id, nama, res.token, res.expires); // Re-open to show new link
+    } else {
+      showToast(res.error||'Gagal generate link','error');
+    }
+  }
+}
+
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

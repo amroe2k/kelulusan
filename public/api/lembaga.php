@@ -8,7 +8,7 @@ $body   = $method === 'POST' ? getJsonBody() : [];
 // ── GET: list all lembaga ──────────────────────────────────────────────
 if ($method === 'GET' && !$action) {
         $rows = $pdo->query(
-            "SELECT l.id, l.nama, l.slug, l.aktif, l.created_at,
+            "SELECT l.id, l.nama, l.slug, l.aktif, l.created_at, l.form_token, l.form_token_expires,
                     COUNT(DISTINCT s.id) as jumlah_siswa,
                     p.jenjang
              FROM lembaga l
@@ -138,6 +138,20 @@ if ($method === 'POST') {
         }
         $pdo->prepare("DELETE FROM siswa WHERE lembaga_id = ?")->execute([$id]);
         echo json_encode(['success' => true]);
+        exit;
+    }
+    // ── Generate Token Form Publik ──────────────────────────────────────
+    if ($act === 'generate_token') {
+        $id = $body['id'] ?? '';
+        $days = (int)($body['days'] ?? 7);
+        if (!$id) { echo json_encode(['success'=>false,'error'=>'ID diperlukan']); exit; }
+        
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', strtotime("+$days days"));
+        
+        $pdo->prepare("UPDATE lembaga SET form_token = ?, form_token_expires = ? WHERE id = ?")->execute([$token, $expires, $id]);
+        
+        echo json_encode(['success' => true, 'token' => $token, 'expires' => $expires]);
         exit;
     }
 }

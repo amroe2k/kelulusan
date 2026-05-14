@@ -78,7 +78,6 @@ const SKIP_ALWAYS = new Set(['bundles']);
 // (berisi file sensitif atau besar yang tidak dibutuhkan halaman portal siswa)
 const SKIP_FRONTEND = new Set([
   'bundles',      // ZIP bundle besar
-  'js',           // Skrip dashboard admin — tidak dipakai index.astro
   'api',          // Endpoint PHP backend admin
   'exports',      // File JSON/Excel export history
   'pdf',          // File PDF SKL yang sudah digenerate

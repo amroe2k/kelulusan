@@ -40,7 +40,7 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
     <slot />
     
     <!-- Theme Toggle Floating Button -->
-    <button id="theme-toggle" class="fixed top-6 right-6 z-[100] p-3 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 hover:rotate-12 active:scale-90 transition-all shadow-xl shadow-slate-200/50 dark:shadow-black/20">
+    <button id="theme-toggle" class="fixed top-[14px] right-6 z-[100] p-3 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 hover:rotate-12 active:scale-90 transition-all shadow-xl shadow-slate-200/50 dark:shadow-black/20">
       <svg id="theme-icon-dark" class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
       <svg id="theme-icon-light" class="w-5 h-5 block dark:hidden text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     </button>
@@ -55,15 +55,13 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" is:inline></script>
     <script is:inline>
       window.showToast = function(msg, type = 'info') {
-        const isDark = document.documentElement.classList.contains('dark');
         const Toast = Swal.mixin({
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
-          background: isDark ? '#1a1a2e' : '#ffffff',
-          color: isDark ? '#e2e8f0' : '#1e293b',
+          background: 'transparent',
           customClass: {
             popup: 'swal-custom-toast',
             title: 'swal-toast-title'
@@ -86,7 +84,6 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
           msg = title;
           title = 'Konfirmasi Tindakan';
         }
-        const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
           title: title,
           html: `<p style="font-family: 'Poppins', sans-serif;">${msg}</p>`,
@@ -96,8 +93,6 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
           cancelButtonColor: '#ef4444',
           confirmButtonText: 'Ya, Lanjutkan!',
           cancelButtonText: 'Batal',
-          background: isDark ? '#1a1a2e' : '#ffffff',
-          color: isDark ? '#e2e8f0' : '#1e293b',
           customClass: {
             popup: 'swal-custom-popup',
             title: 'swal-custom-title',
@@ -114,6 +109,7 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
     <style is:global>
       /* SweetAlert2 Toast Custom Styling */
       .swal-custom-toast {
+        background-color: #ffffff !important;
         border-radius: 12px !important;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
         font-family: 'Poppins', sans-serif !important;
@@ -121,6 +117,8 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
         z-index: 99999 !important;
       }
       .dark .swal-custom-toast {
+        background-color: #1a1a2e !important;
+        color: #f8fafc !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
       }
@@ -128,15 +126,20 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
         font-size: 14px !important;
         font-weight: 600 !important;
       }
-      /* SweetAlert2 Custom Styling */
+      /* SweetAlert2 Custom Styling - Premium Redesign */
       .swal-custom-popup {
-        border-radius: 20px !important;
-        border: 1px solid rgba(99, 102, 241, 0.15) !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(16px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+        border-radius: 32px !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+        padding: 2rem !important;
       }
       .dark .swal-custom-popup {
-        border-color: rgba(255,255,255,0.1) !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
       }
       .swal-custom-title {
         font-family: 'Outfit', sans-serif !important;
@@ -162,6 +165,25 @@ const { title, description = 'Pengumuman Kelulusan Siswa - Cek status kelulusan 
       .swal2-cancel.swal-custom-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5) !important;
+      }
+      /* Global Dark Mode Support for SweetAlert2 */
+      .dark .swal2-popup {
+        background-color: rgba(15, 23, 42, 0.9) !important;
+        color: #f8fafc !important;
+      }
+      .dark .swal2-title {
+        color: #f8fafc !important;
+      }
+      .dark .swal2-html-container {
+        color: #cbd5e1 !important;
+      }
+      .dark .swal2-content {
+        color: #cbd5e1 !important;
+      }
+      
+      /* Tambahan transisi halus */
+      .swal2-show {
+        animation: swal2-show 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       }
     </style>
   </body>
