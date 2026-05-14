@@ -1,0 +1,60 @@
+<?php
+/**
+ * env.php — Parser .env sederhana untuk PHP
+ * ──────────────────────────────────────────
+ * Dibaca oleh db.php. Tidak perlu library tambahan.
+ * Mendukung:
+ *   - KEY=value
+ *   - KEY="value dengan spasi"
+ *   - # komentar
+ *   - Baris kosong
+ */
+
+function loadEnv($envPath) {
+    if (!file_exists($envPath)) return;
+
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+
+        // Lewati komentar dan baris kosong
+        if ($line === '' || strpos($line, '#') === 0) continue;
+
+        // Pisahkan key=value (hanya pada = pertama)
+        $eqPos = strpos($line, '=');
+        if ($eqPos === false) continue;
+
+        $key   = trim(substr($line, 0, $eqPos));
+        $value = trim(substr($line, $eqPos + 1));
+
+        // Hapus tanda kutip mengapit (single atau double)
+        if (
+            (strpos($value, '"') === 0 && substr($value, -1) === '"') ||
+            (strpos($value, "'") === 0 && substr($value, -1) === "'")
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        // Set ke $_ENV dan putenv agar bisa diakses di mana saja
+        if (!array_key_exists($key, $_ENV)) {
+            $_ENV[$key]   = $value;
+            putenv("{$key}={$value}");
+        }
+    }
+}
+
+/**
+ * env() — Helper untuk mengambil nilai .env dengan fallback
+ * Contoh: env('DB_HOST', 'localhost')
+ */
+function env($key, $default = null) {
+    $val = isset($_ENV[$key]) ? $_ENV[$key] : getenv($key);
+    if ($val === false || $val === '') return $default;
+    
+    // Konversi string boolean
+    $lowerVal = strtolower((string) $val);
+    if (in_array($lowerVal, ['true', '1', 'yes'], true)) return true;
+    if (in_array($lowerVal, ['false', '0', 'no'], true)) return false;
+    
+    return $val;
+}

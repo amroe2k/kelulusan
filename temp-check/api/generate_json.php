@@ -230,14 +230,8 @@ foreach ($siswaRows as $s) {
 // ─────────────────────────────────────────────────────────────────────────────
 $output   = ['_meta' => $meta, 'siswa' => $siswaObj];
 $jsonStr  = json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-// Logika Path: Di VPS, folder 'api' sejajar dengan 'data.json' (root). Di lokal, ada di 'public/api/'.
-// Kita cek apakah ada folder 'src' di parent (ciri khas environment lokal).
-if (is_dir(__DIR__ . '/../../src') && is_dir(__DIR__ . '/../../public')) {
-    $publicDir = realpath(__DIR__ . '/../../public'); // Lokal
-} else {
-    $publicDir = realpath(__DIR__ . '/../'); // VPS Root
-}
+$rootDir  = realpath(__DIR__ . '/../../');
+$publicDir = $rootDir . '/public';
 
 $dataJsonPath = $publicDir . '/data.json';
 file_put_contents($dataJsonPath, $jsonStr);

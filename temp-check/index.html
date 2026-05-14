@@ -1,0 +1,879 @@
+<!DOCTYPE html><html lang="id"> <head><script>
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Pengumuman Kelulusan Siswa - Cek status kelulusan Anda secara online."><meta name="robots" content="noindex, nofollow"><meta property="og:title" content="Pengumuman Kelulusan Siswa"><meta property="og:description" content="Pengumuman Kelulusan Siswa - Cek status kelulusan Anda secara online."><meta property="og:type" content="website"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Fonts Preconnect --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><title>Pengumuman Kelulusan Siswa</title><!-- Bundle Integrity Config (per-lembaga secret, auto-generated) --><script src="/bundle-config.js"></script><link rel="stylesheet" href="/_astro/global.D2eQx69m.css">
+<style>:root{--loader-bg: #f1f5f9}:root.dark,[data-astro-cid-j7pv25f6][data-theme=dark]{--loader-bg: #060910}#app-loader[data-astro-cid-j7pv25f6].hidden{opacity:0;visibility:hidden;pointer-events:none}@keyframes ldr-pulse{0%,to{transform:scale(1);box-shadow:0 12px 40px #6366f166}50%{transform:scale(1.07);box-shadow:0 18px 55px #6366f18c}}@keyframes ldr-slide{0%{transform:translate(-100%)}50%{transform:translate(0)}to{transform:translate(100%)}}.custom-scrollbar::-webkit-scrollbar{width:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.status-card-lulus{--tw-border-opacity: 1;border-color:rgb(188 245 212 / var(--tw-border-opacity, 1));background-color:#f0fdf4e6;--tw-shadow: 0 25px 60px -15px rgba(16,185,129,.1);--tw-shadow-colored: 0 25px 60px -15px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}.status-card-tidak{--tw-border-opacity: 1;border-color:rgb(255 209 217 / var(--tw-border-opacity, 1));background-color:#fff1f2e6;--tw-shadow: 0 25px 60px -15px rgba(244,63,94,.1);--tw-shadow-colored: 0 25px 60px -15px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}.dark .status-card-lulus,.dark .status-card-tidak{background:#111125!important;border-color:#ffffff0d;--tw-shadow: 0 0 #0000;--tw-shadow-colored: 0 0 #0000;box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}.dark .status-card-lulus{border-color:#065f46!important}.dark .status-card-tidak{border-color:#9f1239!important}@keyframes portalFloat{0%,to{transform:translateY(0)}50%{transform:translateY(-14px)}}#logo-wrapper{animation:portalFloat 3.5s ease-in-out infinite;will-change:transform}
+</style></head> <body class="antialiased">  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50" style="display:none;" data-astro-cid-j7pv25f6></canvas>  <div id="app-loader" style="
+    position:fixed; inset:0; z-index:100;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2rem;
+    background:var(--loader-bg, #f1f5f9);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  " data-astro-cid-j7pv25f6> <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;" data-astro-cid-j7pv25f6> <div style="
+        width:68px; height:68px;
+        background:linear-gradient(135deg,#6366f1,#a855f7);
+        border-radius:22px;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 12px 40px rgba(99,102,241,0.4);
+        animation:ldr-pulse 2s ease-in-out infinite;
+      " data-astro-cid-j7pv25f6> <svg width="32" height="32" viewBox="0 0 24 24" fill="none" data-astro-cid-j7pv25f6> <path d="M22 10L12 5L2 10L12 15L22 10Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-astro-cid-j7pv25f6></path> <path d="M6 12V17C6 17 9 19 12 19C15 19 18 17 18 17V12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-astro-cid-j7pv25f6></path> </svg> </div> <p style="
+        font-family:'Outfit',sans-serif; font-size:0.75rem; font-weight:700;
+        text-transform:uppercase; letter-spacing:0.2em;
+        color:#94a3b8;
+      " data-astro-cid-j7pv25f6>Portal Kelulusan</p> </div> <div style="width:200px; height:3px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden;" data-astro-cid-j7pv25f6> <div style="
+        height:100%;
+        background:linear-gradient(to right,#6366f1,#a855f7);
+        border-radius:999px;
+        animation:ldr-slide 1.2s ease-in-out infinite;
+      " data-astro-cid-j7pv25f6></div> </div> </div>   <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-slate-50 dark:bg-[#0a0a12] transition-colors duration-500" data-astro-cid-j7pv25f6> <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-indigo-600/10 dark:bg-indigo-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-pulse-slow" data-astro-cid-j7pv25f6></div> <div class="absolute bottom-[-10%] right-[-10%] w-[45rem] h-[45rem] bg-purple-600/10 dark:bg-purple-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-pulse-slow" style="animation-delay:-2s;" data-astro-cid-j7pv25f6></div> <div class="absolute top-[30%] right-[20%] w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-slow" style="animation-delay:-4s;" data-astro-cid-j7pv25f6></div> </div> <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 md:p-12 pb-32 overflow-x-hidden" data-astro-cid-j7pv25f6> <!-- Header Branding (Optional for premium feel) --> <div class="mb-6 text-center animate-fade-in flex flex-col items-center gap-2" data-astro-cid-j7pv25f6> <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm" data-astro-cid-j7pv25f6> <span class="relative flex h-2 w-2" data-astro-cid-j7pv25f6> <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" data-astro-cid-j7pv25f6></span> <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" data-astro-cid-j7pv25f6></span> </span> <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400" data-astro-cid-j7pv25f6>Status Sistem: Aktif</span> </div> </div> <!-- ─── SEARCH SECTION ─── --> <section id="search-section" class="w-full max-w-xl transition-all duration-700" data-astro-cid-j7pv25f6> <div class="glass-card p-8 md:p-10 relative overflow-hidden group" data-astro-cid-j7pv25f6> <!-- Decoration inside card --> <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700" data-astro-cid-j7pv25f6></div> <div class="relative z-10" data-astro-cid-j7pv25f6> <div class="text-center mb-6" data-astro-cid-j7pv25f6> <div class="flex flex-col items-center justify-center gap-2 mb-5" data-astro-cid-j7pv25f6> <!-- Tahun Ajaran Badge --> <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10" data-astro-cid-j7pv25f6> <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" data-astro-cid-j7pv25f6></path></svg> <span id="front-ta-display" class="text-[10px] font-black tracking-widest uppercase" data-astro-cid-j7pv25f6>TAHUN AJARAN -</span> </div> </div> <!-- Logo Lembaga: tampil jika ada, fallback ke icon mortarboard --> <div id="logo-wrapper" class="inline-flex items-center justify-center w-28 h-28 rounded-3xl mb-4 shadow-2xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-500 to-indigo-700 overflow-hidden" data-astro-cid-j7pv25f6> <!-- Logo lembaga (disembunyikan dulu, diisi via JS) --> <img id="portal-logo" src="" alt="Logo Sekolah" class="hidden w-full h-full object-contain p-2" data-astro-cid-j7pv25f6> <!-- Fallback icon --> <svg id="portal-logo-fallback" class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" data-astro-cid-j7pv25f6></path></svg> </div> <h1 class="text-3xl md:text-4xl font-black mb-1 tracking-tight text-slate-900 dark:text-white uppercase" data-astro-cid-j7pv25f6>
+Cek <span class="gradient-text" data-astro-cid-j7pv25f6>Kelulusan</span> </h1> <p class="text-xl md:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight leading-tight mb-4" id="sekolah-name-display" data-astro-cid-j7pv25f6>Memuat nama sekolah...</p> <!-- Relocated SKL Mode Badge --> <div id="active-skl-badge" class="hidden justify-center items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto w-fit mb-2" data-astro-cid-j7pv25f6> <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" data-astro-cid-j7pv25f6></path></svg> <span id="active-skl-text" class="text-[10px] font-black uppercase tracking-widest" data-astro-cid-j7pv25f6></span> </div> </div> <form id="search-form" class="space-y-5" novalidate data-astro-cid-j7pv25f6> <div class="space-y-2" data-astro-cid-j7pv25f6> <label for="nisn" class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest pl-1" data-astro-cid-j7pv25f6>Nomor Induk Siswa Nasional (NISN)</label> <div class="relative group/input" data-astro-cid-j7pv25f6> <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none" data-astro-cid-j7pv25f6> <svg class="w-5 h-5 text-slate-400 group-focus-within/input:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" data-astro-cid-j7pv25f6></path></svg> </div> <input type="text" id="nisn" name="nisn" required maxlength="20" class="input-field !text-xl !py-4 !pl-12 !font-bold tracking-[0.2em]" placeholder="0012345678" autocomplete="off" inputmode="numeric" data-astro-cid-j7pv25f6> </div> <div class="flex items-start gap-1.5 px-1 mt-1" data-astro-cid-j7pv25f6> <svg class="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" data-astro-cid-j7pv25f6></path></svg> <p class="text-[10px] text-slate-500 leading-relaxed font-medium" data-astro-cid-j7pv25f6>Data dienkripsi dan diproses secara aman di sisi klien.</p> </div> </div> <button type="submit" id="btn-submit" class="btn-primary w-full !py-4 !rounded-xl !text-base group" data-astro-cid-j7pv25f6> <span class="relative z-10 flex items-center justify-center gap-2" data-astro-cid-j7pv25f6>
+Cek Hasil Sekarang
+<svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" data-astro-cid-j7pv25f6></path></svg> </span> </button> </form> <div id="loading-indicator" class="hidden mt-8 text-center animate-fade-in" data-astro-cid-j7pv25f6> <div class="flex flex-col items-center gap-4" data-astro-cid-j7pv25f6> <div class="relative w-12 h-12" data-astro-cid-j7pv25f6> <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full" data-astro-cid-j7pv25f6></div> <div class="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" data-astro-cid-j7pv25f6></div> </div> <p class="text-indigo-500 dark:text-indigo-400 font-bold text-sm tracking-widest uppercase" data-astro-cid-j7pv25f6>Mencari Data Siswa...</p> </div> </div> </div> </div> </section> <!-- ─── RESULT SECTION ─── --> <section id="result-section" class="hidden w-full max-w-3xl animate-slide-up" data-astro-cid-j7pv25f6> <div class="glass-card overflow-hidden shadow-2xl" data-astro-cid-j7pv25f6> <!-- Top Banner Header --> <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white relative" data-astro-cid-j7pv25f6> <div class="absolute top-0 right-0 p-8 opacity-20 rotate-12" data-astro-cid-j7pv25f6> <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" data-astro-cid-j7pv25f6></path></svg> </div> <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" data-astro-cid-j7pv25f6> <div data-astro-cid-j7pv25f6> <p class="text-xs font-black uppercase tracking-[0.2em] text-white/70 mb-2" data-astro-cid-j7pv25f6>Lembar Hasil Pengumuman</p> <h2 class="text-3xl md:text-4xl font-black tracking-tight" id="res-nama" data-astro-cid-j7pv25f6>-</h2> <p class="text-white/80 font-medium mt-1" id="res-nisn" data-astro-cid-j7pv25f6>-</p> </div> <button id="btn-back" class="px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 transition-all flex items-center gap-2 text-sm font-bold" data-astro-cid-j7pv25f6> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" data-astro-cid-j7pv25f6></path></svg>
+Cek NISN Lain
+</button> </div> </div> <div class="p-8 md:p-10 bg-white/50 dark:bg-black/20" data-astro-cid-j7pv25f6> <!-- Main Content Grid --> <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" data-astro-cid-j7pv25f6> <!-- Left Info Col --> <div class="lg:col-span-5 space-y-6" data-astro-cid-j7pv25f6> <div class="space-y-4" data-astro-cid-j7pv25f6> <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500" data-astro-cid-j7pv25f6>Identitas Siswa</h3> <div class="space-y-4" data-astro-cid-j7pv25f6> <div class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm" data-astro-cid-j7pv25f6> <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500" data-astro-cid-j7pv25f6><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" data-astro-cid-j7pv25f6></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" data-astro-cid-j7pv25f6></path></svg></div> <div data-astro-cid-j7pv25f6><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter" data-astro-cid-j7pv25f6>Tempat, Tanggal Lahir</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-ttl" data-astro-cid-j7pv25f6>-</p></div> </div> <div class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm" data-astro-cid-j7pv25f6> <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500" data-astro-cid-j7pv25f6><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" data-astro-cid-j7pv25f6></path></svg></div> <div data-astro-cid-j7pv25f6><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter" data-astro-cid-j7pv25f6>Rombongan Belajar</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kelas" data-astro-cid-j7pv25f6>-</p></div> </div> <!-- Dynamic Field SMK: Kompetensi Keahlian --> <div class="hidden items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm" id="kompetensi-container" data-astro-cid-j7pv25f6> <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500" data-astro-cid-j7pv25f6><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" data-astro-cid-j7pv25f6></path></svg></div> <div data-astro-cid-j7pv25f6><p id="lbl-kompetensi" class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter" data-astro-cid-j7pv25f6>Kompetensi Keahlian</p><p class="text-sm font-bold text-slate-800 dark:text-slate-200" id="res-kompetensi" data-astro-cid-j7pv25f6>-</p></div> </div> </div> </div> <!-- Ultra-Modern Refined Status Widget --> <div id="status-card-root" class="relative max-w-sm mx-auto group perspective-1000" data-astro-cid-j7pv25f6> <!-- Background Decorative Blobs --> <div id="blob-1" class="absolute -top-12 -left-12 w-40 h-40 bg-emerald-400/10 dark:bg-emerald-500/5 rounded-full blur-[60px] opacity-0 transition-all duration-1000 group-hover:scale-110" data-astro-cid-j7pv25f6></div> <div id="blob-2" class="absolute -bottom-12 -right-12 w-40 h-40 bg-indigo-400/10 dark:bg-indigo-500/5 rounded-full blur-[60px] opacity-0 transition-all duration-1000 group-hover:scale-110" data-astro-cid-j7pv25f6></div> <div id="status-card-inner" class="relative p-12 min-h-[420px] rounded-[3.5rem] bg-white/80 dark:bg-[#0a0a15]/80 backdrop-blur-xl border-2 text-center transition-all duration-700 flex flex-col justify-between shadow-[0_25px_60px_-15px_rgba(0,0,0,0.06)] overflow-hidden" data-astro-cid-j7pv25f6> <!-- Subtle Dot Grid Pattern --> <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none" style="background-image: radial-gradient(circle, currentColor 1px, transparent 1px); background-size: 24px 24px;" data-astro-cid-j7pv25f6></div> <!-- Corner Accents --> <div class="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-slate-200 dark:border-white/5 rounded-tl-xl opacity-50" data-astro-cid-j7pv25f6></div> <div class="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-slate-200 dark:border-white/5 rounded-br-xl opacity-50" data-astro-cid-j7pv25f6></div> <div class="relative" data-astro-cid-j7pv25f6> <span class="block text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600 mb-2" data-astro-cid-j7pv25f6>Status Kelulusan</span> <div class="h-0.5 w-8 bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mx-auto" data-astro-cid-j7pv25f6></div> </div> <div id="res-status-display" class="relative flex-1 flex flex-col items-center justify-center py-8" data-astro-cid-j7pv25f6> <!-- Status Text & Icon Injected via JS --> </div> <div class="relative pt-6 border-t border-black/5 dark:border-white/5" data-astro-cid-j7pv25f6> <p class="text-[11px] font-black text-slate-400 dark:text-slate-600 tracking-[0.2em] uppercase opacity-80" id="result-subtitle" data-astro-cid-j7pv25f6>Tahun Ajaran 2024/2025</p> </div> </div> </div> </div> <!-- Right Nilai Col --> <div class="lg:col-span-7 space-y-6" data-astro-cid-j7pv25f6> <div class="flex items-center justify-between" data-astro-cid-j7pv25f6> <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500" data-astro-cid-j7pv25f6>Rincian Nilai Akademik</h3> <div class="flex gap-2" data-astro-cid-j7pv25f6> <span class="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-black tracking-tighter uppercase border border-emerald-500/20 flex items-center gap-1.5" data-astro-cid-j7pv25f6><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" data-astro-cid-j7pv25f6></span> <span id="res-rata-rata" data-astro-cid-j7pv25f6>-</span> AVG</span> <span class="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-500 text-[10px] font-black tracking-tighter uppercase border border-indigo-500/20 flex items-center gap-1.5" data-astro-cid-j7pv25f6><span id="res-jml-mapel" data-astro-cid-j7pv25f6>-</span> MAPEL</span> </div> </div> <div class="bg-white dark:bg-black/30 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm" data-astro-cid-j7pv25f6> <div id="ui-tabel-nilai" class="overflow-y-auto custom-scrollbar" style="max-height: 450px;" data-astro-cid-j7pv25f6> <table class="w-full text-left" data-astro-cid-j7pv25f6> <thead class="sticky top-0 bg-slate-50 dark:bg-[#1a1a2e] z-10" data-astro-cid-j7pv25f6> <tr data-astro-cid-j7pv25f6> <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400" data-astro-cid-j7pv25f6>Mata Pelajaran</th> <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center" data-astro-cid-j7pv25f6>Nilai</th> <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center" data-astro-cid-j7pv25f6>Predikat</th> </tr> </thead> <tbody id="nilai-tbody" class="divide-y divide-slate-100 dark:divide-white/5" data-astro-cid-j7pv25f6> <!-- Loaded via JS --> </tbody> </table> </div> </div> <!-- Dynamic Pengumuman Area --> <div id="pengumuman-container" class="hidden bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden" data-astro-cid-j7pv25f6> <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" data-astro-cid-j7pv25f6></div> <div class="flex items-start gap-4" data-astro-cid-j7pv25f6> <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 shadow-sm" data-astro-cid-j7pv25f6> <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" data-astro-cid-j7pv25f6></path></svg> </div> <div class="flex-1" data-astro-cid-j7pv25f6> <h4 class="text-[10px] font-black uppercase tracking-widest text-indigo-900 dark:text-indigo-300 mb-2" data-astro-cid-j7pv25f6>PENGUMUMAN TAMBAHAN</h4> <div id="pengumuman-content" class="text-sm text-indigo-800 dark:text-indigo-200/90 leading-relaxed font-medium" data-astro-cid-j7pv25f6> <!-- Loaded via JS --> </div> </div> </div> </div> <!-- Download Button Footer --> <div class="pt-4 flex flex-col sm:flex-row gap-4" data-astro-cid-j7pv25f6> <button id="btn-download" class="flex-1 btn-success !py-4 !rounded-2xl !text-sm group shadow-emerald-500/20" data-astro-cid-j7pv25f6> <span class="flex items-center justify-center gap-3" data-astro-cid-j7pv25f6> <svg class="w-5 h-5 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" data-astro-cid-j7pv25f6></path></svg>
+Download SKL (Official PDF)
+</span> </button> </div> </div> </div> </div> </div> </section> </main>  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md animate-fade-in" style="animation-delay: 1.5s;" data-astro-cid-j7pv25f6> <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full py-2.5 px-6 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 flex flex-wrap items-center justify-center gap-x-4 gap-y-1" data-astro-cid-j7pv25f6> <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-astro-cid-j7pv25f6>&copy; 2026 Siswa Digital</p> <div class="h-3 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" data-astro-cid-j7pv25f6></div> <div class="flex items-center gap-2.5" data-astro-cid-j7pv25f6> <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]" data-astro-cid-j7pv25f6>Presented by</span> <a href="https://alfa-itsolusindo.web.id/" target="_blank" class="flex items-center gap-2 group" data-astro-cid-j7pv25f6> <span class="text-[10px] font-black text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors tracking-widest uppercase" data-astro-cid-j7pv25f6>Alfa IT Solution</span> <svg class="w-3 h-3 text-indigo-500 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-j7pv25f6><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" data-astro-cid-j7pv25f6></path></svg> </a> </div> </div> </footer>  <iframe id="skl-iframe" style="position:absolute;top:0;left:-9999px;width:794px;height:1247px;border:none;" title="SKL Preview" data-astro-cid-j7pv25f6></iframe>     <script>
+  // ─── SHA-256 ───
+  async function sha256(msg) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // ─── Predikat ───
+  function predikat(n) {
+    if (n >= 90) return { label:'A', cls:'grade-a' };
+    if (n >= 80) return { label:'B', cls:'grade-b' };
+    if (n >= 70) return { label:'C', cls:'grade-c' };
+    return { label:'D', cls:'grade-d' };
+  }
+
+  // ─── Confetti ───
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    canvas.style.display = 'block';
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    const colors = ['#6366f1','#22c55e','#f59e0b','#ec4899','#06b6d4','#a78bfa'];
+    const pieces = Array.from({length:140}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 5 + 3,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random() * 360,
+      vx: Math.random() * 2 - 1,
+      vy: Math.random() * 3.5 + 1.5,
+      vr: Math.random() * 4 - 2,
+    }));
+    let frame = 0;
+    (function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pieces.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x+p.w/2, p.y+p.h/2);
+        ctx.rotate(p.rot * Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        ctx.restore();
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      });
+      if (++frame < 220) requestAnimationFrame(draw);
+      else canvas.style.display = 'none';
+    })();
+  }
+
+  // ─── Main App ───
+  document.addEventListener('DOMContentLoaded', async () => {
+    const $ = id => document.getElementById(id);
+    const searchSection   = $('search-section');
+    const resultSection   = $('result-section');
+    const searchForm      = $('search-form');
+    const nisnInput       = $('nisn');
+    const btnSubmit       = $('btn-submit');
+    const loadingEl       = $('loading-indicator');
+    const btnBack         = $('btn-back');
+    const btnDownload     = $('btn-download');
+    const nilaiTbody      = $('nilai-tbody');
+
+    let data = null;
+    let currentSiswa = null;
+
+    // Load data.json
+    let isAnnouncementTime = false;
+
+    // Helper: Sembunyikan Loading Layar Penuh
+    const hideAppLoader = () => {
+      const loader = $('app-loader');
+      if (!loader) return;
+      // Fade out via opacity transition, lalu sembunyikan sepenuhnya
+      loader.style.opacity = '0';
+      loader.style.visibility = 'hidden';
+      loader.style.pointerEvents = 'none';
+      setTimeout(() => { loader.style.display = 'none'; }, 520);
+    };
+
+    // ── Integrity Verification ──────────────────────────────────────────
+    async function verifyIntegrity(meta) {
+      if (!meta || !meta._integrity) return false;
+      // Gunakan secret per-lembaga dari bundle-config.js, fallback ke default
+      const secret = (typeof window !== 'undefined' && window.BUNDLE_SECRET)
+        ? window.BUNDLE_SECRET
+        : 'kls-portal-integrity-2026';
+      const payload = [
+        meta.lembaga_id, meta.lembaga_nama, meta.lembaga_slug,
+        meta.sekolah, meta.nss, meta.npsn, meta.kepala_sekolah
+      ].map(v => v ?? '').join('|');
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        'raw', enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+      );
+      const sig      = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+      const computed = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('');
+      return computed === meta._integrity;
+    }
+
+    try {
+      const res = await fetch('/data.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error();
+      data = await res.json();
+
+      // ── Cek Integrity ──
+      if (data._meta) {
+        if (data._meta._integrity) {
+          const valid = await verifyIntegrity(data._meta);
+          if (!valid) {
+            const banner = document.createElement('div');
+            banner.id = 'integrity-warning';
+            banner.innerHTML = `
+              <div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fca5a5;padding:12px 20px;font-size:13px;font-family:monospace;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+                <svg style="width:18px;height:18px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span><strong>PERINGATAN INTEGRITAS:</strong> File data.json telah dimodifikasi secara tidak sah. Portal tidak dapat menampilkan data kelulusan. Hubungi administrator.</span>
+              </div>`;
+            document.body.prepend(banner);
+            hideAppLoader(); // pastikan loader hilang sebelum error ditampilkan
+            btnSubmit.disabled = true;
+            showToast('Integritas data tidak valid. Data mungkin telah dimanipulasi.', 'error');
+            return;
+          }
+        } else {
+          // File lama tanpa _integrity — biarkan lanjut
+          console.warn('[Portal] data.json belum memiliki _integrity. Generate ulang untuk proteksi.');
+        }
+      }
+
+      if (data._meta) {
+        $('sekolah-name-display').textContent = data._meta.sekolah;
+        $('result-subtitle').textContent = 'Tahun Ajaran ' + data._meta.tahun_ajaran;
+        
+        if ($('front-ta-display')) {
+          $('front-ta-display').textContent = 'TAHUN AJARAN ' + data._meta.tahun_ajaran;
+        }
+
+        // ─── Tampilkan Mode SKL Aktif ───
+        const sklBadge = $('active-skl-badge');
+        const sklText = $('active-skl-text');
+        const currentSklType = getEffectiveSklType(data._meta);
+        
+        if (sklBadge && sklText) {
+          if (currentSklType === 'skl2') {
+            sklBadge.className = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 animate-fade-in';
+            sklText.textContent = 'Mode: SKL 2 (Transkrip Lengkap)';
+          } else {
+            sklBadge.className = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 animate-fade-in';
+            sklText.textContent = 'Mode: SKL 1 (Hanya Kelulusan)';
+          }
+        }
+
+
+        // ─── Inject Logo Lembaga ───
+        if (data._meta.logo) {
+          const logoEl  = $('portal-logo');
+          const fallbackEl = $('portal-logo-fallback');
+          const wrapperEl  = $('logo-wrapper');
+          if (logoEl && fallbackEl) {
+            if (data._meta && data._meta.logo) {
+              logoEl.src = data._meta.logo;
+              
+              // Wait for logo to fully load before revealing page
+              await new Promise((resolve) => {
+                if (logoEl.complete) resolve();
+                else {
+                  logoEl.onload = resolve;
+                  logoEl.onerror = resolve;
+                }
+              });
+
+              logoEl.classList.remove('hidden');
+              fallbackEl.classList.add('hidden');
+              // Hapus gradient bg — tampilkan bg putih bersih agar logo terbaca
+              if (wrapperEl) {
+                wrapperEl.classList.remove('bg-gradient-to-br','from-indigo-500','to-indigo-700');
+                wrapperEl.classList.add('bg-white','dark:bg-slate-800');
+              }
+            } else {
+              // Logo tidak ada di database, gunakan fallback
+              logoEl.classList.add('hidden');
+              fallbackEl.classList.remove('hidden');
+            }
+          }
+        }
+
+        // ─── GATE: Cek Tanggal Pengumuman ───
+        const tglStr = data._meta.tanggal_pengumuman;
+        if (tglStr) {
+          const announcementDate = parseAnnouncementDate(tglStr);
+          const now = new Date();
+          const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const announceDay   = new Date(announcementDate.getFullYear(), announcementDate.getMonth(), announcementDate.getDate());
+          isAnnouncementTime  = todayMidnight >= announceDay;
+          if (!isAnnouncementTime) {
+            const formatted = announcementDate.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+            showCountdown(formatted);
+          }
+        } else {
+          isAnnouncementTime = true;
+        }
+
+        // ─── Auto-search from URL ───
+        const urlParams = new URLSearchParams(window.location.search);
+        const nisnParam = urlParams.get('nisn');
+        if (nisnParam && isAnnouncementTime) {
+          nisnInput.value = nisnParam;
+          setTimeout(() => {
+            searchForm.dispatchEvent(new Event('submit'));
+          }, 500);
+        }
+      }
+    } catch {
+      showToast('Gagal memuat data. Sistem sedang dalam perbaikan.', 'error');
+      btnSubmit.disabled = true;
+    } finally {
+      // Pastikan loader selalu hilang baik saat sukses maupun error
+      hideAppLoader();
+    }
+
+    // ─── Helper: parse berbagai format tanggal ───
+    function parseAnnouncementDate(str) {
+      if (!str) return new Date();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str.trim())) {
+        const [y,m,d] = str.trim().split('-').map(Number);
+        return new Date(y, m-1, d);
+      }
+      const BULAN = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+      const match = str.trim().match(/^(\d{1,2})\s+(\w+)\s+(\d{4})$/);
+      if (match) {
+        const day = parseInt(match[1]);
+        const mon = BULAN.indexOf(match[2].toLowerCase());
+        const yr  = parseInt(match[3]);
+        if (mon >= 0) return new Date(yr, mon, day);
+      }
+      return new Date(str);
+    }
+
+    // ─── Helper: Deteksi otomatis SKL1 / SKL2 berdasarkan tanggal ───
+    // - Sebelum tanggal_skl2  → SKL1 (pengumuman kelulusan, tanpa nilai)
+    // - Setelah tanggal_skl2  → SKL2 (dengan rincian nilai)
+    function getEffectiveSklType(meta) {
+      if (meta.tanggal_skl2) {
+        const skl2Date = new Date(meta.tanggal_skl2);
+        if (new Date() >= skl2Date) return 'skl2';
+      }
+      return 'skl1';
+    }
+
+    // ─── Tampilkan Countdown / Belum Dibuka ───
+    function showCountdown(tanggal) {
+      btnSubmit.disabled = true;
+      btnSubmit.querySelector('span').innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Pengumuman Belum Dibuka
+      `;
+      nisnInput.disabled = true;
+      nisnInput.placeholder = 'Pengumuman belum dibuka...';
+      const banner = document.createElement('div');
+      banner.className = 'mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center animate-fade-in';
+      banner.innerHTML = `
+        <div class="flex items-center justify-center gap-2 mb-2">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="text-xs font-black text-amber-400 uppercase tracking-widest">Pengumuman Belum Dibuka</span>
+        </div>
+        <p class="text-xs text-amber-300/80 leading-relaxed">Hasil kelulusan akan dapat dilihat mulai</p>
+        <p class="text-sm font-bold text-amber-300 mt-1">${tanggal}</p>
+      `;
+      searchForm.appendChild(banner);
+    }
+
+    // ─── Search Submit ───
+    searchForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!isAnnouncementTime) {
+        showToast('Pengumuman belum dibuka. Silakan kembali pada tanggal yang ditentukan.', 'warning');
+        return;
+      }
+      const nisn = nisnInput.value.trim();
+      if (!nisn) { showToast('Silakan masukkan NISN Anda terlebih dahulu.', 'warning'); return; }
+      if (!/^[0-9]+$/.test(nisn)) { showToast('NISN hanya boleh berisi angka.', 'warning'); return; }
+      if (!data) { showToast('Data belum siap. Coba lagi sesaat.', 'error'); return; }
+
+      btnSubmit.disabled = true;
+      const originalText = btnSubmit.querySelector('span').innerHTML;
+      btnSubmit.querySelector('span').innerHTML = 'Memverifikasi...';
+      loadingEl.classList.remove('hidden');
+
+      try {
+        const hash = await sha256(nisn);
+        await new Promise(r => setTimeout(r, 1200));
+        const siswa = data.siswa[hash];
+        if (siswa) { 
+          currentSiswa = siswa; 
+          showResult(siswa); 
+        } else {
+          showToast('Data tidak ditemukan. Pastikan NISN yang Anda masukkan benar.', 'error');
+        }
+      } catch {
+        showToast('Terjadi kesalahan saat mencari data.', 'error');
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.querySelector('span').innerHTML = originalText;
+        loadingEl.classList.add('hidden');
+      }
+    });
+
+    // ─── Show Result ───
+    function showResult(s) {
+      $('res-nama').textContent  = s.nama;
+      $('res-nisn').textContent  = 'NISN: ' + s.nisn_display;
+      $('res-ttl').textContent   = s.tempat_lahir + ', ' + s.tanggal_lahir;
+      $('res-kelas').textContent = s.kelas;
+      
+      // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
+      const resKompetensi = (s.kompetensi_keahlian || data._meta.kompetensi_keahlian || '').trim();
+      const resKonsentrasi = (s.konsentrasi_keahlian || data._meta.konsentrasi_keahlian || '').trim();
+      const isSmkUi = (data._meta.jenjang || '').toUpperCase() === 'SMK';
+      const kompContainer = $('kompetensi-container');
+      if (kompContainer) {
+        if (resKompetensi || resKonsentrasi) {
+          kompContainer.classList.remove('hidden');
+          kompContainer.classList.add('flex');
+          
+          let displayKomp = '';
+          if (resKompetensi) {
+              const lbl = isSmkUi ? 'Kompetensi Keahlian' : 'Peminatan';
+              displayKomp += `${lbl}: ${resKompetensi}`;
+          }
+          if (resKonsentrasi) {
+              if (displayKomp) displayKomp += ' | ';
+              displayKomp += `Konsentrasi Keahlian: ${resKonsentrasi}`;
+          }
+          $('res-kompetensi').textContent = displayKomp;
+          
+          const lblKomp = $('lbl-kompetensi');
+          if (lblKomp) {
+            lblKomp.classList.add('hidden'); // Hide the standalone label since we prefix it in textContent
+          }
+        } else {
+          kompContainer.classList.add('hidden');
+          kompContainer.classList.remove('flex');
+        }
+      }
+
+
+
+      // Pengumuman Tambahan
+      const pengumuman = (data._meta.pengumuman || '').trim();
+      const pContainer = $('pengumuman-container');
+      if (pContainer) {
+        if (pengumuman) {
+          pContainer.classList.remove('hidden');
+          $('pengumuman-content').innerHTML = pengumuman; // Use innerHTML to allow basic tags
+        } else {
+          pContainer.classList.add('hidden');
+        }
+      }
+
+      const isLulus = s.status.toUpperCase() === 'LULUS';
+      const statusCard = $('status-card-inner');
+      const statusDisplay = $('res-status-display');
+      const blob1 = $('blob-1');
+      const blob2 = $('blob-2');
+      
+      if (isLulus) {
+        blob1.className = 'absolute -top-12 -left-12 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-[60px] opacity-100 transition-all duration-1000 group-hover:scale-125';
+        blob2.className = 'absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-400/20 dark:bg-indigo-500/10 rounded-full blur-[60px] opacity-100 transition-all duration-1000 group-hover:scale-125';
+        statusCard.className = 'relative p-12 min-h-[420px] rounded-[3.5rem] border-2 text-center transition-all duration-700 flex flex-col justify-between status-card-lulus overflow-hidden';
+        statusDisplay.innerHTML = `
+          <div class="mb-4 w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-emerald-500 transform -rotate-6 group-hover:rotate-0 transition-transform duration-500">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h2 class="text-6xl md:text-7xl font-black tracking-tighter text-emerald-600 dark:text-emerald-400 drop-shadow-sm">LULUS</h2>
+          <p class="mt-2 text-[10px] font-bold text-emerald-600/60 dark:text-emerald-400/40 tracking-[0.2em] uppercase">Selamat atas pencapaian Anda!</p>
+        `;
+      } else {
+        blob1.className = 'absolute -top-12 -left-12 w-48 h-48 bg-rose-400/10 dark:bg-rose-500/5 rounded-full blur-[60px] opacity-100 transition-all duration-1000';
+        blob2.className = 'absolute -bottom-12 -right-12 w-48 h-48 bg-slate-400/10 dark:bg-slate-500/5 rounded-full blur-[60px] opacity-100 transition-all duration-1000';
+        statusCard.className = 'relative p-12 min-h-[420px] rounded-[3.5rem] border-2 text-center transition-all duration-700 flex flex-col justify-between status-card-tidak overflow-hidden';
+        statusDisplay.innerHTML = `
+          <div class="mb-4 w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-rose-500 transform rotate-6 group-hover:rotate-0 transition-transform duration-500">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </div>
+          <h2 class="text-5xl md:text-6xl font-black tracking-tight text-rose-600 dark:text-rose-400 uppercase drop-shadow-sm">Tidak Lulus</h2>
+          <p class="mt-2 text-[10px] font-bold text-rose-600/60 dark:text-rose-400/40 tracking-[0.2em] uppercase">Tetap semangat & terus mencoba!</p>
+        `;
+      }
+
+      const isSkl2 = getEffectiveSklType(data._meta) === 'skl2';
+
+      const rataEl = $('res-rata-rata');
+      rataEl.textContent = s.rata_rata ? s.rata_rata.toFixed(2) : '-';
+      $('res-jml-mapel').textContent = (s.nilai && s.nilai.length) ? s.nilai.length : '-';
+
+      if (!isSkl2) {
+        $('ui-tabel-nilai').style.display = 'none';
+      } else {
+        $('ui-tabel-nilai').style.display = '';
+        nilaiTbody.innerHTML = '';
+        if (s.nilai && s.nilai.length) {
+          s.nilai.forEach((item, i) => {
+            const p = predikat(item.nilai);
+            const tr = document.createElement('tr');
+            tr.className = 'group transition-colors hover:bg-slate-50 dark:hover:bg-white/5';
+            tr.innerHTML = `
+              <td class="px-6 py-4">
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-300">${item.mapel}</p>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Matakuliah ke-${i+1}</p>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-lg font-black ${p.cls}">${item.nilai}</span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="px-3 py-1 rounded-lg text-[10px] font-black border ${p.cls} bg-opacity-10" style="border-color:currentColor; background-color:rgba(0,0,0,0.05)">${p.label}</span>
+              </td>`;
+            nilaiTbody.appendChild(tr);
+          });
+        } else {
+          nilaiTbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="px-6 py-10 text-center text-slate-500 dark:text-slate-400">
+                <svg class="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="font-bold text-sm">Data Nilai Belum Tersedia</p>
+                <p class="text-[10px] mt-1 tracking-widest uppercase">Silakan hubungi administrator sekolah.</p>
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      searchSection.classList.add('opacity-0','scale-95','-translate-y-4');
+      setTimeout(() => {
+        searchSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+        void resultSection.offsetWidth;
+        resultSection.classList.add('animate-slide-up');
+        if (isLulus) launchConfetti();
+      }, 400);
+    }
+
+    // ─── Back Button ───
+    btnBack.addEventListener('click', () => {
+      currentSiswa = null;
+      nisnInput.value = '';
+      resultSection.classList.add('hidden');
+      resultSection.classList.remove('animate-slide-up');
+      searchSection.classList.remove('hidden');
+      void searchSection.offsetWidth;
+      searchSection.classList.remove('opacity-0','scale-95','-translate-y-4');
+      searchSection.classList.add('animate-fade-in');
+    });
+
+    // ─── Download PDF ───
+    btnDownload.addEventListener('click', async () => {
+      if (!currentSiswa || !data) return;
+      const orig = btnDownload.innerHTML;
+      btnDownload.innerHTML = '<span class="flex items-center justify-center gap-3"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg> Menyiapkan PDF...</span>';
+      btnDownload.disabled = true;
+
+      try {
+        const m = data._meta;
+        const s = currentSiswa;
+
+        const sklType = getEffectiveSklType(m);
+        const htmlDoc = buildSklHtml(m, s, s.nilai || [], sklType);
+
+        // Buka window baru untuk print — lebih andal dari html2canvas+jsPDF
+        // Mendukung WebP, Google Fonts, dan semua format gambar secara native
+        const printWin = window.open('', '_blank', 'width=900,height=750,scrollbars=yes');
+        if (!printWin) {
+          showToast('Pop-up diblokir! Izinkan pop-up untuk situs ini, lalu coba lagi.', 'error');
+          return;
+        }
+
+        printWin.document.open();
+        printWin.document.write(htmlDoc);
+        printWin.document.close();
+
+        // Poll hingga dokumen & semua aset (gambar, font) selesai dimuat
+        await new Promise(resolve => {
+          const poll = setInterval(() => {
+            if (printWin.document && printWin.document.readyState === 'complete') {
+              clearInterval(poll);
+              resolve();
+            }
+          }, 80);
+          setTimeout(() => { clearInterval(poll); resolve(); }, 6000);
+        });
+        // Extra: tunggu Google Fonts render sepenuhnya
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Trigger print dialog (Ctrl+P) — user pilih "Save as PDF"
+        printWin.focus();
+        printWin.print();
+
+        // Tutup window otomatis setelah user selesai
+        setTimeout(() => { try { printWin.close(); } catch(e) {} }, 3000);
+        showToast('Dialog cetak terbuka — pilih "Simpan sebagai PDF" untuk mengunduh.', 'success');
+
+      } catch (err) {
+        console.error('PDF error:', err);
+        showToast('Gagal membuka PDF. Pastikan pop-up tidak diblokir, lalu coba lagi.', 'error');
+      } finally {
+        btnDownload.innerHTML = orig;
+        btnDownload.disabled  = false;
+      }
+    });
+  });
+
+  // ─── buildSklHtml: Full HTML document, identical to dash-util.js buildSklPreviewHtml ───
+  // ─── Nilai Table Builder (Format Kemdikbud) ───────────────────────────────
+  function buildNilaiKemdikbud(nilaiArr, isSmk, rataRata) {
+    if (!nilaiArr||!nilaiArr.length) return '<p style="font-style:italic;font-size:12px;">Belum ada data nilai.</p>';
+    let c=0;
+    const row=(m,v)=>{c++;const vv=(v!==undefined&&v!==null&&v!=='')? Math.round(v):'';return `<tr><td style="border:1px solid #333;padding:2px 5px;text-align:center;">${c}.</td><td style="border:1px solid #333;padding:2px 6px;">${m}</td><td style="border:1px solid #333;padding:2px 5px;text-align:center;font-weight:700;">${vv}</td></tr>`;};
+    const cat=(l)=>`<tr><td style="border:1px solid #333;padding:2px 5px;"></td><td colspan="2" style="border:1px solid #333;padding:3px 6px;font-weight:700;background:#f0f0f0;">${l}</td></tr>`;
+    const find=(kw)=>{const f=nilaiArr.find(n=>n.mapel.toLowerCase().includes(kw));return f?f.nilai:'';};
+    const findAny=(kws)=>{for(const kw of kws){const f=nilaiArr.find(n=>n.mapel.toLowerCase().includes(kw));if(f)return f.nilai;}return '';};
+    let rows='';
+    if(isSmk){
+      rows+=cat('Mata Pelajaran Umum');
+      rows+=row('Pendidikan Agama dan Budi Pekerti',findAny(['agama','budi pekerti']));
+      rows+=row('Pendidikan Pancasila',findAny(['pancasila','pkn']));
+      rows+=row('Bahasa Indonesia',find('bahasa indonesia'));
+      rows+=row('Pendidikan Jasmani, Olahraga dan Kesehatan',findAny(['jasmani','olahraga','pjok']));
+      rows+=row('Sejarah',find('sejarah'));
+      rows+=row('Seni dan Budaya',findAny(['seni','budaya']));
+      rows+=cat('Mata Pelajaran Kejuruan');
+      rows+=row('Matematika',find('matematika'));
+      rows+=row('Bahasa Inggris',find('bahasa inggris'));
+      rows+=row('Informatika',find('informatika'));
+      rows+=row('Projek Ilmu Pengetahuan Alam dan Sosial',findAny(['ipas','projek ilmu']));
+      rows+=row('Dasar-dasar Program Keahlian',findAny(['dasar-dasar','dasar program']));
+      rows+=row('Konsentrasi Keahlian',find('konsentrasi'));
+      rows+=row('Projek Kreativitas, Inovasi dan Kewirausahaan',findAny(['kreativitas','pkwu']));
+      rows+=row('Praktik Kerja Lapangan',findAny(['praktik kerja','pkl']));
+      const used=['agama','budi pekerti','pancasila','pkn','bahasa indonesia','jasmani','olahraga','pjok','sejarah','seni','budaya','matematika','bahasa inggris','informatika','ipas','projek ilmu','dasar-dasar','dasar program','konsentrasi','kreativitas','pkwu','praktik kerja','pkl'];
+      const extra=nilaiArr.filter(n=>!used.some(k=>n.mapel.toLowerCase().includes(k)));
+      rows+=cat('Mata Pelajaran Pilihan');
+      if(extra.length)extra.forEach(p=>{rows+=row(p.mapel,p.nilai);});else rows+=row('-','');
+      rows+=cat('Muatan Lokal');rows+=row('-','');
+    } else {
+      rows+=cat('Mata Pelajaran Wajib');
+      rows+=row('Pendidikan Agama ... Dan Budi Pekerti',findAny(['agama','budi pekerti']));
+      rows+=row('Pendidikan Pancasila',findAny(['pancasila','pkn']));
+      rows+=row('Bahasa Indonesia',find('bahasa indonesia'));
+      rows+=row('Matematika',find('matematika'));
+      rows+=row('Ilmu Pengetahuan Alam: Fisika, Kimia, Biologi',findAny(['ipa','fisika','kimia','biologi']));
+      rows+=row('Ilmu Pengetahuan Sosial: Sosiologi, Ekonomi, Sejarah, Geografi',findAny(['ips','sosiologi','ekonomi','geografi']));
+      rows+=row('Bahasa Inggris',find('bahasa inggris'));
+      rows+=row('Pendidikan Jasmani Olahraga dan Kesehatan',findAny(['jasmani','olahraga','pjok']));
+      rows+=row('Informatika',find('informatika'));
+      rows+=row('Sejarah',find('sejarah'));
+      rows+=row('Seni, Budaya dan Prakarya',findAny(['seni','budaya','prakarya']));
+      const used=['agama','budi pekerti','pancasila','pkn','bahasa indonesia','matematika','ipa','fisika','kimia','biologi','ips','sosiologi','ekonomi','geografi','bahasa inggris','jasmani','olahraga','pjok','informatika','sejarah','seni','budaya','prakarya'];
+      const pilihan=nilaiArr.filter(n=>!used.some(k=>n.mapel.toLowerCase().includes(k)));
+      rows+=cat('Mata Pelajaran Pilihan');
+      if(pilihan.length){pilihan.forEach(p=>{rows+=row(p.mapel,p.nilai);});for(let i=0;i<5-pilihan.length;i++)rows+=row('Ditulis 4 atau 5 mapel pilihan','');}else{for(let i=0;i<5;i++)rows+=row('Ditulis 4 atau 5 mapel pilihan','');}
+      rows+=cat('Muatan Lokal');rows+=row('-','');
+    }
+    rows+=`<tr><td style="border:1px solid #333;padding:2px 5px;"></td><td style="border:1px solid #333;padding:2px 6px;text-align:center;"><strong><em>Rata-rata</em></strong></td><td style="border:1px solid #333;padding:2px 5px;text-align:center;font-weight:700;">${rataRata}</td></tr>`;
+    return `<table style="border-collapse:collapse;width:100%;font-size:13px;margin:15px 0;font-family:Arial,sans-serif;"><thead><tr><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:30px;">No.</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;">Mata Pelajaran</th><th style="border:1px solid #333;padding:4px 6px;background:#e8e8e8;width:60px;">Nilai</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function buildSklHtml(meta, siswaData, nilaiData, type) {
+    const isSklNilai = (type !== 'skl1');
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const fmt = d => { if(!d) return '-'; if(typeof d==='string' && !/^\d{4}-\d{2}-\d{2}$/.test(d.trim())) return d; const parts = typeof d==='string' ? d.split('-') : null; if(parts&&parts.length===3) return `${parseInt(parts[2])} ${bulan[parseInt(parts[1])-1]} ${parts[0]}`; const dt=new Date(d); return `${dt.getDate()} ${bulan[dt.getMonth()]} ${dt.getFullYear()}`; };
+    const now = new Date();
+    const siswa = siswaData;
+    const nilai = nilaiData && nilaiData.length ? nilaiData : [];
+    const rataRata = nilai.length ? (nilai.reduce((s,n) => s+n.nilai, 0)/nilai.length).toFixed(1) : '-';
+    const sklNum = String(Math.floor(Math.random()*900+100)).padStart(3,'0');
+    const nomorSurat = (meta.nomor_surat_mode === 'static' && meta.nomor_surat_statis)
+      ? meta.nomor_surat_statis
+      : (meta.nomor_surat_suffix ? `${sklNum}${meta.nomor_surat_suffix}` : `${sklNum}/${meta.npsn||'SKL'}/${now.getFullYear()}`);
+    // Kompetensi Keahlian: tampilkan untuk semua jenjang jika ada isinya
+    const kompetensi = (siswa.kompetensi_keahlian || meta.kompetensi_keahlian || '').trim();
+    const konsentrasi = (siswa.konsentrasi_keahlian || meta.konsentrasi_keahlian || '').trim();
+    const isSmk = (meta.jenjang||'').toUpperCase() === 'SMK';
+    const kompetensiLabel = isSmk ? 'Kompetensi Keahlian' : 'Peminatan';
+    let kompetensiHeaderLine = kompetensi ? `<p style="margin-top:3px;font-weight:700;color:#4f46e5;">${kompetensiLabel}: ${kompetensi}</p>` : '';
+    if (konsentrasi) {
+        kompetensiHeaderLine += `\n<p style="margin-top:3px;font-weight:700;color:#4f46e5;">Konsentrasi Keahlian: ${konsentrasi}</p>`;
+    }
+    const tglPengumuman = isSklNilai
+      ? (meta.tanggal_skl2 ? fmt(meta.tanggal_skl2) : fmt(meta.tanggal_pengumuman||`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`))
+      : (meta.tanggal_pengumuman ? fmt(meta.tanggal_pengumuman) : fmt(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`));
+    const logoHtml = meta.logo ? `<img src="${meta.logo}" style="height:90px;width:90px;object-fit:contain;" crossorigin="anonymous" />` : `<div style="width:90px;height:90px;border:2px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;background:#fafafa;">LOGO</div>`;
+    const kopSuratHtml = meta.kop_surat ? `<img src="${meta.kop_surat}" style="width:100%;max-height:130px;object-fit:contain;display:block;" crossorigin="anonymous" />` : '';
+    const stempelHtml = meta.stempel ? `<img src="${meta.stempel}" crossorigin="anonymous" style="position:absolute;top:15px;left:-10px;width:140px;height:140px;object-fit:contain;opacity:0.6;pointer-events:none;" />` : '';
+    const ttdHtml = meta.ttd ? `<img src="${meta.ttd}" crossorigin="anonymous" style="height:70px;margin:0 auto 4px auto;display:block;" />` : `<div style="height:70px;"></div>`;
+    const nilaiRows = nilai.length > 0 
+      ? nilai.map((n,i) => `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px 10px;text-align:center;color:#666;font-size:11px;">${i+1}</td><td style="padding:8px 10px;color:#333;">${n.mapel}</td><td style="padding:8px 10px;text-align:center;font-weight:700;color:#111;">${Math.round(n.nilai)}</td></tr>`).join('')
+      : `<tr><td colspan="3" style="padding:30px 10px;text-align:center;color:#64748b;font-size:11px;font-style:italic;">Data Rincian Nilai belum tersedia atau belum diunggah oleh pihak sekolah.</td></tr>`;
+    const _kotaRaw = (meta.kota || '').trim();
+    const kota = _kotaRaw || '........';
+    const kotaLabel = _kotaRaw
+      ? (_kotaRaw.startsWith('Kab. ') ? 'Kabupaten ' + _kotaRaw.slice(5) : 'Kota ' + _kotaRaw)
+      : 'Kota/Kabupaten*) ........';
+    const isLulus = (siswa.status||'LULUS').toUpperCase() === 'LULUS';
+    const jenjang = (meta.jenjang||'').toUpperCase();
+    const isSmaOrMa = ['SMA','MA'].includes(jenjang);
+    const kompetensiKeahlian = (kompetensi||'').trim();
+    const konsentrasiKeahlian = (siswa.konsentrasi_keahlian||'').trim();
+    let kompetensiRow = '';
+    if (isSmk) {
+      kompetensiRow = `<tr><td>Kompetensi Keahlian</td><td>:</td><td>${kompetensiKeahlian||'-'}</td></tr>`;
+      if (konsentrasiKeahlian) kompetensiRow += `\n        <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    } else if (isSmaOrMa && kompetensiKeahlian) {
+      kompetensiRow = `<tr><td>Peminatan</td><td>:</td><td>${kompetensiKeahlian}</td></tr>`;
+      if (konsentrasiKeahlian) kompetensiRow += `\n        <tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    } else if (konsentrasiKeahlian) {
+      kompetensiRow = `<tr><td>Konsentrasi Keahlian</td><td>:</td><td>${konsentrasiKeahlian}</td></tr>`;
+    }
+
+    const sklBody = isSklNilai ? `
+      <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'Sekolah'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
+      <table class="student-data">
+        <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
+        <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
+        <tr><td>Nama Lengkap</td><td>:</td><td>${siswa.nama}</td></tr>
+        <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${fmt(siswa.tanggal_lahir)}</td></tr>
+        <tr><td>Nomor Induk Siswa Nasional</td><td>:</td><td>${siswa.nisn||siswa.nisn_display||'-'}</td></tr>
+        <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
+        <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
+        <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
+        ${kompetensiRow}
+      </table>
+      <div class="result-status"><span class="badge ${(siswa.status||'LULUS')==='TIDAK LULUS'?'badge-tidak':'badge-lulus'}">${siswa.status||'LULUS'}</span></div>
+      <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}, dengan nilai sebagai berikut :</p>
+      <div class="scores-container">${buildNilaiKemdikbud(nilai, isSmk, rataRata)}</div>
+    ` : `
+      <p class="intro-text">Yang bertanda tangan di bawah ini, Kepala <strong>${meta.sekolah||'...'}</strong> ${kotaLabel}, Provinsi ${meta.provinsi||'........'} menerangkan bahwa:</p>
+      <table class="student-data">
+        <tr><td>Satuan Pendidikan</td><td>:</td><td>${meta.sekolah||'-'}</td></tr>
+        <tr><td>Nomor Pokok Satuan Pendidikan</td><td>:</td><td>${meta.npsn||'-'}</td></tr>
+        <tr><td>Nama Lengkap</td><td>:</td><td><strong>${siswa.nama}</strong></td></tr>
+        <tr><td>Jenis Kelamin</td><td>:</td><td>${(siswa.jenis_kelamin||'L')==='P'?'Perempuan':'Laki-laki'}</td></tr>
+        <tr><td>Tempat, Tanggal Lahir</td><td>:</td><td>${siswa.tempat_lahir||'-'}, ${siswa.tanggal_lahir_display||fmt(siswa.tanggal_lahir)}</td></tr>
+        <tr><td>Nomor Induk Siswa Nasional</td><td>:</td><td>${siswa.nisn||'-'}</td></tr>
+        <tr><td>Nomor Ijazah</td><td>:</td><td>-</td></tr>
+        <tr><td>Tanggal Kelulusan</td><td>:</td><td>${tglPengumuman}</td></tr>
+        <tr><td>Kurikulum</td><td>:</td><td>${meta.kurikulum||'Kurikulum Merdeka'}</td></tr>
+        ${kompetensiRow}
+      </table>
+      <div class="result-status" style="margin:18px 0;"><span class="badge ${isLulus?'badge-lulus':'badge-tidak'}">${siswa.status||'LULUS'}</span></div>
+      <p class="intro-text" style="margin-top:10px;">Dinyatakan <strong>${siswa.status||'LULUS'}</strong> dari Satuan Pendidikan berdasarkan kriteria kelulusan ${meta.sekolah||'...'} ${kotaLabel} Tahun Ajaran ${meta.tahun_ajaran||'-'}.</p>
+    `;
+
+    return `<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8">
+<title>SKL-${siswa.nama ? siswa.nama.replace(/\s+/g,'_') : 'Siswa'}-${siswa.nisn||'0000000000'}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { width:794px; overflow:hidden; }
+  body { font-family:'Inter',sans-serif; background:#fff; color:#1e293b; width:794px; min-height:1247px; padding:0; margin:0; }
+  .page { background:#fff; width:794px; min-height:1083px; padding:${isSklNilai ? '16px 36px 20px 56px' : '20px 35px 80px 55px'}; position:relative; overflow:hidden; }
+  .watermark { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-30deg); font-size:100px; font-weight:900; color:rgba(0,0,0,0.02); text-transform:uppercase; white-space:nowrap; pointer-events:none; z-index:0; }
+  .header { display:flex; align-items:center; gap:20px; border-bottom:5px double #0f172a; padding-bottom:10px; margin-bottom:10px; position:relative; z-index:1; }
+  .header-text { flex:1; text-align:center; }
+  .header-text h2 { font-family:'Outfit',sans-serif; font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#0f172a; margin-bottom:4px; }
+  .header-text p { font-size:12px; color:#475569; line-height:1.4; }
+  .title-area { text-align:center; margin:${isSklNilai ? '6px 0 14px' : '10px 0 35px 0'}; position:relative; z-index:1; }
+  .title-area h3 { font-family:'Outfit',sans-serif; font-size:${isSklNilai ? '16px' : '18px'}; font-weight:800; text-transform:uppercase; color:#0f172a; letter-spacing:3px; }
+  .title-area .line { width:150px; height:0; border-bottom:3px solid #0f172a; margin:${isSklNilai ? '4px' : '6px'} auto; }
+  .title-area p { font-size:13px; font-weight:600; color:#64748b; margin-top:${isSklNilai ? '3px' : '5px'}; }
+  .intro-text { font-size:${isSklNilai ? '13px' : '14px'}; line-height:${isSklNilai ? '1.4' : '1.5'}; margin:${isSklNilai ? '5px 0' : '8px 0'}; color:#334155; position:relative; z-index:1; }
+  .student-data { border-collapse:collapse; width:calc(100% - 40px); margin:${isSklNilai ? '4px 0 4px 40px' : '8px 0 8px 40px'}; font-size:14px; line-height:${isSklNilai ? '1.3' : '1.4'}; position:relative; z-index:1; }
+  .student-data td { padding:${isSklNilai ? '1px 0' : '3px 0'}; vertical-align:top; }
+  .student-data td:first-child { width:${isSklNilai ? '205px' : '165px'}; color:#64748b; font-weight:500; white-space:nowrap; }
+  .student-data td:nth-child(2) { width:20px; text-align:center; color:#94a3b8; }
+  .student-data td:last-child { font-weight:700; color:#0f172a; }
+  .scores-container { margin:${isSklNilai ? '6px 0' : '10px 0'}; width:100%; position:relative; z-index:1; }
+  .scores-table { border-collapse:collapse; width:100%; font-size:${isSklNilai ? '12px' : '13px'}; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+  .scores-table th { background:#f8fafc; color:#64748b; font-weight:700; text-transform:uppercase; font-size:${isSklNilai ? '10px' : '11px'}; letter-spacing:1px; padding:${isSklNilai ? '5px 8px' : '8px 10px'}; border-bottom:2px solid #e2e8f0; text-align:left; }
+  .scores-table td { padding:${isSklNilai ? '3px 8px' : '5px 10px'}; border-bottom:1px solid #f1f5f9; }
+  .scores-table .avg-row { background:#f8fafc; font-weight:800; font-size:${isSklNilai ? '13px' : '14px'}; }
+  .result-status { text-align:center; margin:${isSklNilai ? '8px 0' : '10px 0'}; position:relative; z-index:1; }
+  .badge { display:inline-block; padding:${isSklNilai ? '6px 30px' : '8px 36px'}; border-radius:12px; font-size:${isSklNilai ? '18px' : '20px'}; font-weight:900; text-transform:uppercase; letter-spacing:4px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+  .badge-lulus { background:#ecfdf5; color:#059669; border:3px solid #10b981; }
+  .badge-tidak { background:#fef2f2; color:#dc2626; border:3px solid #ef4444; }
+  .signature-area { display:flex; justify-content:flex-end; margin-top:${isSklNilai ? '16px' : '30px'}; position:relative; z-index:1; }
+  .signature-area.page-break-section { display:block; }
+  .signature-box { text-align:center; position:relative; min-width:240px; }
+  .signature-box .date { font-size:${isSklNilai ? '13px' : '14px'}; color:#475569; margin-bottom:4px; }
+  .signature-box .role { font-size:${isSklNilai ? '14px' : '15px'}; font-weight:600; color:#1e293b; margin-bottom:10px; }
+  .signature-box .name { font-size:${isSklNilai ? '14px' : '16px'}; font-weight:800; color:#0f172a; text-transform:uppercase; margin-top:5px; border-bottom:2px solid #0f172a; display:inline-block; padding-bottom:2px; }
+  .signature-box .nip { font-size:${isSklNilai ? '12px' : '13px'}; color:#64748b; margin-top:4px; }
+  .footer-note { position:absolute; bottom:30px; left:56px; right:36px; font-size:11px; color:#94a3b8; text-align:center; padding-top:10px; border-top:1px solid #f1f5f9; font-style:italic; z-index:1; }
+  .page2-footer { display:none; }
+  .page-break-section { margin-top:30px; }
+  .page2-header { display:none; align-items:center; gap:20px; border-bottom:5px double #0f172a; padding-bottom:10px; margin-bottom:20px; }
+  /* SKL2: halaman 2 */
+  .skl2-sig-page { margin-top:20px; border-top:2px dashed #cbd5e1; padding-top:16px; position:relative; z-index:1; }
+  .skl2-p2-kop { display:none; margin-bottom:20px; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    @page { size:210mm 330mm; margin:10mm; }
+    html, body { width:210mm; min-height:auto; overflow:visible; }
+    .page { padding:0; min-height:0; overflow:visible; position:static; }
+    .dummy-badge { display:none !important; }
+    ${isSklNilai ? `
+    .skl2-sig-page { border:none !important; margin:0 !important; padding:0 !important; }
+    .skl2-p2-kop { display:none; }
+    .footer-note { display:none; }
+    ` : `
+    .page-break-section { page-break-before:always; padding-top:20px; }
+    .page2-header { display:flex !important; }
+    .page2-footer { display:block !important; position:static; margin-top:20px; }
+    .footer-note { position:fixed; bottom:8px; left:10mm; right:10mm; margin:0; padding:6px 0 0; border-top:1px solid #e2e8f0; background:transparent; font-size:10px; }
+    `}
+  }
+</style></head><body>
+  <div class="page">
+    <div class="watermark">${meta.sekolah||'SKL'}</div>
+    <div class="header">
+      ${kopSuratHtml ? kopSuratHtml : `
+        ${logoHtml}
+        <div class="header-text">
+          <h2>${meta.sekolah||'NAMA SEKOLAH'}</h2>
+          <p style="margin-top:4px;font-weight:600;">NPSN: ${meta.npsn||'-'} | NSS: ${meta.nss||'-'}</p>
+          <p>${meta.alamat||'-'}</p>
+          ${(meta.telepon||meta.email) ? `<p style="margin-top:2px;">Telp: ${meta.telepon||'-'} | Email: ${meta.email||'-'}</p>` : ''}
+          ${kompetensiHeaderLine}
+        </div>
+        <div style="width:90px;height:90px;flex-shrink:0;"></div>
+      `}
+    </div>
+    <div class="title-area">
+      <h3>SURAT KETERANGAN LULUS</h3>
+      <div class="line"></div>
+      <p>Nomor: ${nomorSurat}</p>
+    </div>
+    ${sklBody}
+    ${isSklNilai ? `
+    <div class="skl2-sig-page" id="signature-section">
+      <div class="skl2-p2-kop">
+        ${kopSuratHtml ? kopSuratHtml : `${logoHtml}<div class="header-text"><h2>${meta.sekolah||'NAMA SEKOLAH'}</h2><p style="font-weight:600;">NPSN: ${meta.npsn||'-'} | NSS: ${meta.nss||'-'}</p><p>${meta.alamat||'-'}</p>${(meta.kota||meta.provinsi)?`<p>Kab./Kota ${meta.kota||'-'}, Prov. ${meta.provinsi||'-'}</p>`:''}</div><div style="width:90px;height:90px;flex-shrink:0;"></div>`}
+      </div>
+      <p class="intro-text" style="margin:14px 0 10px;">Surat Keterangan Lulus ini berlaku sementara sampai dengan diterbitkannya Ijazah Tahun Ajaran ${meta.tahun_ajaran||'-'}, untuk menjadikan maklum bagi yang berkepentingan.</p>
+      <div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:14px;gap:50px;position:relative;z-index:1;">
+        <div style="width:90px;height:120px;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8;font-family:'Times New Roman',serif;background:#f8fafc;z-index:2;position:relative;">Foto 3x4</div>
+        <div class="signature-box" style="margin:0; text-align:center; min-width:250px; position:relative;">
+          ${stempelHtml}
+          <p class="date">${kota}, ${tglPengumuman}</p>
+          <p class="role">Kepala ${(meta.jenjang||'Sekolah').toUpperCase()} ${meta.sekolah||''}</p>
+          <div style="margin:10px 0;">${ttdHtml}</div>
+          <p class="name">${meta.kepala_sekolah||'Kepala Sekolah'}</p>
+          ${meta.jabatan_kepsek?`<p class="nip" style="margin-top:2px;font-weight:600;color:#475569;">${meta.jabatan_kepsek}</p>`:''}
+          ${meta.id_kepsek_mode==='nuptk'?(meta.nuptk_kepsek?`<p class="nip">NUPTK. ${meta.nuptk_kepsek}</p>`:''): (meta.nip_kepsek?`<p class="nip">NIP. ${meta.nip_kepsek}</p>`:'')}
+        </div>
+      </div>
+      <p style="font-size:10px;color:#666;margin-top:14px;">Keterangan:<br>*) Pilih Salah Satu</p>
+    </div>
+    ` : `
+    <div class="signature-area" id="signature-section">
+      <div style="display:flex;justify-content:flex-end;width:100%;">
+        <div class="signature-box">
+          ${stempelHtml}
+          <p class="date">${kota}, ${tglPengumuman}</p>
+          <p class="role">Kepala Sekolah,</p>
+          <div style="margin:10px 0;">${ttdHtml}</div>
+          <p class="name">${meta.kepala_sekolah||'Kepala Sekolah'}</p>
+          ${meta.jabatan_kepsek?`<p class="nip" style="margin-top:2px;font-weight:600;color:#475569;">${meta.jabatan_kepsek}</p>`:''}
+          ${meta.id_kepsek_mode==='nuptk'?(meta.nuptk_kepsek?`<p class="nip">NUPTK. ${meta.nuptk_kepsek}</p>`:''): (meta.nip_kepsek?`<p class="nip">NIP. ${meta.nip_kepsek}</p>`:'')}
+        </div>
+      </div>
+    </div>
+    <p class="footer-note">Dokumen ini diterbitkan secara elektronik dan sah sebagai bukti kelulusan sementara sebelum ijazah asli diterbitkan. Keaslian dokumen dapat dikonfirmasi melalui portal resmi sekolah.</p>
+    `}
+  </div>
+</body></html>`;
+  }
+  </script>  <!-- Theme Toggle Floating Button --> <button id="theme-toggle" class="fixed top-6 right-6 z-[100] p-3 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 hover:rotate-12 active:scale-90 transition-all shadow-xl shadow-slate-200/50 dark:shadow-black/20"> <svg id="theme-icon-dark" class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg> <svg id="theme-icon-light" class="w-5 h-5 block dark:hidden text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> </button> <script>
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    </script> <!-- SweetAlert2 --> <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <script>
+      window.showToast = function(msg, type = 'info') {
+        const isDark = document.documentElement.classList.contains('dark');
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          background: isDark ? '#1a1a2e' : '#ffffff',
+          color: isDark ? '#e2e8f0' : '#1e293b',
+          customClass: {
+            popup: 'swal-custom-toast',
+            title: 'swal-toast-title'
+          },
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+          }
+        });
+
+        Toast.fire({
+          icon: type,
+          title: msg
+        });
+      };
+
+      window.showConfirm = function(title, msg, onConfirm) {
+        if (typeof msg === 'function') {
+          onConfirm = msg;
+          msg = title;
+          title = 'Konfirmasi Tindakan';
+        }
+        const isDark = document.documentElement.classList.contains('dark');
+        Swal.fire({
+          title: title,
+          html: `<p style="font-family: 'Poppins', sans-serif;">${msg}</p>`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#6366f1',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Ya, Lanjutkan!',
+          cancelButtonText: 'Batal',
+          background: isDark ? '#1a1a2e' : '#ffffff',
+          color: isDark ? '#e2e8f0' : '#1e293b',
+          customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            confirmButton: 'swal-custom-btn',
+            cancelButton: 'swal-custom-btn'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            onConfirm();
+          }
+        });
+      };
+    </script> </body> </html>

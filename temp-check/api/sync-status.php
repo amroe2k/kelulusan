@@ -54,12 +54,7 @@ foreach ($ASSET_KEYS as $key) {
 }
 
 // ── 3. Baca data.json aktif ────────────────────────────────────────────
-if (is_dir(__DIR__ . '/../../src') && is_dir(__DIR__ . '/../../public')) {
-    $publicDir = realpath(__DIR__ . '/../../public');
-} else {
-    $publicDir = realpath(__DIR__ . '/../');
-}
-$jsonPath   = $publicDir . '/data.json';
+$jsonPath   = realpath(__DIR__ . '/../../public') . '/data.json';
 $jsonExists = file_exists($jsonPath);
 $jsonTotal  = 0; $jsonLulus = 0; $jsonTidakLulus = 0;
 $jsonGeneratedAt = null;

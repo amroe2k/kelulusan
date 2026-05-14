@@ -176,13 +176,7 @@ foreach ($siswaRows as $s) {
 // ── Tulis ke public/data.json ───────────────────────────────────────────
 $output   = ['_meta' => $meta, 'siswa' => $siswaObj];
 $jsonStr  = json_encode($output, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-if (is_dir(__DIR__ . '/../../src') && is_dir(__DIR__ . '/../../public')) {
-    $publicDir = realpath(__DIR__ . '/../../public');
-} else {
-    $publicDir = realpath(__DIR__ . '/../');
-}
-$outPath  = $publicDir . '/data.json';
+$outPath  = realpath(__DIR__ . '/../../public') . '/data.json';
 
 if (file_put_contents($outPath, $jsonStr) === false) {
     http_response_code(500);
@@ -190,7 +184,7 @@ if (file_put_contents($outPath, $jsonStr) === false) {
 }
 
 // ── Tulis bundle-config.js (harus sinkron dengan secret lembaga aktif) ──
-$bundleConfigPath = $publicDir . '/bundle-config.js';
+$bundleConfigPath = realpath(__DIR__ . '/../../public') . '/bundle-config.js';
 $bundleConfigContent =
     "/* AUTO-GENERATED — DO NOT EDIT */\n" .
     "/* Bundle: {$lembaga['slug']} | {$lembaga['nama']} */\n" .

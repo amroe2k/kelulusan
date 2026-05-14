@@ -78,31 +78,24 @@ if (!file_exists($dataJsonSrc)) {
 // ── Tentukan folder dist ──────────────────────────────────────────────────
 // Prioritas: dist/frontend/ (build terpisah) → dist/ (build lengkap legacy)
 $rootDir          = dirname(__DIR__, 2);
-if (is_dir(__DIR__ . '/../../src') && is_dir(__DIR__ . '/../../public')) {
-    // Mode Lokal (Development)
-    $publicDir = realpath(__DIR__ . '/../../public');
-    $distFrontendDir  = $rootDir . '/dist/frontend';
-    $distLegacyDir    = $rootDir . '/dist';
+$distFrontendDir  = $rootDir . '/dist/frontend';
+$distLegacyDir    = $rootDir . '/dist';
 
-    if (is_dir($distFrontendDir) && file_exists($distFrontendDir . '/index.html')) {
-        $distDir   = $distFrontendDir;
-        $buildMode = 'frontend';
-    } elseif (is_dir($distLegacyDir) && file_exists($distLegacyDir . '/index.html')) {
-        $distDir   = $distLegacyDir;
-        $buildMode = 'legacy';
-    } else {
-        echo json_encode([
-            'success' => false,
-            'error'   => 'Folder build belum ada. Jalankan "npm run build:frontend" untuk build terpisah, atau "npm run build" untuk build lengkap.',
-        ]);
-        exit;
-    }
+$buildMode = 'none';
+if (is_dir($distFrontendDir) && file_exists($distFrontendDir . '/index.html')) {
+    // ✅ Build terpisah tersedia — gunakan dist/frontend/ (hanya portal siswa)
+    $distDir   = $distFrontendDir;
+    $buildMode = 'frontend';
+} elseif (is_dir($distLegacyDir) && file_exists($distLegacyDir . '/index.html')) {
+    // ⚠️ Fallback ke dist/ (build lengkap — termasuk dashboard)
+    $distDir   = $distLegacyDir;
+    $buildMode = 'legacy';
 } else {
-    // Mode VPS (Production)
-    // Di VPS, root htdocs sudah merupakan hasil build frontend.
-    $publicDir = realpath(__DIR__ . '/../');
-    $distDir   = $publicDir;
-    $buildMode = 'vps';
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Folder build belum ada. Jalankan "npm run build:frontend" untuk build terpisah, atau "npm run build" untuk build lengkap.',
+    ]);
+    exit;
 }
 
 // ── Buat folder bundles ───────────────────────────────────────────────────
@@ -138,19 +131,6 @@ foreach ($iterator as $file) {
     $filePath   = $file->getRealPath();
     $relativePath = substr($filePath, strlen(realpath($distDir)) + 1);
     $relativePath = str_replace('\\', '/', $relativePath);
-
-    // Di VPS, abaikan folder-folder sistem agar tidak ikut masuk bundle
-    if ($buildMode === 'vps') {
-        $skipPatterns = ['^api/', '^dashboard/', '^exports/', '^bundles/', '^\.env', '^users\.json'];
-        $shouldSkip = false;
-        foreach ($skipPatterns as $pattern) {
-            if (preg_match('#' . $pattern . '#', $relativePath)) {
-                $shouldSkip = true;
-                break;
-            }
-        }
-        if ($shouldSkip) continue;
-    }
 
     // Ganti data.json dari dist dengan data.json lembaga
     if ($relativePath === 'data.json') continue; // Akan ditambahkan manual

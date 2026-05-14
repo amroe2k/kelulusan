@@ -1,3 +1,16 @@
 ---
-return Astro.redirect('/dashboard/overview');
+// Menggunakan meta refresh dan script agar transisi mulus dan layar tetap kosong
 ---
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0;url=/dashboard/overview">
+    <script>
+        window.location.replace('/dashboard/overview');
+    </script>
+</head>
+<body style="background-color: #f8fafc; margin: 0;">
+    <!-- Layar kosong agar tidak ada teks 'Redirecting...' yang berkedip -->
+</body>
+</html>

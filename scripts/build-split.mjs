@@ -188,7 +188,7 @@ const PAGE_GROUPS = {
   dashboard: {
     label: 'Admin Dashboard',
     outDir: 'dist/dashboard',
-    hideOnBuild: ['index.astro', 'login.astro', '404.astro'],  // sembunyikan halaman publik
+    hideOnBuild: ['index.astro', '404.astro'],  // sembunyikan halaman publik
     config: 'astro.config.dashboard.mjs',
     cleanAfterBuild: [],
   },

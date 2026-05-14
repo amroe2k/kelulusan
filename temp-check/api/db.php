@@ -11,7 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 require_once __DIR__ . '/env.php';
 
 $envPaths = [
-    __DIR__ . '/../.env',         // VPS Document Root (misal: htdocs/domain.com/.env)
     __DIR__ . '/../../.env',      // root project (development)
     __DIR__ . '/../../../.env',   // satu level lebih atas (VPS dengan public_html)
     __DIR__ . '/.env',            // fallback: di folder api/
